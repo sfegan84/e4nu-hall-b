@@ -1,0 +1,56 @@
+********************************e4nu_1p1pi*****************************
+* Stuart Fegan - University of York (stuart.fegan@york.ac.uk)
+*
+* Version of the e2a/e4nu (electrons for neutrinos) analysis code
+* for the one proton, one pion channel. Derives from the e4nu analysis
+* code already built by the group, however, significant divergence
+* necessary in order to improve readability/debugging
+*
+* v0.1  March  3rd, 2020 - implementing previous tweaks and changes tested
+*                          elsewhere, including ROOT v6 compatible vertex
+*                          correction functions.  Attempting to make efforts
+*                          to refactor code and untangle some of the logical
+*                          knots
+* v0.2  March  9th, 2020 - Moving beam-energy specific variable declarations 
+*                          of e2a_ep...::loop() to separate header files in a 
+*                          "myHeaders" folder (also added to Makefile)
+* v0.21 March 10th, 2020 - two proton particle kinematics now in a loop, in
+*                          preparation for a generic function for multi-
+*                          proton (>2) events
+* v0.22 March 13th, 2020 - Dealing with the many compiler warnings in e2a_ep...
+*                          mostly potentially unitialised variables in if
+*                          statememnts, resolved by initialising at declaration
+*                          to nonsense values (e.g. -999)
+* v0.23 March 16th, 2020 - Applying corrections to resolve e2a_ep... compiler
+*                          warnings from unused variables. Tidying up z-vertex
+*                          correction file loading
+* v0.3  April  1st, 2020 - Propagating some e2a_ep improvements to FilterData
+*                          Fundamental restructuring of e2a_ep... loop, post
+*                          event selection histogram processing doesn't need to
+*                          be there
+* v0.31 April  9th, 2020 - Streamlining of creation and momentum correction of
+*                          proton 4-vectors in the 2-proton case. Checking harmonisation
+*                          of variable names with higher proton multiplicities
+* v0.32 April 17th, 2020 - Moving some proton corrections for multi-proton events to a function
+*
+* v1.0    May  6th, 2020 - Changing filenames and preparing for proper plot production of 1p1pi case
+*                          
+*
+********************************e4nu_1p1pi*****************************
+* Ideas for future versions - Subdirectories for histograms
+*                           - Better coding practices
+*                           - Individual functions for the subtractions 
+*                             for the various proton and pion cases
+*                           - More generic delcaration of particle
+*                             kinematics after particle ID
+*                           - Electron and hadron selections in bespoke functions
+*                           - Remove unused variables
+*                           - Remove shadowed declarations of local variables
+*                           - z-vertex correction parameters in a C++ data structure,
+*                             rather than loading a gazillion root files
+*                           - ensure anything generic or outsourced to functions
+*                             from e2a_ep... also applies to FilterData
+*			    - Output file paths set from a command line argument
+*
+*
+********************************e4nu_1p1pi*****************************
