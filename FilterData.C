@@ -109,11 +109,8 @@ void FilterData::Loop()
 //	double eps;
 	Float_t pimi_phimin = 0, pimi_phimax = 0;
 	Float_t pipl_phimin = 0, pipl_phimax = 0;
-	const int n_slice=3;
 	const int nsect=6;
 	double beta,delta;
-	//const double pperp_min[n_slice]={0.,0.2,0.4};
-	//const double pperp_max[n_slice]={0.2,0.4,10.};
 	TVector3 V3_pimi,V3_pipl,V3_rotprot1,V3_rotprot2,V3_rotprot3,V3_rot_pi,V3_rotprot;
 	TVector3 V3_phot_angles;
 	//double sum_val,sub_val;
@@ -124,19 +121,18 @@ void FilterData::Loop()
 	int 	el_segment, el_cc_sector;
 	//double delt_uplim,delt_lowlim;
 	double prot_accept_mom_lim = 0.3;  //proton momentum threshold
-	double prot_mom_lim;
-	double min_good_mom;
-	double max_mom;
+	double prot_mom_lim = -999;
+	double min_good_mom = -999;
+	double max_mom = -999;
 	Double_t el_sccc_timediff;
 	Double_t sc_cc_delt_cut_sect[nsect]={-2,-5,-8,-8,-2,2};
 	Double_t el_cc_nphe;
 	Double_t elmom_corr_fact[nsect];
-	double pipl_maxmom, pimi_maxmom;
 
-	int N_pperp = 2;
+	double pipl_maxmom = -999;
+	double pimi_maxmom = -999;
+
 	int N_Ecal = 6;
-	
-	double pperp_cut[N_pperp] = {0.0, 0.2};
 	
 	double *Ecal_lowlim,*Ecal_uplim;
 	TF1 *vz_corr_func;
