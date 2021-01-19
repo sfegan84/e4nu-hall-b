@@ -136,7 +136,7 @@ void FilterData::Loop()
 	int N_pperp = 2;
 	int N_Ecal = 6;
 	
-	double *pperp_cut[N_pperp] = {0.0, 0.2};
+	double pperp_cut[N_pperp] = {0.0, 0.2};
 	
 	double *Ecal_lowlim,*Ecal_uplim;
 	TF1 *vz_corr_func;
