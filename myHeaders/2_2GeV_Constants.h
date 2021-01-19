@@ -14,7 +14,7 @@ Ecal_lowlim[5]=0.;
 Ecal_uplim[5]=2.;
 
 for (int i=0;i<N_Ecal;i++){
-  cout<<Ecal_lowlim[i]<<"  to  "<<Ecal_uplim[i]<<endl;
+  std::cout<<Ecal_lowlim[i]<<"  to  "<<Ecal_uplim[i]<<std::endl;
  }
 
 vert_min["3He"]=-3.29;
