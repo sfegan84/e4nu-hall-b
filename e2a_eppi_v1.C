@@ -387,8 +387,10 @@ Float_t cphir = 0;
 
 const int N_tot=100;
   const int n_slice=3,nsect=6;
+
   int N_pperp = 2;
   int N_Ecal = 6;
+
 
 double p_kin;
 double W_var;
@@ -480,12 +482,12 @@ void e2a_eppi_v1::Loop()
     #include "myHeaders/1_1GeV_Constants.h"
   }
   //---2.2 GeV  Configuration parameters and cuts
-  else if(en_beam[fbeam_en]>2. && en_beam[fbeam_en]<3.){
+  else if(en_beam[fbeam_en]>2.0 && en_beam[fbeam_en]<3.0){
     std::cout << "Loading parameters for 2.2 GeV beam energy" << std::endl;
     #include "myHeaders/2_2GeV_Constants.h"
   }
   //---4.4 GeV  Configuration parameters and cuts
-  else if(en_beam[fbeam_en]>4. && en_beam[fbeam_en]<5.){
+  else if(en_beam[fbeam_en]>4.0 && en_beam[fbeam_en]<5.0){
     std::cout << "Loading parameters for 4.4 GeV beam energy" << std::endl;
      #include "myHeaders/4_4GeV_Constants.h"
   }

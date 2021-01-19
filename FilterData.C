@@ -106,10 +106,11 @@ void FilterData::Loop()
 	//	nentries = 8000000;
 
 	//double N_prot1 = 0, N_prot2 = 0,N_prot_both = 0;
-	double eps;
+//	double eps;
 	Float_t pimi_phimin = 0, pimi_phimax = 0;
 	Float_t pipl_phimin = 0, pipl_phimax = 0;
-	const int n_slice=3,nsect=6;
+	const int n_slice=3;
+	const int nsect=6;
 	double beta,delta;
 	//const double pperp_min[n_slice]={0.,0.2,0.4};
 	//const double pperp_max[n_slice]={0.2,0.4,10.};
@@ -118,9 +119,11 @@ void FilterData::Loop()
 	//double sum_val,sub_val;
 	double epratio_sig_cutrange=3.;
 	double prot_delt_cutrange=3.;
+	double pimi_delt_cutrange = 3.0;
+	double pipl_delt_cutrange = 3.0;
 	int 	el_segment, el_cc_sector;
 	//double delt_uplim,delt_lowlim;
-	double prot_accept_mom_lim;
+	double prot_accept_mom_lim = 0.3;  //proton momentum threshold
 	double prot_mom_lim;
 	double min_good_mom;
 	double max_mom;
@@ -128,233 +131,53 @@ void FilterData::Loop()
 	Double_t sc_cc_delt_cut_sect[nsect]={-2,-5,-8,-8,-2,2};
 	Double_t el_cc_nphe;
 	Double_t elmom_corr_fact[nsect];
-	double pipl_maxmom, pimi_maxmom,pimi_delt_cutrange,pipl_delt_cutrange;
-	int N_pperp,N_Ecal;
-	double *pperp_cut,*Ecal_lowlim,*Ecal_uplim;
+	double pipl_maxmom, pimi_maxmom;
+
+	int N_pperp = 2;
+	int N_Ecal = 6;
+	
+	double *pperp_cut[N_pperp] = {0.0, 0.2};
+	
+	double *Ecal_lowlim,*Ecal_uplim;
 	TF1 *vz_corr_func;
 	TF1 *vz_corr_func2;
+	
+	Ecal_lowlim=new double[N_Ecal];
+	Ecal_uplim=new double[N_Ecal];	
+	
+	vertdiff_min["3He"]=-1.0;
+	vertdiff_min["4He"]=-1.0;
+	vertdiff_min["C12"]=-1.0;
+	vertdiff_min["56Fe"]=-1.0;
+	
+	vertdiff_max["3He"]=1.0;
+	vertdiff_max["4He"]=1.0;
+	vertdiff_max["C12"]=1.0;
+	vertdiff_max["56Fe"]=1.0;
+	
 
-
-	if(en_beam[fbeam_en]>1. && en_beam[fbeam_en]<2.) //1.1 GeV Configuration parameters and cuts
-	{
-		eps=0.02;
-		prot_accept_mom_lim=0.3;
-		prot_mom_lim=0.95;
-		min_good_mom=0.4;
-		max_mom=1.1;
-		pipl_maxmom=0.65;
-		pimi_maxmom=0.6;
-		pimi_delt_cutrange=3.;
-		pipl_delt_cutrange=3.;
-		N_pperp=2;
-		N_Ecal=6;
-		pperp_cut=new double[N_pperp];
-		Ecal_lowlim=new double[N_Ecal];
-		Ecal_uplim=new double[N_Ecal];
-		pperp_cut[0]=0.;
-		pperp_cut[1]=0.2;
-
-		for (int i=0;i<N_Ecal;i++){
-			Ecal_lowlim[i]=0.45+i*0.18;
-			Ecal_uplim[i]=0.63+i*0.18;
-		}
-
-		Ecal_lowlim[5]=0.;
-		Ecal_uplim[5]=1.35;
-
-		vert_min["3He"]=-3.05;
-		vert_min["C12"]=4.95;
-		vert_min["CH2"]=4.85;
-		vert_max["3He"]=-0.18;
-		vert_max["C12"]=5.76;
-		vert_max["CH2"]=5.62;
-
-		vertdiff_min["3He"]=-1.;
-		vertdiff_min["C12"]=-1.;
-		vertdiff_min["CH2"]=-1.;
-
-		vertdiff_max["3He"]=1.;
-		vertdiff_max["C12"]=1.;
-		vertdiff_max["CH2"]=1.;
-
-		EC_photon_beta["3He"]=0.89;
-		EC_photon_beta["C12"]=0.89;
-		EC_photon_beta["CH2"]=0.91;
-
-		LEC_photon_beta["3He"]=0.97;
-		LEC_photon_beta["C12"]=0.97;
-		LEC_photon_beta["CH2"]=0.97;
-
-		EC_time_offset[std::make_pair("3He",1)]=-0.73;  EC_time_offset[std::make_pair("3He",2)]=-0.81; EC_time_offset[std::make_pair("3He",3)]=-0.91;
-		EC_time_offset[std::make_pair("3He",4)]=-0.94;  EC_time_offset[std::make_pair("3He",5)]=-0.92; EC_time_offset[std::make_pair("3He",6)]=-0.81;
-
-		EC_time_offset[std::make_pair("C12",1)]=-0.71;  EC_time_offset[std::make_pair("C12",2)]=-0.77; EC_time_offset[std::make_pair("C12",3)]=-0.87;
-		EC_time_offset[std::make_pair("C12",4)]=-0.91;  EC_time_offset[std::make_pair("C12",5)]=-0.89; EC_time_offset[std::make_pair("C12",6)]=-0.79;
-
-		EC_time_offset[std::make_pair("CH2",1)]=-0.70;  EC_time_offset[std::make_pair("CH2",2)]=-0.80; EC_time_offset[std::make_pair("CH2",3)]=-0.91;
-		EC_time_offset[std::make_pair("CH2",4)]=-0.92;  EC_time_offset[std::make_pair("CH2",5)]=-0.91; EC_time_offset[std::make_pair("CH2",6)]=-0.80;
-
-		elmom_corr_fact[0]=1.007;
-		elmom_corr_fact[1]=0.988;
-		elmom_corr_fact[2]=1.008;
-		elmom_corr_fact[3]=1.011;
-		elmom_corr_fact[4]=1.014;
-		elmom_corr_fact[5]=1.013;//a constant to multiply e- momentum with to correct the location of n peak in MM(3He(e,e'pp)n)
+//These energy dependent headers are the same as in the data analysis code (e2a...).  Maybe they should just be loaded once in one place?
+	if(en_beam[fbeam_en]>1.0 && en_beam[fbeam_en]<2.0) //1.1 GeV Configuration parameters and cuts
+	  {
+	    std::cout << "Loading parameters for 1.1 GeV beam energy" << std::endl;
+            #include "myHeaders/1_1GeV_Constants.h"
+	  }
+	
+	else if(en_beam[fbeam_en]>2.0 && en_beam[fbeam_en]<3.0) //2.2 GeV  Configuration parameters and cuts
+	  {
+	    std::cout << "Loading parameters for 2.2 GeV beam energy" << std::endl;
+            #include "myHeaders/2_2GeV_Constants.h"
 	}
 
-	if(en_beam[fbeam_en]>2. && en_beam[fbeam_en]<3.) //2.2 GeV  Configuration parameters and cuts
-	{
-
-		eps=0.02;//GeV
-		prot_accept_mom_lim=0.3;
-		prot_mom_lim=2.15;
-		min_good_mom=0.55;
-		max_mom=2.1;
-		pipl_maxmom=1.4;
-		pimi_maxmom=1.3;
-		pimi_delt_cutrange=3.;
-		pipl_delt_cutrange=3.;
-		N_pperp=2;
-		N_Ecal=6;
-		pperp_cut=new double[N_pperp];
-		Ecal_lowlim=new double[N_Ecal];
-		Ecal_uplim=new double[N_Ecal];
-		pperp_cut[0]=0.;
-		pperp_cut[1]=0.2;
-
-		for (int i=0;i<N_Ecal;i++){
-			 Ecal_lowlim[i]=0.75+i*0.25;
-			  Ecal_uplim[i]=1.+i*0.25;
-		}
-
-		Ecal_lowlim[5]=0.;
-		Ecal_uplim[5]=2.;
-
-		vert_min["3He"]=-3.29;
-		vert_min["4He"]=-2.53;
-		vert_min["C12"]=4.8;
-		vert_min["56Fe"]=4.6;
-		vert_max["3He"]=-0.23;
-		vert_max["4He"]=1.73;
-		vert_max["C12"]=5.5;
-		vert_max["56Fe"]=5.3;
-
-		vertdiff_min["3He"]=-1.;
-		vertdiff_min["4He"]=-1.;
-		vertdiff_min["C12"]=-1.;
-		vertdiff_min["56Fe"]=-1.;
-
-		vertdiff_max["3He"]=1.;
-		vertdiff_max["4He"]=1.;
-		vertdiff_max["C12"]=1.;
-		vertdiff_max["56Fe"]=1.;
-
-		EC_photon_beta["3He"]=0.93;
-		EC_photon_beta["4He"]=0.92;
-		EC_photon_beta["C12"]=0.92;
-		EC_photon_beta["56Fe"]=0.90;
-
-		LEC_photon_beta["3He"]=0.96;
-		LEC_photon_beta["4He"]=0.94;
-		LEC_photon_beta["C12"]=0.94;
-		LEC_photon_beta["56Fe"]=0.95;
-
-		EC_time_offset[std::make_pair("3He",1)]=-1.37;  EC_time_offset[std::make_pair("3He",2)]=-1.42; EC_time_offset[std::make_pair("3He",3)]=-1.55;
-		EC_time_offset[std::make_pair("3He",4)]=-1.53;  EC_time_offset[std::make_pair("3He",5)]=-1.49; EC_time_offset[std::make_pair("3He",6)]=-1.44;
-
-		EC_time_offset[std::make_pair("4He",1)]=0.72;  EC_time_offset[std::make_pair("4He",2)]=0.27; EC_time_offset[std::make_pair("4He",3)]=0.16;
-		EC_time_offset[std::make_pair("4He",4)]=0.21;  EC_time_offset[std::make_pair("4He",5)]=0.22; EC_time_offset[std::make_pair("4He",6)]=0.21;
-
-		EC_time_offset[std::make_pair("C12",1)]=0.50;  EC_time_offset[std::make_pair("C12",2)]=0.39; EC_time_offset[std::make_pair("C12",3)]=0.29;
-		EC_time_offset[std::make_pair("C12",4)]=0.29;  EC_time_offset[std::make_pair("C12",5)]=0.32; EC_time_offset[std::make_pair("C12",6)]=0.33;
-
-		EC_time_offset[std::make_pair("56Fe",1)]=0.75;  EC_time_offset[std::make_pair("56Fe",2)]=0.49; EC_time_offset[std::make_pair("56Fe",3)]=0.37;
-		EC_time_offset[std::make_pair("56Fe",4)]=0.39;  EC_time_offset[std::make_pair("56Fe",5)]=0.43; EC_time_offset[std::make_pair("56Fe",6)]=0.44;
-
-		elmom_corr_fact[0]=1.001;
-		elmom_corr_fact[1]=0.991;
-		elmom_corr_fact[2]=1.005;
-		elmom_corr_fact[3]=1.004;
-		elmom_corr_fact[4]=1.006;
-		elmom_corr_fact[5]=1.005;//a constant to multiply e- momentum with to correct the location of n peak in MM(3He(e,e'pp)n)
-
+	else if(en_beam[fbeam_en]>4.0 && en_beam[fbeam_en]<5.0)  //4.4 GeV  Configuration parameters and cuts
+	  {
+	    std::cout << "Loading parameters for 4.4 GeV beam energy" << std::endl;
+            #include "myHeaders/4_4GeV_Constants.h"
 	}
 
-	if(en_beam[fbeam_en]>4. && en_beam[fbeam_en]<5)  //4.4 GeV  Configuration parameters and cuts
-	{
-
-		eps=0.02;//GeV
-		prot_accept_mom_lim=0.3;
-		prot_mom_lim=2.7;
-		min_good_mom=1.1;
-		if(ftarget=="3He") min_good_mom=1.3;//the EC threshold was different for He3
-		max_mom=3.7;
-		pipl_maxmom=1.9;
-		pipl_delt_cutrange=3.;
-		pimi_maxmom=1.6;
-		pimi_delt_cutrange=3.;
-		N_pperp=2;
-		N_Ecal=6;
-		pperp_cut=new double[N_pperp];
-		Ecal_lowlim=new double[N_Ecal];
-		Ecal_uplim=new double[N_Ecal];
-		pperp_cut[0]=0.;
-		pperp_cut[1]=0.2;
-		for (int i=0;i<N_Ecal;i++){
-			  Ecal_lowlim[i]=1.5+i*0.5;
-			  Ecal_uplim[i]=2.+i*0.5;
-		}
-		Ecal_lowlim[5]=0.;
-		Ecal_uplim[5]=4.;
-
-		vert_min["3He"]=-3.27;
-		vert_min["4He"]=-2.51;
-		vert_min["C12"]=4.7;
-		vert_min["56Fe"]=4.6;
-		vert_max["3He"]=0.07;
-		vert_max["4He"]=1.71;
-		vert_max["C12"]=5.3;
-		vert_max["56Fe"]=5.4;
-
-		vertdiff_min["3He"]=-1.;
-		vertdiff_min["4He"]=-1;
-		vertdiff_min["C12"]=-1;
-		vertdiff_min["56Fe"]=-1;
-
-		vertdiff_max["3He"]=1.;
-		vertdiff_max["4He"]=1.;
-		vertdiff_max["C12"]=1;
-		vertdiff_max["56Fe"]=1;
-
-		EC_photon_beta["3He"]=0.92;
-		EC_photon_beta["4He"]=0.91;
-		EC_photon_beta["C12"]=0.92;
-		EC_photon_beta["56Fe"]=0.91;
-
-		LEC_photon_beta["3He"]=0.97;
-		LEC_photon_beta["4He"]=0.97;
-		LEC_photon_beta["C12"]=0.95;
-		LEC_photon_beta["56Fe"]=0.96;
-
-		EC_time_offset[std::make_pair("3He",1)]=-0.15;  EC_time_offset[std::make_pair("3He",2)]=-0.26; EC_time_offset[std::make_pair("3He",3)]=-0.41;
-		EC_time_offset[std::make_pair("3He",4)]=-0.29;  EC_time_offset[std::make_pair("3He",5)]=-0.25; EC_time_offset[std::make_pair("3He",6)]=-0.23;
-
-		EC_time_offset[std::make_pair("4He",1)]=-0.01;  EC_time_offset[std::make_pair("4He",2)]=-0.11; EC_time_offset[std::make_pair("4He",3)]=-0.23;
-		EC_time_offset[std::make_pair("4He",4)]=-0.26;  EC_time_offset[std::make_pair("4He",5)]=-0.21; EC_time_offset[std::make_pair("4He",6)]=-0.09;
-
-		EC_time_offset[std::make_pair("C12",1)]=-0.01;  EC_time_offset[std::make_pair("C12",2)]=-0.11; EC_time_offset[std::make_pair("C12",3)]=-0.23;
-		EC_time_offset[std::make_pair("C12",4)]=-0.27;  EC_time_offset[std::make_pair("C12",5)]=-0.21; EC_time_offset[std::make_pair("C12",6)]=-0.08;
-
-		EC_time_offset[std::make_pair("56Fe",1)]=-0.49;  EC_time_offset[std::make_pair("56Fe",2)]=-0.14; EC_time_offset[std::make_pair("56Fe",3)]=-0.32;
-		EC_time_offset[std::make_pair("56Fe",4)]=-0.25;  EC_time_offset[std::make_pair("56Fe",5)]=-0.17; EC_time_offset[std::make_pair("56Fe",6)]=-0.35;
-
-		elmom_corr_fact[0]=1.001;
-		elmom_corr_fact[1]=0.991;
-		elmom_corr_fact[2]=1.005;
-		elmom_corr_fact[3]=1.004;
-		elmom_corr_fact[4]=1.006;
-		elmom_corr_fact[5]=1.005;//a constant to multiply e- momentum with to correct the location of n peak in MM(3He(e,e'pp)n)
-
+	else{
+	  std::cout << "Beam Energy not determined. Aborting" << std::endl;
+	  //anything needed here to suppress compiler warnings?
 	}
 
 	//Further constants for binding energies and target masses
@@ -963,7 +786,7 @@ void FilterData::Loop()
 		const double phot_rad_cut = 40;
 		const double phot_e_phidiffcut=30; //electron - photon phi difference cut
 		double photon_ece;
-		const double EC_sampling_frac = 0.31; //for photons
+//		const double EC_sampling_frac = 0.31; //for photons
 
 		// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
