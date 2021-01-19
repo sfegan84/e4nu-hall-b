@@ -216,38 +216,31 @@ void FilterData::Loop()
 	TFile *file_in4=new TFile(Form("FiducialsCorrections/pipldeltat_mom_%s.root",fbeam_en.c_str()));
 
 	TFile *file_in5 = NULL;
-	//TFile *file_in6 = NULL;
-	//TFile *file_in7 = NULL;
-
+	
+	
+	//First, load the regular correction function, just in case we never reach any of the special run conditions
+	vz_corr_func2 = (TF1 *)file_in3->Get("f_vz");
+	
 	if (en_beam[fbeam_en] < 2.300 && en_beam[fbeam_en] > 2.100 ) {
-	  //replace these...
-	  //file_in5 = new TFile("FiducialsCorrections/vz_56Fe_2261_badruns.root");//vertex correction for 56Fe runs with exploded liquid target cell
-	  //file_in6 = new TFile("FiducialsCorrections/vz_3He_2261_2ndrungroup.root");//vertx correction for 3He 2nd group runs
-	  //file_in7 = new TFile("FiducialsCorrections/vz_4He_2261_2ndrungroup.root");//vertex correction for 4He 2nd group runs
-	  
-	  //..with this
 	  if(ftarget=="56Fe"){
 	    std::cout << "Getting Vertex Corrections for Iron (exploded cell)" << std::endl;
 	    file_in5 = new TFile("FiducialsCorrections/vz_v6/vz_56Fe_2261_badruns.root");//vertex correction for 56Fe runs with exploded liquid target cell
+	    vz_corr_func2 = (TF1 *)file_in5->Get("f_vz");
 	  }
 	  if(ftarget=="3He"){
 	    std::cout << "Getting Vertex Corrections for Helium-3 (second group)" << std::endl;
 	    file_in5 = new TFile("FiducialsCorrections/vz_v6/vz_3He_2261_2ndrungroup.root");//vertx correction for 3He 2nd group runs
+	    vz_corr_func2 = (TF1 *)file_in5->Get("f_vz");
 	  }
 	  if(ftarget=="4He"){
 	    std::cout << "Getting Vertex Corrections for Helium-4 (second group)" << std::endl;
 	    file_in5 = new TFile("FiducialsCorrections/vz_v6/vz_4He_2261_2ndrungroup.root");//vertex correction for 4He 2nd group runs
+	    vz_corr_func2 = (TF1 *)file_in5->Get("f_vz");
 	  }
 	  
-	  vz_corr_func2 = (TF1 *)file_in5->Get("f_vz");
 	}
-	else {
-	//pars[0] = 0;
-	//pars[1] = 0;
-	//pars[2] = 0;
-	  vz_corr_func2 = (TF1 *)file_in3->Get("f_vz");  //if we end up here we are on none of the special run conditions, so just to be sure we load the regular correction function
-	}
-
+	
+	
 	//Output file definition (find a way to define path, and file name, as an argument)
 	//TFile *file_out = new TFile(Form("/w/hallb-scifs17exp/clas/claseg2/apapadop/genie_filtered_data_e2a_ep_%s_%s_neutrino6_united4_radphot_test_100M.root",ftarget.c_str(),fbeam_en.c_str()), "Recreate");
 	TFile *file_out = new TFile(Form("/home/stuart/e4nu/code/e4nu_1p1pi/genie_filtered_data_e2a_eppi_%s_%s_test_100M.root",ftarget.c_str(),fbeam_en.c_str()), "Recreate");
