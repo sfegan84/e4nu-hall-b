@@ -873,7 +873,8 @@ void Subtraction::pi4_rot_func(TVector3 V3_pi[4], int q_pi[4], double *P_0pi,dou
     const int N2pi=2;
     TVector3 V3_2pi[N2pi];
     int q_2pi[N2pi];
-    double P_0pi=0, P_1pi[N2pi]={0};
+    *P_0pi=0;
+    double P_1pi[N2pi]={0};
 
     for(int h=0;h<6;h++){
 
@@ -903,9 +904,9 @@ void Subtraction::pi4_rot_func(TVector3 V3_pi[4], int q_pi[4], double *P_0pi,dou
          q_2pi[0]=q_pi[2];        q_2pi[1]=q_pi[3];
       }
 
-      pi2_rot_func( V3_2pi,q_2pi,&P_0pi, P_1pi);
+      pi2_rot_func( V3_2pi,q_2pi,P_0pi, P_1pi);  //replacing &P_0pi with P_0pi. Pointer stuff... SF 01/20/2021
 
-      *P_420=*P_420+P_0pi*(N_2pi[h]/N_allpi);
+      *P_420=*P_420 + *P_0pi * (N_2pi[h]/N_allpi);
 
   //---------------------------4pi->2pi->1pi->0pi----------------------------------------------
 
