@@ -902,50 +902,60 @@ Bool_t Fiducial::EFiducialCut(std::string beam_en, TVector3 momentum)
 
     if(mom <= 2.0)
       {
-        bool SCpdcut = true;
+        //bool 	SCpdcut = true;
+	SCpdcut = true;
         if (SCpdcut){  // if the SCpdCut bit is set, take off the bad SC paddle by strictly cutting off a theta gap.
-    if (status){
-      int tsector = sector + 1;
-      // sector 3 has two bad paddles
-      if (tsector == 3){
-        float badpar3[4];            // 4 parameters to determine the positions of the two theta gaps
-        for (int i=0; i<4; i++){
-          badpar3[i] = 0;
-          // calculate the parameters using pol7
-          for (int d=7; d>=0; d--){badpar3[i] = badpar3[i]*mom + fgPar_4Gev_2250_Efid_Theta_S3[i][d];}
-        }
-        for(int ipar=0;ipar<2;ipar++)
-          status = status && !(theta>badpar3[2*ipar] && theta<badpar3[2*ipar+1]);
-      }
-      // sector 4 has one bad paddle
-      else if (tsector == 4){
-        float badpar4[2];     // 2 parameters to determine the position of the theta gap
-        for (int i=0; i<2; i++){
-          badpar4[i] = 0;
-          // calculate the parameters using pol7
-          for (int d=7; d>=0; d--){badpar4[i] = badpar4[i]*mom + fgPar_4Gev_2250_Efid_Theta_S4[i][d];}
-        }
-        status = !(theta>badpar4[0] && theta<badpar4[1]);
-      }
-      // sector 5 has four bad paddles
-      else if (tsector == 5){
-        Float_t badpar5[8];           // 8 parameters to determine the positions of the four theta gaps
-        for (Int_t i=0; i<8; i++){
-          badpar5[i] = 0;
-          // calculate the parameters using pol7
-          for (Int_t d=7; d>=0; d--){badpar5[i] = badpar5[i]*mom + fgPar_4Gev_2250_Efid_Theta_S5[i][d];}
-        }
-        if (mom<1.25) badpar5[0] = 23.4;
-        if (mom<1.27) badpar5[1] = 24.0; // some dummy constants. see fiducial cuts webpage.
-        for(Int_t ipar=0;ipar<4;ipar++)
-          status = status && !(theta>badpar5[2*ipar] && theta<badpar5[2*ipar+1]);
-      }
-    }
+	  if (status){
+	    int tsector = sector + 1;
+	    // sector 3 has two bad paddles
+	    if (tsector == 3){
+	      float badpar3[4];            // 4 parameters to determine the positions of the two theta gaps
+	      for (int i=0; i<4; i++){
+		badpar3[i] = 0;
+		// calculate the parameters using pol7
+		for (int d=7; d>=0; d--){
+		  badpar3[i] = badpar3[i]*mom + fgPar_4Gev_2250_Efid_Theta_S3[i][d];
+		}
+	      }
+	      for(int ipar=0;ipar<2;ipar++){
+		status = status && !(theta>badpar3[2*ipar] && theta<badpar3[2*ipar+1]);
+	      }
+	    }
+	    // sector 4 has one bad paddle
+	    else if (tsector == 4){
+	      float badpar4[2];     // 2 parameters to determine the position of the theta gap
+	      for (int i=0; i<2; i++){
+		badpar4[i] = 0;
+		// calculate the parameters using pol7
+		for (int d=7; d>=0; d--){
+		  badpar4[i] = badpar4[i]*mom + fgPar_4Gev_2250_Efid_Theta_S4[i][d];
+		}
+	      }
+	      status = !(theta>badpar4[0] && theta<badpar4[1]);
+	    }
+	    // sector 5 has four bad paddles
+	    else if (tsector == 5){
+	      Float_t badpar5[8];           // 8 parameters to determine the positions of the four theta gaps
+	      for (Int_t i=0; i<8; i++){
+		badpar5[i] = 0;
+		// calculate the parameters using pol7
+		for (Int_t d=7; d>=0; d--){
+		  badpar5[i] = badpar5[i]*mom + fgPar_4Gev_2250_Efid_Theta_S5[i][d];
+		}
+	      }
+	      if (mom<1.25) badpar5[0] = 23.4;
+	      if (mom<1.27) badpar5[1] = 24.0; // some dummy constants. see fiducial cuts webpage.
+	      for(Int_t ipar=0;ipar<4;ipar++){
+		status = status && !(theta>badpar5[2*ipar] && theta<badpar5[2*ipar+1]);
+	      }
+	    }
+	  }
         }
         return (status && (phi < phiMax) && (phi>phiMin));
       }
     else{
-      bool SCpdcut = true;
+      //bool SCpdcut = true;
+      SCpdcut = true;
       if (SCpdcut){  // if the SCpdCut bit is set, take off the bad SC paddle by strictly cutting off a theta gap.
         if (status){
     int tsector = sector + 1;
@@ -2539,7 +2549,7 @@ Bool_t Fiducial::PimiFiducialCut(std::string beam_en, TVector3 momentum, Float_t
 	 }
 	 //sector 5 has two gaps, plus two moved from electron gaps
 	 else if(tsector == 5){
-	   double parsec5_l[3],parsec5_h[3];
+	   double parsec5_l[4],parsec5_h[4];
 	   for(int d=0;d<4;d++){
 	     //-----Define theta limits from stored parameters
 	     parsec5_l[d]= fid_2gev_2250_pimifid_S5[d][0][0]+fid_2gev_2250_pimifid_S5[d][0][1]/mom_pi +fid_2gev_2250_pimifid_S5[d][0][2]/(mom_pi*mom_pi) +fid_2gev_2250_pimifid_S5[d][0][3]/(mom_pi*mom_pi*mom_pi);
