@@ -934,7 +934,7 @@ void Subtraction::pi4_rot_func(TVector3 V3_pi[4], int q_pi[4], double *P_0pi,dou
 
 //----mostly copy paste from Lucas
 
-void Subtraction::rot_2pi_1p (TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3q, double N1pi1p[2], double *N2pi1p, int N_total)
+void Subtraction::rot_2pi_1p (TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3_q, double N1pi1p[2], double *N2pi1p, int N_total)
 {
   double N_all = 0;
   N1pi1p[0] = 0;
@@ -952,9 +952,9 @@ void Subtraction::rot_2pi_1p (TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot
         V3_2pi_rot[0]=V3_pi[0];
         V3_2pi_rot[1]=V3_pi[1];
         V3_p_rot=V3_prot;
-        V3_2pi_rot[0].Rotate(rot_angle,V3q);
-        V3_2pi_rot[1].Rotate(rot_angle,V3q);
-        V3_p_rot.Rotate(rot_angle,V3q);
+        V3_2pi_rot[0].Rotate(rot_angle,V3_q);
+        V3_2pi_rot[1].Rotate(rot_angle,V3_q);
+        V3_p_rot.Rotate(rot_angle,V3_q);
 
         for(int z=0;z<2;z++)
           {
@@ -970,7 +970,7 @@ void Subtraction::rot_2pi_1p (TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot
   else *N2pi1p=0;
 }
 
-void Subtraction::rot_1pi_2p (TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3q, double N1pi1p[2], double *N1pi2p, int N_total)
+void Subtraction::rot_1pi_2p (TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3_q, double N1pi1p[2], double *N1pi2p, int N_total)
 {
   double N_all = 0;
   N1pi1p[0] = 0;
@@ -987,9 +987,9 @@ void Subtraction::rot_1pi_2p (TVector3 V3_pi, double qpi, TVector3 V3_prot[2], T
     V3_pi_rot = V3_pi;
     V3_p_rot[0] = V3_prot[0];
     V3_p_rot[1] = V3_prot[1];
-    V3_pi_rot.Rotate(rot_angle,V3q);
-    V3_p_rot[0].Rotate(rot_angle,V3q);
-    V3_p_rot[1].Rotate(rot_angle,V3q);
+    V3_pi_rot.Rotate(rot_angle,V3_q);
+    V3_p_rot[0].Rotate(rot_angle,V3_q);
+    V3_p_rot[1].Rotate(rot_angle,V3_q);
 
     if(qpi>0){
       pi_stat=PiplFiducialCut(fbeam_en,V3_pi_rot, &cphil, &cphir);
@@ -1004,7 +1004,7 @@ if(N_all!=0)  *N1pi2p = N_all;
 else *N1pi2p=0;
 }
 
-void Subtraction::rot_1pi_3p(TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3q, double N1pi1p[3], double N1pi2p[3], double *N1pi3p, int N_total)
+void Subtraction::rot_1pi_3p(TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3_q, double N1pi1p[3], double N1pi2p[3], double *N1pi3p, int N_total)
 {
   double N_all = 0;
   TVector3 V3_pi_rot;
@@ -1016,13 +1016,13 @@ void Subtraction::rot_1pi_3p(TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TV
   {
     rot_angle = gRandom->Uniform(0,2*TMath::Pi());
     V3_pi_rot = V3_pi;
-    V3_pi_rot.Rotate(rot_angle, V3q);
+    V3_pi_rot.Rotate(rot_angle, V3_q);
     V3_p_rot[0] = V3_prot[0];
-    V3_p_rot[0].Rotate(rot_angle, V3q);
+    V3_p_rot[0].Rotate(rot_angle, V3_q);
     V3_p_rot[1] = V3_prot[1];
-    V3_p_rot[1].Rotate(rot_angle, V3q);
+    V3_p_rot[1].Rotate(rot_angle, V3_q);
     V3_p_rot[2] = V3_prot[2];
-    V3_p_rot[2].Rotate(rot_angle, V3q);
+    V3_p_rot[2].Rotate(rot_angle, V3_q);
       if(qpi>0) pi_stat = PiplFiducialCut(fbeam_en,V3_pi_rot, &cphil, &cphir);
       else pi_stat = PimiFiducialCut(fbeam_en,V3_pi_rot, &pimi_phimin, &pimi_phimax);
 
@@ -1037,7 +1037,7 @@ void Subtraction::rot_1pi_3p(TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TV
   *N1pi3p = N_all;
 }
 
-void Subtraction::rot_3pi_1p(TVector3 V3_pi[3], double qpi[3], TVector3 V3_prot, TVector3 V3q, double N1pi1p[3], double N2pi1p[3], double *N3pi1p, int N_total)
+void Subtraction::rot_3pi_1p(TVector3 V3_pi[3], double qpi[3], TVector3 V3_prot, TVector3 V3_q, double N1pi1p[3], double N2pi1p[3], double *N3pi1p, int N_total)
 {
   double N_all = 0;
   TVector3 V3_pi_rot[3];
@@ -1049,13 +1049,13 @@ void Subtraction::rot_3pi_1p(TVector3 V3_pi[3], double qpi[3], TVector3 V3_prot,
   {
     rot_angle = gRandom->Uniform(0,2*TMath::Pi());
     V3_p_rot = V3_prot;
-    V3_p_rot.Rotate(rot_angle, V3q);
+    V3_p_rot.Rotate(rot_angle, V3_q);
     V3_pi_rot[0] = V3_pi[0];
-    V3_pi_rot[0].Rotate(rot_angle, V3q);
+    V3_pi_rot[0].Rotate(rot_angle, V3_q);
     V3_pi_rot[1] = V3_pi[1];
-    V3_pi_rot[1].Rotate(rot_angle, V3q);
+    V3_pi_rot[1].Rotate(rot_angle, V3_q);
     V3_pi_rot[2] = V3_pi[2];
-    V3_pi_rot[2].Rotate(rot_angle, V3q);
+    V3_pi_rot[2].Rotate(rot_angle, V3_q);
     for(int z=0; z<3; z++){
       if(qpi[z]>0) pi_stat[z] = PiplFiducialCut(fbeam_en,V3_pi_rot[z], &cphil, &cphir);
       else pi_stat[z] = PimiFiducialCut(fbeam_en,V3_pi_rot[z], &pimi_phimin, &pimi_phimax);
@@ -1073,7 +1073,7 @@ void Subtraction::rot_3pi_1p(TVector3 V3_pi[3], double qpi[3], TVector3 V3_prot,
   *N3pi1p = N_all;
 }
 
-void Subtraction::rot_1phot_1pi_1p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3q, bool radstat, double *N1pi1p0phot, double *N1pi1p1phot, int N_total)
+void Subtraction::rot_1phot_1pi_1p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3_q, bool radstat, double *N1pi1p0phot, double *N1pi1p1phot, int N_total)
 {
   double N_all = 0;
   double N_1pi_1p_0phot = 0;
@@ -1089,9 +1089,9 @@ void Subtraction::rot_1phot_1pi_1p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
   {
     rot_angle = gRandom->Uniform(0,2*TMath::Pi());
     V3_p_rot = V3_prot;
-    V3_p_rot.Rotate(rot_angle, V3q);
+    V3_p_rot.Rotate(rot_angle, V3_q);
     V3_pi_rot = V3_pi;
-    V3_pi_rot.Rotate(rot_angle, V3q);
+    V3_pi_rot.Rotate(rot_angle, V3_q);
 
     if(qpi>0) pi_stat = PiplFiducialCut(fbeam_en,V3_pi_rot, &cphil, &cphir);
     else pi_stat = PimiFiducialCut(fbeam_en,V3_pi_rot, &pimi_phimin, &pimi_phimax);
@@ -1099,7 +1099,7 @@ void Subtraction::rot_1phot_1pi_1p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
     if(!radstat)
     {
       V3_phot_rot = V3_phot;
-      V3_phot_rot.Rotate(rot_angle, V3q);
+      V3_phot_rot.Rotate(rot_angle, V3_q);
       phot_stat = Phot_fid(V3_phot_rot);
     }
 
@@ -1110,7 +1110,7 @@ void Subtraction::rot_1phot_1pi_1p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
   *N1pi1p1phot = N_all;
 }
 
-void Subtraction::rot_1phot_1pi_2p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N1pi2p0phot, double *N1pi2p1phot, int N_total)
+void Subtraction::rot_1phot_1pi_2p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3_q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N1pi2p0phot, double *N1pi2p1phot, int N_total)
 {
   double N_all = 0;
   double N_1pi_2p_0phot = 0;
@@ -1126,11 +1126,11 @@ void Subtraction::rot_1phot_1pi_2p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
   {
     rot_angle = gRandom->Uniform(0,2*TMath::Pi());
     V3_p_rot[0] = V3_prot[0];
-    V3_p_rot[0].Rotate(rot_angle, V3q);
+    V3_p_rot[0].Rotate(rot_angle, V3_q);
     V3_p_rot[1] = V3_prot[1];
-    V3_p_rot[1].Rotate(rot_angle, V3q);
+    V3_p_rot[1].Rotate(rot_angle, V3_q);
     V3_pi_rot = V3_pi;
-    V3_pi_rot.Rotate(rot_angle, V3q);
+    V3_pi_rot.Rotate(rot_angle, V3_q);
 
     if(qpi>0) pi_stat = PiplFiducialCut(fbeam_en,V3_pi_rot, &cphil, &cphir);
     else pi_stat = PimiFiducialCut(fbeam_en,V3_pi_rot, &pimi_phimin, &pimi_phimax);
@@ -1138,7 +1138,7 @@ void Subtraction::rot_1phot_1pi_2p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
     if(!radstat)
     {
       V3_phot_rot = V3_phot;
-      V3_phot_rot.Rotate(rot_angle, V3q);
+      V3_phot_rot.Rotate(rot_angle, V3_q);
       phot_stat = Phot_fid(V3_phot_rot);
     }
 
@@ -1153,7 +1153,7 @@ void Subtraction::rot_1phot_1pi_2p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
   *N1pi2p0phot = N_1pi_2p_0phot;
 }
 
-void Subtraction::rot_2phot_1pi_1p(TVector3 V3_phot[2], TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3q, bool radstat[2], double *N1pi1p0phot, double *N1pi1p1phot, double *N1pi1p2phot, int N_total)
+void Subtraction::rot_2phot_1pi_1p(TVector3 V3_phot[2], TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3_q, bool radstat[2], double *N1pi1p0phot, double *N1pi1p1phot, double *N1pi1p2phot, int N_total)
 {
   double N_all = 0;
   double N_1pi_1p_0phot = 0;
@@ -1170,9 +1170,9 @@ void Subtraction::rot_2phot_1pi_1p(TVector3 V3_phot[2], TVector3 V3_pi, double q
   {
     rot_angle = gRandom->Uniform(0,2*TMath::Pi());
     V3_p_rot = V3_prot;
-    V3_p_rot.Rotate(rot_angle, V3q);
+    V3_p_rot.Rotate(rot_angle, V3_q);
     V3_pi_rot = V3_pi;
-    V3_pi_rot.Rotate(rot_angle, V3q);
+    V3_pi_rot.Rotate(rot_angle, V3_q);
 
     if(qpi>0) pi_stat = PiplFiducialCut(fbeam_en,V3_pi_rot, &cphil, &cphir);
     else pi_stat = PimiFiducialCut(fbeam_en,V3_pi_rot, &pimi_phimin, &pimi_phimax);
@@ -1182,7 +1182,7 @@ void Subtraction::rot_2phot_1pi_1p(TVector3 V3_phot[2], TVector3 V3_pi, double q
       if(!radstat[i])
       {
         V3_phot_rot[i] = V3_phot[i];
-        V3_phot_rot[i].Rotate(rot_angle, V3q);
+        V3_phot_rot[i].Rotate(rot_angle, V3_q);
         phot_stat[i] = Phot_fid(V3_phot_rot[i]);
       }
     }
@@ -1196,7 +1196,7 @@ void Subtraction::rot_2phot_1pi_1p(TVector3 V3_phot[2], TVector3 V3_pi, double q
   *N1pi1p2phot = N_all;
 }
 
-void Subtraction::rot_1phot_2pi_1p(TVector3 V3_phot, TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N2pi1p0phot, double *N2pi1p1phot, int N_total)
+void Subtraction::rot_1phot_2pi_1p(TVector3 V3_phot, TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3_q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N2pi1p0phot, double *N2pi1p1phot, int N_total)
 {
   double N_all = 0;
   double N_2pi_1p_0phot = 0;
@@ -1212,11 +1212,11 @@ void Subtraction::rot_1phot_2pi_1p(TVector3 V3_phot, TVector3 V3_pi[2], double q
   {
     rot_angle = gRandom->Uniform(0,2*TMath::Pi());
     V3_pi_rot[0] = V3_pi[0];
-    V3_pi_rot[0].Rotate(rot_angle, V3q);
+    V3_pi_rot[0].Rotate(rot_angle, V3_q);
     V3_pi_rot[1] = V3_pi[1];
-    V3_pi_rot[1].Rotate(rot_angle, V3q);
+    V3_pi_rot[1].Rotate(rot_angle, V3_q);
     V3_p_rot = V3_prot;
-    V3_p_rot.Rotate(rot_angle, V3q);
+    V3_p_rot.Rotate(rot_angle, V3_q);
 
     for(int i=0; i<2; i++)
     {
@@ -1227,7 +1227,7 @@ void Subtraction::rot_1phot_2pi_1p(TVector3 V3_phot, TVector3 V3_pi[2], double q
     if(!radstat)
     {
       V3_phot_rot = V3_phot;
-      V3_phot_rot.Rotate(rot_angle, V3q);
+      V3_phot_rot.Rotate(rot_angle, V3_q);
       phot_stat = Phot_fid(V3_phot_rot);
     }
 
@@ -1242,7 +1242,7 @@ void Subtraction::rot_1phot_2pi_1p(TVector3 V3_phot, TVector3 V3_pi[2], double q
   *N2pi1p0phot = N_2pi_1p_0phot;
 }
 
-void Subtraction::rot_1phot_1pi_3p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3q, bool radstat, double N1pi1p0phot[3], double N1pi1p1phot[3], double N1pi2p0phot[3], double N1pi2p1phot[3], double *N1pi3p1phot, double *N1pi3p0phot, int N_total)
+void Subtraction::rot_1phot_1pi_3p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3_q, bool radstat, double N1pi1p0phot[3], double N1pi1p1phot[3], double N1pi2p0phot[3], double N1pi2p1phot[3], double *N1pi3p1phot, double *N1pi3p0phot, int N_total)
 {
   double N_all = 0;
   double N_1pi_3p_0phot = 0;
@@ -1258,13 +1258,13 @@ void Subtraction::rot_1phot_1pi_3p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
   {
     rot_angle = gRandom->Uniform(0,2*TMath::Pi());
     V3_p_rot[0] = V3_prot[0];
-    V3_p_rot[0].Rotate(rot_angle, V3q);
+    V3_p_rot[0].Rotate(rot_angle, V3_q);
     V3_p_rot[1] = V3_prot[1];
-    V3_p_rot[1].Rotate(rot_angle, V3q);
+    V3_p_rot[1].Rotate(rot_angle, V3_q);
     V3_p_rot[2] = V3_prot[2];
-    V3_p_rot[2].Rotate(rot_angle, V3q);
+    V3_p_rot[2].Rotate(rot_angle, V3_q);
     V3_pi_rot = V3_pi;
-    V3_pi_rot.Rotate(rot_angle, V3q);
+    V3_pi_rot.Rotate(rot_angle, V3_q);
 
     if(qpi>0) pi_stat = PiplFiducialCut(fbeam_en,V3_pi_rot, &cphil, &cphir);
     else pi_stat = PimiFiducialCut(fbeam_en,V3_pi_rot, &pimi_phimin, &pimi_phimax);
@@ -1272,7 +1272,7 @@ void Subtraction::rot_1phot_1pi_3p(TVector3 V3_phot, TVector3 V3_pi, double qpi,
     if(!radstat)
     {
       V3_phot_rot = V3_phot;
-      V3_phot_rot.Rotate(rot_angle, V3q);
+      V3_phot_rot.Rotate(rot_angle, V3_q);
       phot_stat = Phot_fid(V3_phot_rot);
     }
 

@@ -50,15 +50,15 @@ struct Subtraction {
 
   //---
   //additions for A(e,e'ppi)
-  void rot_2pi_1p(TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3q, double N1pi1p[2], double *N2pi1p, int N_tot);
-  void rot_1pi_2p(TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3q, double N1pi1p[2], double *N1pi2p, int N_tot);
-  void rot_1pi_3p(TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3q, double N1pi1p[3], double N1pi2p[3], double *N1pi3p, int N_tot);
-  void rot_3pi_1p(TVector3 V3_pi[3], double qpi[3], TVector3 V3_prot, TVector3 V3q, double N1pi1p[3], double N2pi1p[3], double *N3pi1p, int N_tot);
-  void rot_1phot_1pi_1p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3q, bool radstat, double *N1pi1p0phot, double *N1pi1p1phot, int N_tot);
-  void rot_1phot_1pi_2p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N1pi2p0phot, double *N1pi2p1phot, int N_tot);
-  void rot_2phot_1pi_1p(TVector3 V3_phot[2], TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3q, bool radstat[2], double *N1pi1p0phot, double *N1pi1p1phot, double *N1pi1p2phot, int N_tot);
-  void rot_1phot_2pi_1p(TVector3 V3_phot, TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N2pi1p0phot, double *N2pi1p1phot, int N_tot);
-  void rot_1phot_1pi_3p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3q, bool radstat, double N1pi1p0phot[3], double N1pi1p1phot[3], double N1pi2p0phot[3], double N1pi2p1phot[3], double *N1pi3p1phot, double *N1pi3p0phot, int N_tot);
+  void rot_2pi_1p(TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3_q, double N1pi1p[2], double *N2pi1p, int N_tot);
+  void rot_1pi_2p(TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3_q, double N1pi1p[2], double *N1pi2p, int N_tot);
+  void rot_1pi_3p(TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3_q, double N1pi1p[3], double N1pi2p[3], double *N1pi3p, int N_tot);
+  void rot_3pi_1p(TVector3 V3_pi[3], double qpi[3], TVector3 V3_prot, TVector3 V3_q, double N1pi1p[3], double N2pi1p[3], double *N3pi1p, int N_tot);
+  void rot_1phot_1pi_1p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3_q, bool radstat, double *N1pi1p0phot, double *N1pi1p1phot, int N_tot);
+  void rot_1phot_1pi_2p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[2], TVector3 V3_q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N1pi2p0phot, double *N1pi2p1phot, int N_tot);
+  void rot_2phot_1pi_1p(TVector3 V3_phot[2], TVector3 V3_pi, double qpi, TVector3 V3_prot, TVector3 V3_q, bool radstat[2], double *N1pi1p0phot, double *N1pi1p1phot, double *N1pi1p2phot, int N_tot);
+  void rot_1phot_2pi_1p(TVector3 V3_phot, TVector3 V3_pi[2], double qpi[2], TVector3 V3_prot, TVector3 V3_q, bool radstat, double N1pi1p0phot[2], double N1pi1p1phot[2], double *N2pi1p0phot, double *N2pi1p1phot, int N_tot);
+  void rot_1phot_1pi_3p(TVector3 V3_phot, TVector3 V3_pi, double qpi, TVector3 V3_prot[3], TVector3 V3_q, bool radstat, double N1pi1p0phot[3], double N1pi1p1phot[3], double N1pi2p0phot[3], double N1pi2p1phot[3], double *N1pi3p1phot, double *N1pi3p0phot, int N_tot);
 
 
   //---
