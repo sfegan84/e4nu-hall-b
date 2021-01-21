@@ -1927,8 +1927,10 @@ void e2a_eppi_v1::Loop()
 		  h2_kin_e_pi_Wvar->Fill(en_recon3[1], W_var, (N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_2pi_1p_1phot)*(1/Mott_cross_sec));
 		}
 	    }
-	    double N_1pi_1p[2] = {0};
-	    double N_2pi_1p = 0;
+	    //double N_1pi_1p[2] = {0};
+	    N_1pi_1p[2] = {0};
+	    //double N_2pi_1p = 0;
+	    N_2pi_1p = 0;
 	    rotation->rot_2pi_1p (V3_pi, q_pi, V3_p, V3_q, N_1pi_1p, &N_2pi_1p, N_tot);
 	    
 	    if(N_2pi_1p_1phot!=0 && N_2pi_1p!=0){
@@ -2402,14 +2404,14 @@ void e2a_eppi_v1::Loop()
     if((num_p == 1)&&(num_pi == 1)){
       //cout << "1p 1pi event" << endl;
 
-	/*****************************This is a test, remove for normal running*********************************
+	/*----------------------------This is a test, remove for normal running---------------------------------
 	
 	//1.1 GeV, reconstructed energy cut
 	if(fabs(1.161 - en_recon1) > 0.05){
 	  continue;
 	}	    
 			    
-        /******************************************************************************************************/
+        ------------------------------------------------------------------------------------------------------*/
 
       h1_Q2_1p1pi->Fill(Q2);
 
