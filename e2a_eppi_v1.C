@@ -1,4 +1,3 @@
-
 #define E2A_EPPI_C
 
 #include "e2a_eppi_v1.h"
@@ -267,8 +266,6 @@ TH2F *h2_rot_1pi_3p_1phot_pipl;
   TH3F *h3_Npi_Np_Nphoton;
 
 
-
-
 //extra histos for my sanity
 TH1F *h1_Q2_1p1pi, *h1_Q2_deltaplus, *h1_Q2_deltazero, *h1_Q2_deltaplus_ME_cut, *h1_Q2_deltazero_ME_cut;
 TH1F *h1_InvM_eppi,*h1_InvM_ep,*h1_InvM_epi,*h1_InvM_ppi,*h1_InvM_ppip,*h1_InvM_ppim,*h1_InvM_ppip2,*h1_InvM_ppim2,*h1_InvM_ppi0,*h1_InvM_ppi0_2;
@@ -333,7 +330,6 @@ Double_t FSum_e(Double_t *x,Double_t *par){
   else if(x[0]>=par[1]) return el_Epratio_mean->Eval(par[1])+par[0]*el_Epratio_sig->Eval(par[1]);
   else return -1;
 }
-
 Double_t FSub_e(Double_t *x,Double_t *par){
   if(x[0]<par[1])       return el_Epratio_mean->EvalPar(x)-par[0]*el_Epratio_sig->EvalPar(x);
   else if(x[0]>=par[1]) return el_Epratio_mean->Eval(par[1])-par[0]*el_Epratio_sig->Eval(par[1]);
@@ -341,7 +337,6 @@ Double_t FSub_e(Double_t *x,Double_t *par){
 }
 
 //proton Delta_t vs momentum PID cut
-
 Double_t FSum_prot(Double_t *x, Double_t *par){   //the 2 parameters are the cut range and momentum limit
   if(x[0] < par[1])         return prot_deltat_mean->EvalPar(x)+par[0]*prot_deltat_sig->EvalPar(x);
   else if(x[0] >= par[1])   return prot_deltat_mean->Eval(par[1])+par[0]*prot_deltat_sig->Eval(par[1]);
@@ -355,7 +350,6 @@ Double_t FSub_prot(Double_t *x,Double_t *par){
 
 
 //To Draw two sigma pid cuts lines on Delta t vs p distribution of negative pions
-
 Double_t FSum_pimi(Double_t *x,Double_t *par){
   if(x[0]<par[1]) return pimi_deltat_mean->EvalPar(x)+par[0]*pimi_deltat_sig->EvalPar(x);
   else if(x[0]>=par[1])return pimi_deltat_mean->Eval(par[1])+par[0]*pimi_deltat_sig->Eval(par[1]);
@@ -368,10 +362,8 @@ Double_t FSub_pimi(Double_t *x,Double_t *par){
 }
 
 
-
 //To Draw two sigma pid cuts lines on Delta t vs p distribution of negative pions
 Double_t FSum_pipl(Double_t *x,Double_t *par){
-
   if(x[0]<par[1])  return pipl_deltat_mean->EvalPar(x)+par[0]*pipl_deltat_sig->EvalPar(x);
   else if(x[0]>=par[1]) return pipl_deltat_mean->Eval(par[1])+par[0]*pipl_deltat_sig->Eval(par[1]);
   else return -1;
@@ -385,18 +377,75 @@ Double_t FSub_pipl(Double_t *x,Double_t *par){
 Float_t cphil = 0;
 Float_t cphir = 0;
 
+Float_t pimi_phil = 0;
+Float_t pimi_phir = 0;
+
 const int N_tot=100;
-  const int n_slice=3,nsect=6;
+const int n_slice=3,nsect=6;
+const int ind_em=0; //Index for electron, always the first particle
 
-  int N_pperp = 2;
-  int N_Ecal = 6;
+int N_pperp = 2;
+int N_Ecal = 6;
 
+  int 	el_segment, el_cc_sector;
+  Double_t el_sccc_timediff;
+  Double_t el_cc_nphe;
+  double min_good_mom = -999;
+  double max_mom = -999;
+  double epratio_sig_cutrange=3.;
+  double prot_delt_cutrange = 3.0;
+  double pimi_delt_cutrange = 3.0;
+  double pipl_delt_cutrange = 3.0;
+
+  Double_t sc_cc_delt_cut_sect[nsect]={-2,-5,-8,-8,-2,2};
+  Double_t elmom_corr_fact[nsect];
+  double el_phi_mod;
+  double el_vert_corr;
 
 double p_kin;
 double W_var;
-TLorentzVector V4_el;
+TLorentzVector *V4_el;
+TLorentzVector *V4_el_uncorr;
+
+TLorentzVector *V4_beam;
+
+TLorentzVector V4_target;
+
+TVector3 V3_el;
+TVector3 V3_q;
+
+
+TLorentzVector *lTmp;
+
+double Mott_cross_sec;
+double E_rec = -999;
+double Q2, x_bjk, omega, nu;
+//implement consistent names for momentum limits
+double prot_mom_lim;
+double pipl_maxmom;
+double pimi_maxmom;
+
+int num_p;
+int num_pi;
+int num_pimi;
+int num_pipl;
+int num_pi_phot;
+int num_pi_phot_nonrad;
+int ec_num_n;
+int num_phot_rad;
+
 int index_p[20]={}; //index for each proton
 int ec_index_n[20]={};
+int index_pi[20]={}; //index for each proton
+int index_pimi[20]={}; //index for each proton
+int index_pipl[20]={}; //index for each proton
+int ind_pi_phot[20]={}; //index for each proton
+bool ec_radstat_n[20] = {false};
+
+  TF1 *vz_corr_func;
+  TF1 *vz_corr_func2;
+
+float el_vert;
 
 void e2a_eppi_v1::Loop()
 {
@@ -432,42 +481,35 @@ void e2a_eppi_v1::Loop()
   if (fChain == 0) return;
 
   Long64_t nentries = fChain->GetEntriesFast();
-  //      nentries =8000000;
-  //     nentries =1000000;
 
   //double N_prot1 = 0, N_prot2 = 0;
   double N_prot_both = 0;
   //double eps = 0.02; //GeV - Is this variable called/used anywhere else???
-  Float_t pimi_phimin = 0, pimi_phimax = 0;
-  Float_t pipl_phimin = 0, pipl_phimax = 0;
 
-  double beta,delta;
+  double beta, delta;
   const double pperp_min[n_slice]={0.,0.2,0.4};
   const double pperp_max[n_slice]={0.2,0.4,10.};
-  TVector3 V3_pimi,V3_pipl,V3_rotprot1,V3_rotprot2,V3_rotprot3,V3_rot_pi,V3_rotprot;
-  TVector3 V3_phot_angles;
+  //TVector3 V3_pimi;
+  TVector3 V3_pipl,V3_rotprot1,V3_rotprot2,V3_rotprot3,V3_rot_pi,V3_rotprot;
+  //TVector3 V3_phot_angles;
+
   //double sum_val,sub_val;
-  double epratio_sig_cutrange=3.;
-  double prot_delt_cutrange=3.;
-  int 	el_segment, el_cc_sector;
+
+
   //double delt_uplim,delt_lowlim;
-  double prot_accept_mom_lim = 0.3;  //proton momentum threshold
-  double pion_accept_mom_lim = 0.15; //pion momentum threshold
-  double prot_mom_lim = -999;
-  double min_good_mom = -999;
-  double max_mom = -999;
-  Double_t el_sccc_timediff;
-  Double_t sc_cc_delt_cut_sect[nsect]={-2,-5,-8,-8,-2,2};
-  Double_t el_cc_nphe;
-  Double_t elmom_corr_fact[nsect];
-  double pipl_maxmom = -999;
-  double pimi_maxmom = -999;
-  double pimi_delt_cutrange = 3.0;
-  double pipl_delt_cutrange = 3.0;
+
+
+  //this is set in the header files?
+  prot_mom_lim = -999;
+  pipl_maxmom = -999;
+  pimi_maxmom = -999;
+
+double del_pt;
+
+
+
   double pperp_cut[N_pperp] = {0.0, 0.2};
   double *Ecal_lowlim,*Ecal_uplim;
-  TF1 *vz_corr_func;
-  TF1 *vz_corr_func2;
 
   p_kin = 0.0;
 
@@ -525,8 +567,13 @@ void e2a_eppi_v1::Loop()
   gRandom = new TRandom3();
   gRandom->SetSeed(10);
 
-  TLorentzVector V4_beam(0,0,en_beam[fbeam_en],en_beam[fbeam_en]);
-  TLorentzVector V4_target(0,0,0,target_mass[ftarget]);
+  V4_el_uncorr = new TLorentzVector(1.0,1.0,1.0,1.0);
+  V4_el = new TLorentzVector(1.0,1.0,1.0,1.0);
+
+  V4_beam = new TLorentzVector(0,0,en_beam[fbeam_en],en_beam[fbeam_en]);
+  V4_target.SetXYZM(0,0,0,target_mass[ftarget]);
+
+
 
   std::cout << "loading fiducials and corrections..." << std::endl;
   //there is definitely a better way to store all these parameters for use by the code, rather than load in all these root files, on to-do list
@@ -541,10 +588,7 @@ void e2a_eppi_v1::Loop()
   //extra TFile for specific conditions of z vertex correction (where the filenames don't conform to the structure of file_in3)
   TFile *file_in5 = NULL;
 
-
-  ////double pars[3];
-  //z vertex function for non-generic run condition file names; 2.2 GeV and Fe, 3He or 4He target
-  
+  //z vertex function for non-generic run condition file names; 2.2 GeV and Fe, 3He or 4He target  
   //First, load the regular correction function, just in case we never reach any of the special run conditions
   vz_corr_func2 = (TF1 *)file_in3->Get("f_vz");
   
@@ -564,9 +608,7 @@ void e2a_eppi_v1::Loop()
       file_in5 = new TFile("FiducialsCorrections/vz_v6/vz_4He_2261_2ndrungroup.root");//vertex correction for 4He 2nd group runs
       vz_corr_func2 = (TF1 *)file_in5->Get("f_vz");
     }
-    
   }
-  
 
 
   //Output file definition - this should come after the terrible hack above for the second run group and bad runs cases, or the file writing needs tweaking
@@ -654,6 +696,7 @@ void e2a_eppi_v1::Loop()
   h1_del_pt = new TH1F("h1_del_pt","",500,0,5);
 
 
+//theta phi plots, in momentum slices, for fiducial cut definitions
   for(int ii=0; ii<24;ii++){
     h2_pimi_th_vs_phi[ii] = new TH2F(Form("h2_pimi_th_vs_phi_%d",ii),"",200,-60,360,200,0,180);
     h2_pimi_th_vs_phi_fid[ii] = new TH2F(Form("h2_pimi_th_vs_phi_fid_%d",ii),"Pi minus #theta vs #phi, post fiducial cut",200,-60,360,200,0,180);
@@ -695,6 +738,7 @@ void e2a_eppi_v1::Loop()
     
     //---
     //Setting specific conditions of certain runs (z-vertex correction parameters, torus field, etc
+    //All this e2a specific stuff should be removed from the main loop and put in a function
     //---
     if (runnb==18258 || runnb==18259 || (runnb>18382 && runnb<18438) || (runnb>18220 && runnb<18253)) {
       //overwriting parameters of the previously loaded vertex correction function for the runs with the same target and beam energy, but different vertex correction
@@ -726,6 +770,8 @@ void e2a_eppi_v1::Loop()
       fTorusCurrent=2250;
     }
     
+
+
     if(jentry == 0){ //was n_evt == 1 before but jentry = n_evnt - 1
       fiducialcut->SetConstants(fTorusCurrent, target_name, en_beam);
       fiducialcut->SetFiducialCutParameters(fbeam_en);
@@ -737,773 +783,146 @@ void e2a_eppi_v1::Loop()
     //Resets q vector to (0,0,0)
     rotation->ResetQVector();
 
+
+
     //---------------------------------------------
     //--------START OF ELECTRON SELECTION----------
     //---------------------------------------------
-    
-    //int n_elec = 0; //a counter that is never incremented
-    const int ind_em=0; //Index for electron
-    if (ec[ind_em] <=0) {
-      //std::cout << "Possible problem with making electron ec vector. EC index below/equal Zero: ec[ind_em] =  " << ec[ind_em] << std::endl;
-      continue;
-    }
-    if (sc[ind_em] <=0) {
-      //std::cout << "Possible problem with making electron ec vector. SC index below/equal zero: sc[ind_em] =  " << sc[ind_em] << std::endl;
-      continue;
-    }
+    if(electron_ID()!=0) continue;
 
-    //Define electron vectors, angles amd other Information
-    TVector3 e_ec_xyz1(ech_x[ec[ind_em]-1],ech_y[ec[ind_em]-1],ech_z[ec[ind_em]-1]);
-    TVector3 el_mom1(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em] ,p[ind_em]*cz[ind_em]);
-    //double sc_time = sc_t[sc[ind_em] - 1];
-    //double sc_path = sc_r[sc[ind_em] - 1];
-    int sc_paddle = sc_pd[sc[ind_em] - 1];
-    //int sc_sector = sc_sect[sc[ind_em] - 1];
-    float el_vert = vz[ind_em];
-    double ec_x = ech_x[ec[ind_em]-1];
-    double ec_y = ech_y[ec[ind_em]-1];
-    double ec_z = ech_z[ec[ind_em]-1];
-    double el_theta =  TMath::ACos(cz[ind_em])*TMath::RadToDeg();
-    double el_phi_mod = TMath::ATan2(cy[ind_em],cx[ind_em])*TMath::RadToDeg()+30; //Add extra 30 degree rotation in phi
-    if(el_phi_mod<0){
-      el_phi_mod  = el_phi_mod+360; //Add 360 so that electron phi is between 0 and 360 degree
-    }
-    int el_ec_sector = ec_sect[ec[ind_em] - 1];
-    double el_vert_corr = el_vert+vz_corr(vz_corr_func,el_phi_mod,el_theta);
-    
-    //Variables for electron cuts
-    double ece = TMath::Max( ec_ei[ec[ind_em] - 1] + ec_eo[ec[ind_em] - 1],   etot[ec[ind_em] - 1]);
-    el_segment = int((cc_segm[cc[ind_em]-1]-int(cc_segm[cc[ind_em]-1]/1000)*1000)/10); //does this work in all cases?? F.H. 08/07/19
-    el_cc_sector = cc_sect[cc[ind_em]-1];
-    el_sccc_timediff = sc_t[cc[ind_em]-1]-cc_t[cc[ind_em]-1]-(sc_r[cc[ind_em]-1]-cc_r[cc[ind_em]-1])/(c*ns_to_s);
-    el_cc_nphe = nphe[cc[ind_em]-1]/10.;
-    double ec_SC_timediff_uncorr = ec_t[ec[ind_em]-1]-sc_t[sc[ind_em]-1]-(ec_r[ec[ind_em]-1]-sc_r[sc[ind_em]-1])/(c*ns_to_s);
-    
-    //fsum_e and fsub_p are TF1 Functions for electron E/p cuts
-    fsum_e->SetParameters(epratio_sig_cutrange, max_mom);
-    fsub_e->SetParameters(epratio_sig_cutrange, max_mom);
-    
-    //Cuts for 1.1 GeV on energy deposition, momenta, tof and cherenkov
-    if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && ec[ind_em] > 0.5 && sc[ind_em] > 0.5 && cc[ind_em] > 0.5 && q[ind_em] < 0 &&
-      ec_ei[ec[ind_em] - 1] >= 0.03 && ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) && p[ind_em] >= min_good_mom  &&
-      cc_c2[cc[ind_em]-1] <= 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1] )
-    {
-      h1_el_SCpd[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
-      for(int k=1;k<=6;k++){  //k is sector number
-	if(abs(p[ind_em]-0.45)<0.05 && sc_sect[sc[ind_em]-1]==k)  h2_el_theta_phi_p_beffidcut[k-1]->Fill(el_phi_mod,el_theta);
-	if(abs(p[ind_em]-1)<0.05 && sc_sect[sc[ind_em]-1]==k)     h2_el_theta_phi_p_beffidcut2[k-1]->Fill(el_phi_mod,el_theta);
-      }
-    }
-    
-    //Cuts for 2.2 GeV on energy deposition, momenta, tof and cherenkov
-    if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 3. && ec[ind_em] > 0.5 && cc[ind_em] > 0.5 &&  sc[ind_em] > 0.5 && q[ind_em] < 0  &&
-       ec_ei[ec[ind_em] - 1] >= 0.06 && ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) && p[ind_em] >= min_good_mom &&
-       cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1]  &&
-       TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass) <= en_beam[fbeam_en]) //this cut only exists for 2.2 GeV to cut some very rare events with p_e > beam mom" F.H. 08/08/19
-      {
-	h1_el_SCpd[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
-	for(int k=1;k<=6;k++){ //k is sector number
-	  if(abs(p[ind_em]-1.)<0.05 && sc_sect[sc[ind_em]-1]==k)	 h2_el_theta_phi_p_beffidcut[k-1]->Fill(el_phi_mod,el_theta);
-	  if(abs(p[ind_em]-1.65)<0.05 && sc_sect[sc[ind_em]-1]==k) h2_el_theta_phi_p_beffidcut2[k-1]->Fill(el_phi_mod,el_theta);
-	}
-      }
-    
-    //Cuts for 4.4 GeV on energy deposition, momenta, tof and cherenkov.
-    // It is the only one with ece cut 0.33, keeping approved cuts
-    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. && ec[ind_em] > 0.5 &&  sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
-       ec_ei[ec[ind_em] - 1] >= 0.055 && ece >= 0.33  && ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) && p[ind_em] >= min_good_mom  &&
-       cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1] )
-      {
-	h1_el_SCpd[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
-	for(int k=1;k<=6;k++){ //k is sector number
-	  if(abs(p[ind_em]-2.5)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_beffidcut[k-1]->Fill(el_phi_mod,el_theta);
-	  if(abs(p[ind_em]-1.4)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_beffidcut2[k-1]->Fill(el_phi_mod,el_theta);
-	}
-      }
-    
-    h2_el_ec_xy->Fill(ec_x,ec_y);
-
-    h2_el_theta_p[sc_sect[sc[ind_em]-1]-1]->Fill(el_mom1.Mag(),el_theta);
-
-    for(int ii=0; ii<24;ii++){
-      if( ((ii*0.05) < p[ind_em]) && (p[ind_em] < ((ii+1)*0.05))){
-	h2_el_th_vs_phi[ii]->Fill(el_phi_mod,el_theta);      
-	h2_el_th_phi[sc_sect[sc[ind_em]-1]-1][ii]->Fill(el_phi_mod,el_theta);
-      }
-    }
-
-    //Main Fiducial Cut for Electron
-    if( !EFiducialCut(fbeam_en, el_mom1) ) continue; //theta, phi cuts
-    if( !CutUVW(e_ec_xyz1) )               continue; //u>60, v<360, w<400
-    
-    h2_el_ec_xy_fidcut->Fill(ec_x,ec_y);
-
-    for(int ii=0; ii<24;ii++){
-      if( ((ii*0.05) < p[ind_em]) && (p[ind_em] < ((ii+1)*0.05))){
-	h2_el_th_vs_phi_fid[ii]->Fill(el_phi_mod,el_theta);      
-	h2_el_th_phi_fid[sc_sect[sc[ind_em]-1]-1][ii]->Fill(el_phi_mod,el_theta);
-      }
-    }
-    
-    /** FROM HERE AFTER ELECTRON FIDUCIAL CUTS HAVE BEEN PERFORMED **/
-    //Cuts for 4.4 GeV, no cc and tof cuts (only done for 4.4 GeV)
-    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. && ec[ind_em] > 0.5 &&  sc[ind_em] > 0.5  &&  q[ind_em] < 0 &&
-       ec_ei[ec[ind_em] - 1] >= 0.055  && ece >= 0.33  && p[ind_em] >= min_good_mom)
-      {
-	h2_el_E_p_ratio_withoutCC->Fill(p[ind_em], ece/p[ind_em]);
-	if(cc[ind_em] > 0.5) h2_el_E_p_ratio_withCC->Fill(p[ind_em], ece/p[ind_em]);
-      }
-    
-    //Cuts for 1.1 GeV. No cut on minimum momentum and ec_ei cut
-    if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && ec[ind_em] > 0.5 && sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
-       ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) &&
-       el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1] &&   cc_c2[cc[ind_em]-1] <= 0.1)
-      {
-	// if(ec_ei[ec[ind_em] - 1] >= 0.05)
-	h1_el_Etot_cut->Fill(ece);
-	//  if (p[ind_em]>=min_good_mom)
-	h1_el_Ein_cut->Fill(ec_ei[ec[ind_em] - 1]);
-      }
-    
-    //Cuts for 2.2 GeV. No cut on minimum momentum and ec_ei cut
-    if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 3. && ec[ind_em] > 0.5 && sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
-       ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) &&
-       cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1]  &&
-       TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass) <= en_beam[fbeam_en]) //this cut only exists for 2.2 GeV to cut some very rare events with p_e > beam mom" F.H. 08/08/19
-      {
-	// if(ec_ei[ec[ind_em] - 1] >= 0.06)
-	h1_el_Etot_cut->Fill(ece);
-	// if (p[ind_em]>=min_good_mom)
-	h1_el_Ein_cut->Fill(ec_ei[ec[ind_em] - 1]);
-      }
-    
-    //Cuts for 4.4 GeV. No cut on minimum momentum and ec_ei cut
-    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. && ec[ind_em] > 0.5 &&  sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
-       ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em])  &&
-       cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1])
-      {
-	// if(ec_ei[ec[ind_em] - 1] >= 0.055)
-	h1_el_Etot_cut->Fill(ece);
-	// if (p[ind_em]>=min_good_mom)
-	h1_el_Ein_cut->Fill(ec_ei[ec[ind_em] - 1]);
-      }
-    
-    //General cut on EC, SC, CC hit and q (charge) for all events
-    if( ec[ind_em] < 0.5 ||  sc[ind_em] < 0.5 ||  cc[ind_em] < 0.5 || q[ind_em] >=0)
-      {
-	continue;
-      }
-    
-    h1_el_Etot->Fill(ece);
-    h1_el_Ein->Fill(ec_ei[ec[ind_em] - 1]);
-    h2_el_E_p_ratio->Fill(p[ind_em], ece/p[ind_em]);
-    h1_el_cc_chi2->Fill(cc_c2[cc[ind_em]-1]);
-    h1_el_cc_deltat[el_cc_sector-1]->Fill(el_sccc_timediff);
-    if(el_cc_nphe>2.5)      h1_el_cc_deltat_cut[el_cc_sector-1]->Fill(el_sccc_timediff);
-    if(el_vert_corr<vert_max[ftarget] && el_vert_corr>vert_min[ftarget])  h1_el_cc_nphe->Fill(el_cc_nphe);
-    if(el_vert_corr<vert_max[ftarget] && el_vert_corr>vert_min[ftarget] && el_sccc_timediff>sc_cc_delt_cut_sect[el_cc_sector-1] &&  cc_c2[cc[ind_em]-1]<0.1)
-      {
-	h1_el_cc_nphe_cut->Fill(el_cc_nphe);
-      }
-    
-    h2_el_Ein_Eout->Fill(ec_eo[ec[ind_em]-1],ec_ei[ec[ind_em]-1]);
-    h2_el_Einout_Etot->Fill(ece,ec_ei[ec[ind_em]-1]+ec_eo[ec[ind_em]-1]);
-    
-    //Cut on 1.1 GeV events (E/p, energy deposit, TOF and cherenkov)
-    if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] <2. &&
-       ( ec_ei[ec[ind_em] - 1] < 0.03 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
-	 p[ind_em] < min_good_mom || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||   cc_c2[cc[ind_em]-1] > 0.1 ) )
-      {
-        continue;
-      }
-    
-    //Cut on 2.2 GeV events (E/p, energy deposit, TOF and cherenkov)
-    if(en_beam[fbeam_en] < 3.  && en_beam[fbeam_en] > 2 &&
-       ( ec_ei[ec[ind_em] - 1] < 0.06 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
-	 p[ind_em] < min_good_mom || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||
-	 TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass)>en_beam[fbeam_en] ) ) //only here a cut on electron momentum to cut some very scarse events where p_e > beam energy (see Mariana's anaysis note)
-      {
-        continue;
-      }
-    
-    //Cut on 4.4 GeV events (E/p, energy deposit, TOF and cherenkov)
-    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. &&
-       ( ec_ei[ec[ind_em] - 1] < 0.055 || ece < 0.33 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
-	 p[ind_em] < min_good_mom  || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff<sc_cc_delt_cut_sect[el_cc_sector-1] ) )
-      {
-        continue;
-      }
-    
-    h1_el_SCpdfidcut[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
-    
-    //Plotting electron phi-theta for each sector for each beam energy. Phi is modified (phi_mod = phi + 30)
-    //4.4 GeV
-    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. ){
-      for(int k=1;k<=6;k++){  //k is sector number
-	if(abs(p[ind_em]-2.5)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut[k-1]->Fill(el_phi_mod,el_theta);
-	if(abs(p[ind_em]-1.4)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut2[k-1]->Fill(el_phi_mod,el_theta);
-      }
-    }
-    //2.2 GeV
-    else if (en_beam[fbeam_en] < 3. && en_beam[fbeam_en] > 2){
-      for(int k=1;k<=6;k++){  //k is sector number
-	if(abs(p[ind_em]-1.)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut[k-1]->Fill(el_phi_mod,el_theta);
-	if(abs(p[ind_em]-1.65)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut2[k-1]->Fill(el_phi_mod,el_theta);
-      }
-    }
-    else { //1.1 GeV
-      for(int k=1;k<=6;k++){  //k is sector number
-	if(abs(p[ind_em]-0.45)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut[k-1]->Fill(el_phi_mod,el_theta);
-	if(abs(p[ind_em]-1)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut2[k-1]->Fill(el_phi_mod,el_theta);
-      }
-    }
-    
-    h2_el_E_p_ratio_cut->Fill(p[ind_em], ece/p[ind_em]);
-    //Fill histogram for cherenkov photo electrons with vertex cut
-    if( el_vert_corr < vert_max[ftarget] && el_vert_corr > vert_min[ftarget]) h1_el_cc_nphe_cut2->Fill(el_cc_nphe);
-    
-    if(sc_paddle == 5) {
-      h1_el_ec_sc_timediff->Fill(ec_SC_timediff_uncorr);
-      h1_el_ec_sc_timediff_corr->Fill(ec_SC_timediff_uncorr-EC_time_offset[make_pair(ftarget,el_ec_sector)]);
-    }
-    h1_el_ec_sc_timediff_allSCpd->Fill(ec_SC_timediff_uncorr);
-    h1_el_ec_sc_timediff_corr_allSCpd->Fill(ec_SC_timediff_uncorr-EC_time_offset[make_pair(ftarget,el_ec_sector)]);
-    h1_el_ec_sc_timediff_sect[el_cc_sector-1]->Fill(ec_SC_timediff_uncorr);
-    h1_el_ec_sc_timediff_sect_corr[el_cc_sector-1]->Fill(ec_SC_timediff_uncorr-EC_time_offset[make_pair(ftarget,el_ec_sector)]);
-    TVector3 v3_el_ec_uvw = FindUVW(e_ec_xyz1);
-    h2_el_ec_sc_timediff_ecu[el_cc_sector-1]->Fill(v3_el_ec_uvw.X(),ec_SC_timediff_uncorr);
-    h2_el_ec_sc_timediff_ecv[el_cc_sector-1]->Fill(v3_el_ec_uvw.Y(),ec_SC_timediff_uncorr);
-    h2_el_ec_sc_timediff_ecw[el_cc_sector-1]->Fill(v3_el_ec_uvw.Z(),ec_SC_timediff_uncorr);
-    h2_el_ec_sc_timediff_SCpd[el_cc_sector-1]->Fill(sc_paddle,ec_SC_timediff_uncorr);
-    
-    //Electron vertex cut
-    if( !(el_vert_corr < vert_max[ftarget] && el_vert_corr > vert_min[ftarget]) ) continue;
-    
-    //Main Electron 4-Vectors with and without momentum correction. Units are GeV
-    TLorentzVector V4_el_uncorr(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em],p[ind_em]*cz[ind_em],TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass));
-    V4_el.SetXYZM(elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cx[ind_em], elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cy[ind_em], elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cz[ind_em], TMath::Sqrt(p[ind_em]*p[ind_em]*elmom_corr_fact[el_ec_sector-1]*elmom_corr_fact[el_ec_sector-1]+e_mass*e_mass));
-
-    h1_el_mom->Fill(V4_el_uncorr.Rho());
-    h1_el_mom_corr->Fill(V4_el.Rho());
-    h1_el_mom_ratio->Fill(V4_el.Rho()/V4_el_uncorr.Rho());
-    h2_el_pcorr_puncorr->Fill(V4_el.Rho(),V4_el.Rho()/V4_el_uncorr.Rho());
-    h2_el_mom_diff->Fill(V4_el.Rho(),V4_el.Rho()-V4_el_uncorr.Rho());
-
-    //Electron momentum vector corrected
-    TVector3 V3_el=V4_el.Vect();
-    double Mott_cross_sec = (fine_struc_const*fine_struc_const*(cz[ind_em]+1)) / (2*V4_el.E()*V4_el.E()*(1-cz[ind_em])*(1-cz[ind_em]));
-
-    //Don't we need to change this to the resonance case? 
-    //Energy reconstruction for electron only method
-    //double E_rec_old = (2*(m_prot-bind_en[ftarget])*V4_el.E()+m_prot*m_prot-(m_prot-bind_en[ftarget])*(m_prot-bind_en[ftarget]))/(2*(m_prot-bind_en[ftarget]-V4_el.E()+V4_el.Rho()*cz[ind_em]));  //using the same value of single nucleon separation E for Ecal and Eqe
-    
-    //double E_rec= (m_prot*bind_en[ftarget]+m_prot*V4_el.E())/(m_prot-V4_el.E()+V4_el.Rho()*cz[ind_em]);  //using the same value of single nucleon separation E Ecal and Eqe
-
-    double E_rec = (m_delta*m_delta-(m_prot-bind_en[ftarget])*(m_prot-bind_en[ftarget])+2*(m_prot-bind_en[ftarget])*V4_el.E())/(2*(m_prot-bind_en[ftarget]-V4_el.E()+V4_el.Rho()*cz[ind_em]));
-    
-    //Calculation of kinematic quantities (nu, Q2, x bjorken, q and W)
-    double nu = -(V4_el-V4_beam).E();
-    double omega = (V4_beam-V4_el).E();
-    double Q2 = -(V4_el-V4_beam).Mag2();
-    double x_bjk = Q2/(2*m_prot*nu);
-    TVector3 V3_q = (V4_beam-V4_el).Vect();
-    W_var = TMath::Sqrt((m_prot+nu)*(m_prot+nu)-V3_q*V3_q);
-
-    double del_pt;
-
-    h2_el_theta_p_cut[sc_sect[sc[ind_em]-1]-1]->Fill(V4_el.Rho(),el_theta);
-
-    
-    //Set q vector for the following rotations for the subtraction procedure
-    rotation->SetQVector(V3_q);
-    //    rotation->PrintQVector();
-
-
-    //Temporary Q^2 cut
-    //if (Q2 > 0.2){
-    //if ((Q2 < 0.2) || (Q2 > 0.3)){
-    //if (Q2 < 0.3){
-    //  continue;
-    //}
-
-     //----    
-     //Filling Histograms for electron kinematics
-     h1_xbjk->Fill(x_bjk);
-     h1_xbjk_weight->Fill(x_bjk,1/Mott_cross_sec);
-     h1_Q2->Fill(Q2);
-     h1_Q2_weight->Fill(Q2,1/Mott_cross_sec);
-     h2_Q2_nu->Fill(nu,Q2);
-     h2_Q2_nu_weight->Fill(nu,Q2,1/Mott_cross_sec);
-     h2_Q2_xbjk_weight->Fill(x_bjk,Q2,1/Mott_cross_sec);
-     h1_Wvar->Fill(W_var);
-     h1_Wvar_weight->Fill(W_var,1/Mott_cross_sec);
-     h2_Q2_W->Fill(W_var,Q2);
-     h2_xB_W->Fill(W_var,x_bjk);
-     h2_Q2_W_weight->Fill(W_var,Q2,1/Mott_cross_sec);
-    
-     h1_el_Mott_crosssec->Fill(Mott_cross_sec);
-     h2_el_theta_phi->Fill(el_phi_mod,el_theta);
-     h1_el_theta->Fill(el_theta);
-     h2_el_phi_vert_uncorr->Fill(el_vert,el_phi_mod);
-     h2_el_phi_vert->Fill(el_vert_corr,el_phi_mod);
-     h1_el_vertuncorr->Fill(el_vert);
-     h1_el_vertcorr->Fill(el_vert_corr);
-     h2_el_vertcorr_runN->Fill(runnb,el_vert_corr);
-     //---
-
-
-    //Now we are done with the selection of electrons. Next step is looking for other hadrons in the events
-     //So could we move 634-921 into an electronSelection() function?
-
+//calculation of three-momentum transfer vector can surely be done here instead of every single time a different multiplicity chain is atarted?
+    //V3_q=(*V4_beam-*V4_el).Vect();
     //---------------------------------------------
     //---------END OF ELECTRON SELECTION-----------
     //---------------------------------------------
 
+
+    //---------------------------------------------
+    //---------START OF HADRON SELECTION-----------
+    //---------------------------------------------
+
     //Index variables for hadrons (p and pions)
-     index_p[20] = {}; //reinitialise proton index for this event
-    int ind_p;      //temp proton index in the loop
-    int index_pi[20]; //index for each pion
-    int ind_pi_phot[20];
-    //int ind_pi;       //temp pion index in the loop
-    int index_pipl[20]; //index for each pi plus
-    int index_pimi[20]; //index for each pi minus
+    //int index_p[20] = {}; //reinitialise proton index for this event
+    //int ind_p;      //temp proton index in the loop
+    //int index_pi[20]; //index for each pion
+    //int ind_pi_phot[20];
+    int ind_pi;       //temp pion index in the loop
+    //int index_pipl[20]; //index for each pi plus
+    //int index_pimi[20]; //index for each pi minus
     //Number of hadrons
-    int num_p = 0;
+    num_p = 0;
     int num_n = 0;
-    int num_pi = 0;
-    int num_pi_phot = 0; //couting all pions and photons
-    int num_pimi = 0;
-    int num_pipl = 0;
-    int num_pi_phot_nonrad=0; //counting all pions and non-radiation photons
-    int num_phot_rad = 0; //counting radiation photons
+    num_pi = 0;
+    num_pi_phot = 0; //couting all pions and photons
+    num_pimi = 0;
+    num_pipl = 0;
+    num_pi_phot_nonrad=0; //counting all pions and non-radiation photons
+    num_phot_rad = 0; //counting radiation photons
     //Index and number variables for neutral particles
-    int ec_num_n = 0;
-    bool ec_radstat_n[20] = {false};
+    ec_num_n = 0;
+    //bool ec_radstat_n[20] = {false};
 
     //reinitialise to empty
     //int ec_index_n[20]={};
     ec_index_n[20]={};
+
+
 
     //Setting arrays
     for (int i = 0; i<20; i++) {
       index_p[i] = -1;   index_pi[i] = -1;   index_pipl[i] = -1;   index_pimi[i] = -1;   ind_pi_phot[i] = -1;
     }
 
-    double pimi_phi, pimi_phi_mod, pimi_phi_mod2, pimi_theta; //Pi Minus
+    double pimi_phi, pimi_phi_mod, pimi_theta; //Pi Minus
     double pipl_phi, pipl_phi_mod, pipl_theta; //Pi Plus
     double prot_phi, prot_phi_mod, prot_theta; //Proton
     double pipl_vert_corr, pipl_vert; //Pi Plus Vertex and correction
     double pimi_vert_corr, pimi_vert; //Pi Minus Vertex and correction
-    double p_vert_corr; //Proton Vertex Corrected
+    //double p_vert_corr; //Proton Vertex Corrected
     //double ecpath_corr;
     double neut_phi, neut_phi_mod, neut_theta; //Neutral
-    double neut_ecx, neut_ecy, neut_ecz; //neutrals EC hit pos
-    double neut_xvert,neut_yvert,neut_zvert; //neutrals Vertex position
-    double neut_ecpath_corr, neut_ectime_corr, neut_beta_corr; //Neutrals Corrected values
-    double ec_delta = 0; //for neutrals
+    //double neut_ecx, neut_ecy, neut_ecz; //neutrals EC hit pos
+    //double neut_xvert,neut_yvert,neut_zvert; //neutrals Vertex position
+    //double neut_ecpath_corr, neut_ectime_corr, neut_beta_corr; //Neutrals Corrected values
+    //double ec_delta = 0; //for neutrals
 
-    const double pimi_vertcut = 2.5; //Vertexcut Pi minus
-    const double pipl_vertcut = 2.5; //Vertexcut Pi plus
-    const double phot_rad_cut = 40;
-    const double phot_e_phidiffcut=30; //electron - photon phi difference cut
-    double photon_ece;
-
+    //double photon_ece;
 
     CounterEvents ++;
+
 
     //Loop for Hadrons, electrons have i=0
     for( int i = 1; i < TMath::Min(gpart, 20); i++ )
       {
-        //Start of proton selection
+	//---------------------------------------------
+	//---------START OF PROTON SELECTION-----------
+	//---------------------------------------------
 	if( sc[i] > 0 && stat[i] > 0 &&  id[i] == 2212 ) //Particle i is a proton and has a sc hit
-	  {
-      	    ind_p = i;
-            beta  = p[ind_p]/TMath::Sqrt(p[ind_p]*p[ind_p]+m_prot*m_prot);
-	    delta = sc_t[sc[ind_p]-1] - sc_r[sc[ind_p]-1] / (beta*c*ns_to_s) - tr_time;
-            prot_phi = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg();
-	    prot_phi_mod = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg() + 30; //Add extra 30 degree rotation in phi
-	    if(prot_phi_mod<0){
-	      prot_phi_mod = prot_phi_mod + 360;   //Proton will be between 0 and 360
-	    }
-            prot_theta = TMath::ACos(cz[ind_p])*TMath::RadToDeg();
-	    
-            //fsum_e and fsub_p are TF1 Functions for proton delta cuts
-	    fsum_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
-	    fsub_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
-	    h2_prot_Deltat_p->Fill(p[ind_p],delta);
-	    
-            //proton pid cut and momentum > 0.3GeV cut to get rid of low momentum protons that have a high energy loss and we don't know the efficiency precisely for
-	    if(delta < fsum_prot->Eval(p[ind_p]) && delta > fsub_prot->Eval(p[ind_p]) && p[ind_p] >= prot_accept_mom_lim){
-	      
-              TLorentzVector V4_uncorrprot(p[ind_p]*cx[ind_p],p[ind_p]*cy[ind_p],p[ind_p]*cz[ind_p],TMath::Sqrt(p[ind_p]*p[ind_p]+ m_prot*m_prot ) );
-              p_vert_corr = vz[ind_p]+vz_corr(vz_corr_func,prot_phi_mod,prot_theta);
-	      
-	      h2_prot_px_py_p->Fill(cx[ind_p],cy[ind_p]);
+	  {	    
+	    if(proton_ID(i)!=0) continue;
+	  }
+	//---------------------------------------------
+	//---------START OF PROTON SELECTION-----------
+	//---------------------------------------------
 
-	      for(int k=1;k<=6;k++){ // k is sector number
-		if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
-		  h2_prot_theta_phi_p_beffidcut[k-1]->Fill(prot_phi_mod,prot_theta);
-		}
-		if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k)	 { //2.2 and 4.4 GeV
-		  h2_prot_theta_phi_p_beffidcut[k-1]->Fill(prot_phi_mod,prot_theta);
-		}
-	      }
 
-	      h2_prot_theta_p[sc_sect[sc[ind_p]-1]-1]->Fill(p[i],prot_theta);
-	      
-	      if(PFiducialCut(fbeam_en, V4_uncorrprot.Vect())){ //proton fiducial cuts
-		
-		h2_prot_theta_p_cut[sc_sect[sc[ind_p]-1]-1]->Fill(p[i],prot_theta);
-		for(int k = 1; k <= 6; k++){ //k is sector number
-		  if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
-		    h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
-		  }
-		  if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //2.2 and 4.4 GeV
-		    h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
-		  }
-		}
-		h1_el_prot_vertdiff_all->Fill(el_vert_corr - p_vert_corr);
-		h2_prot_px_py_p_fidcut->Fill(cx[ind_p],cy[ind_p]);
-		h2_prot_E_p->Fill(p[ind_p],edep[sc[ind_p]-1]);
-		h2_prot_beta_p->Fill(p[ind_p],b[ind_p]);
-		h2_prot_theta_phi->Fill(prot_phi_mod,prot_theta);
-		
-                //main vertex cut for protons
-		if( (el_vert_corr-p_vert_corr) > vertdiff_min[ftarget] && (el_vert_corr-p_vert_corr) < vertdiff_max[ftarget] ){
-		  num_p = num_p + 1;
-		  index_p[num_p-1] = i;
-		}
-	      } //end of fiducial cuts
-	    } //end of if delta condition
-	  } //end of if loop to check for proton id
-	
-	
+	//---------------------------------------------
+	//--------START OF PI MINUS SELECTION----------
+	//---------------------------------------------
 	//if(q[i] < 0 && sc[i] > 0 && dc[i] > 0 && stat[i] > 0 ) //negative particle, possibly pi minus
 	if(q[i] < 0 && sc[i] > 0 && dc[i] > 0 && stat[i] > 0 && id[i] == -211) //negative particle, possibly pi minus, adding id requirement, which seems to be missing
 	  {
-	    V3_pimi.SetXYZ(p[i]*cx[i],p[i]*cy[i],p[i]*cz[i]);
-	    beta = p[i]/TMath::Sqrt(p[i]*p[i]+m_pimi*m_pimi);
-	    delta = sc_t[sc[i]-1]-sc_r[sc[i]-1]/(beta*c*ns_to_s) - tr_time;
+	    if(piminus_ID(i)!=0) continue;
+	  }
+	//---------------------------------------------
+	//---------END OF PI MINUS SELECTION-----------
+	//---------------------------------------------
 
-	    //fsum_pimi and fsub_pimi are TF1 Functions for piminus delta cuts
-	    fsub_pimi->SetParameters(pimi_delt_cutrange,pimi_maxmom);
-	    fsum_pimi->SetParameters(pimi_delt_cutrange,pimi_maxmom);
-	    
-	    h1_neg_m->Fill(TMath::Sqrt(p[i]*p[i]/(b[i]*b[i])-p[i]*p[i]));
-	    h2_neg_delt_p->Fill(p[i],delta);
-	    h2_neg_E_p->Fill(p[i],edep[sc[i]-1]);
-	    h2_neg_beta_p->Fill(p[i],b[i]);
 
-	    //Pion pid delta cut
-	    if(delta < fsum_pimi->Eval(p[i]) && delta > fsub_pimi->Eval(p[i]) && p[i] >= pion_accept_mom_lim){
-	      
-	      pimi_vert=vz[i];
-	      pimi_phi = TMath::ATan2(cy[i],cx[i])*TMath::RadToDeg();
-	      pimi_phi_mod = pimi_phi + 30;  //Add extra 30 degree rotation in phi
-	      if (pimi_phi_mod<0){
-		pimi_phi_mod = pimi_phi_mod + 360;  //Pi minus is between 0 and 360 degree
-	      }
-
-	      pimi_phi_mod2 = pimi_phi_mod - ((sc_sect[sc[i]-1]-1)*60) - 30;
-
-	      pimi_theta = TMath::ACos(cz[i])*TMath::RadToDeg();
-
-	      pimi_vert_corr = pimi_vert+vz_corr(vz_corr_func, pimi_phi_mod,pimi_theta);
-	      
-	      //Some if conditions for histograms
-	      if(abs(p[i]-1.) < 0.02 && sc_sect[sc[i]-1]==1 && abs(en_beam[fbeam_en]-4.)<1)   h2_pimi_theta_phi_p->Fill(pimi_phi_mod,pimi_theta); //4.4 GeV, why is scsect ==1 here F.H. 12/08/19
-	      if(abs(p[i]-1.) < 0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-2.)<1)   h2_pimi_theta_phi_p->Fill(pimi_phi_mod,pimi_theta); //2.2 GeV
-	      if(abs(p[i]-0.5) <0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-1.)<1)   h2_pimi_theta_phi_p->Fill(pimi_phi_mod,pimi_theta); //1.1 GeV
-
-	      //I think determining the sector via the sc_sect variable is off SF 09/17/20
-	      for(int k=1;k<=6;k++){ //k is sector number
-		if(en_beam[fbeam_en]> 1. && en_beam[fbeam_en]< 2. &&  abs(p[i]-0.3)<0.025 && sc_sect[sc[i]-1]==k)  { //1.1 GeV
-		  h2_pimi_theta_phi_p_beffidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
-		}
-		if(en_beam[fbeam_en]> 2. && en_beam[fbeam_en]< 5. && abs(p[i]-0.975)<0.025 && sc_sect[sc[i]-1]==k) { //2.2 and 4.4 GeV
-		  h2_pimi_theta_phi_p_beffidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
-		}
-	      }
-	      h2_pimi_theta_phi_beffid->Fill(pimi_phi_mod,pimi_theta);
-	      h2_pimi_theta_p[sc_sect[sc[i]-1]-1]->Fill(p[i],pimi_theta);
-
-	      for(int ii=0; ii<24;ii++){
-		if( ((ii*0.05) < p[i]) && (p[i] < ((ii+1)*0.05))){
-		  h2_pimi_th_vs_phi[ii]->Fill(pimi_phi_mod,pimi_theta);      
-		  h2_pimi_th_phi[sc_sect[sc[i]-1]-1][ii]->Fill(pimi_phi_mod2,pimi_theta);
-		}
-	      }
-	      
-	      if(PimiFiducialCut(fbeam_en, V3_pimi, &pimi_phimin, &pimi_phimax)){  //Pi minus fiducial cuts
-		
-		h2_pimi_theta_p_cut[sc_sect[sc[i]-1]-1]->Fill(p[i],pimi_theta);
-		h1_pimi_prot_vertdiff->Fill(el_vert_corr-pimi_vert_corr);
-		//some conditions for histogram
-
-		for(int ii=0; ii<24;ii++){
-		  if( ((ii*0.05) < p[i]) && (p[i] < ((ii+1)*0.05))){
-		    h2_pimi_th_vs_phi_fid[ii]->Fill(pimi_phi_mod,pimi_theta);      
-		    h2_pimi_th_phi_fid[sc_sect[sc[i]-1]-1][ii]->Fill(pimi_phi_mod2,pimi_theta);
-		  }
-		}
-
-		if(abs(p[i]-1.)< 0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-4.)<1)	h2_pimi_theta_phi_fidcut->Fill(pimi_phi_mod,pimi_theta); //4.4 GeV
-		if(abs(p[i]-1.)< 0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-2.)<1)	h2_pimi_theta_phi_fidcut->Fill(pimi_phi_mod,pimi_theta); //2.2 GeV
-		if(abs(p[i]-0.5)<0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-1.)<1)	h2_pimi_theta_phi_fidcut->Fill(pimi_phi_mod,pimi_theta); //1.1 GeV
-
-		for(int k=1;k<=6;k++){ //k is sector number
-		  if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. &&  abs(p[i]-0.3)<0.025 && sc_sect[sc[i]-1]==k) { //1.1 GeV
-		    h2_pimi_theta_phi_p_fidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
-		  }
-		  if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. &&  abs(p[i]-0.975)<0.025 && sc_sect[sc[i]-1]==k) { //2.2 GeV and 4.4 GeV
-		    h2_pimi_theta_phi_p_fidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
-		  }
-		}
-		h2_pimi_theta_phi->Fill(pimi_phi_mod,pimi_theta);
-		//main vertex cut for pi minus
-		if(abs(el_vert_corr-pimi_vert_corr) < pimi_vertcut){
-		  
-		  num_pimi = num_pimi + 1;
-		  num_pi = num_pi + 1;
-		  num_pi_phot = num_pi_phot + 1;
-		  num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
-		  index_pimi[num_pimi - 1] = i;
-		  index_pi[num_pi - 1] = i;
-		  ind_pi_phot[num_pi_phot - 1] = i;
-		  
-		  h2_pimi_beta_p->Fill(p[i],b[i]);
-		  h2_pimi_E_p->Fill(p[i],edep[sc[i]-1]);
-		  h2_pimi_delt_p->Fill(p[i],delta);
-		  
-		} //if piminus vertex cut
-	      } //if Piminus fiducials
-	    } //if piminus delta cut
-	  } //if negative particle
-	
-	
+	//---------------------------------------------
+	//---------START OF PI PLUS SELECTION----------
+	//---------------------------------------------
 	//if(q[i] > 0 &&  sc[i] > 0 && dc[i] > 0 && stat[i] > 0) //positive particle. possible pi plus
 	if(q[i] > 0 &&  sc[i] > 0 && dc[i] > 0 && stat[i] > 0 && id[i] == 211) //positive particle. possible pi plus, adding id requirement, which seems to be missing
 	  {
-	    V3_pipl.SetXYZ(p[i]*cx[i],p[i]*cy[i],p[i]*cz[i]);
-	    beta = p[i]/TMath::Sqrt(p[i]*p[i]+m_pipl*m_pipl);
-	    delta= sc_t[sc[i]-1]-sc_r[sc[i]-1]/(beta*c*ns_to_s) - tr_time;
-	    
-	    //fsum_piplus and fsub_piplus are TF1 Functions for piplus delta cuts
-	    fsub_pipl->SetParameters(pipl_delt_cutrange,pipl_maxmom);
-	    fsum_pipl->SetParameters(pipl_delt_cutrange,pipl_maxmom);
-	    
-	    h1_pos_m->Fill(TMath::Sqrt(p[i]*p[i]/(b[i]*b[i])-p[i]*p[i]));
-	    h2_pos_delt_p->Fill(p[i],delta);
-	    h2_pos_beta_p->Fill(p[i],b[i]);
-	    h2_pos_E_p->Fill(p[i],edep[sc[i]-1]);
-	    //Pion pid delta cut
-	    if(delta < fsum_pipl->Eval(p[i]) && delta > fsub_pipl->Eval(p[i]) && p[i] >= pion_accept_mom_lim){
-	      
-	      pipl_vert=vz[i];
-	      pipl_phi = TMath::ATan2(cy[i],cx[i])*TMath::RadToDeg();
-	      pipl_phi_mod = pipl_phi + 30; //Add 30 degrees
-	      if (pipl_phi_mod < 0){
-		pipl_phi_mod = pipl_phi_mod + 360;  //Pi plus is between 0 and 360 degree
-	      }
-	      pipl_theta = TMath::ACos(cz[i])*TMath::RadToDeg();
-	      pipl_vert_corr = pipl_vert + vz_corr(vz_corr_func,pipl_phi_mod,pipl_theta);
-	      
-	      //Some if conditions for histograms
-	      if(abs(p[i]-1) < 0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-4)<1)   h2_pipl_theta_phi_p->Fill(pipl_phi_mod,pipl_theta); //4.4 GeV
-	      if(abs(p[i]-1) < 0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-2)<1)   h2_pipl_theta_phi_p->Fill(pipl_phi_mod,pipl_theta); //2.2 GeV
-	      if(abs(p[i]-0.5)<0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-1)<1)   h2_pipl_theta_phi_p->Fill(pipl_phi_mod,pipl_theta); //1.1 GeV
-	      for(int k = 1; k <= 6; k++){ //k is sector number
-		if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. &&  abs(p[i]-0.3)<0.025 && sc_sect[sc[i]-1]==k) { //1.1 GeV
-		  h2_pipl_theta_phi_p_beffidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
-		}
-		if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[i]-0.975)<0.025 && sc_sect[sc[i]-1]==k) { //2.2 and 4.4 GeV
-		  h2_pipl_theta_phi_p_beffidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
-		}
-	      }
-	      h2_pipl_theta_phi_beffid->Fill(pipl_phi_mod,pipl_theta);
-	      h2_pipl_theta_p[sc_sect[sc[i]-1]-1]->Fill(p[i],pipl_theta);
-	      
-	      if (PiplFiducialCut(fbeam_en, V3_pipl, &pipl_phimin, &pipl_phimax)){ //Pi Plus fiducial cut
-		
-		h2_pipl_theta_p_cut[sc_sect[sc[i]-1]-1]->Fill(p[i],pipl_theta);
-		h1_pipl_prot_vertdiff->Fill(el_vert_corr-pipl_vert_corr);
-		if(abs(p[i]-1) < 0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-4)<1)	h2_pipl_theta_phi_fidcut->Fill(pipl_phi_mod,pipl_theta); //4.4 GeV
-		if(abs(p[i]-1) < 0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-2)<1)	h2_pipl_theta_phi_fidcut->Fill(pipl_phi_mod,pipl_theta); //2.2 GeV
-		if(abs(p[i]-0.5)<0.02 && sc_sect[sc[i]-1]==5 && abs(en_beam[fbeam_en]-1)<1)	h2_pipl_theta_phi_fidcut->Fill(pipl_phi_mod,pipl_theta); //1.1 GeV
-		for(int k = 1; k <= 6; k++){ //k is sector number
-		  if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[i]-0.3)<0.025   && sc_sect[sc[i]-1]==k) { //1.1 GeV
-		    h2_pipl_theta_phi_p_fidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
-		  }
-		  if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[i]-0.975)<0.025 && sc_sect[sc[i]-1]==k) {//2.2 and 4.4 GeV
-		    h2_pipl_theta_phi_p_fidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
-		  }
-		}
-		
-		h2_pipl_theta_phi->Fill(pipl_phi_mod,pipl_theta);
-		
-		if (abs(el_vert_corr-pipl_vert_corr) < pipl_vertcut){ //pi plus vertex cut
-		  num_pipl = num_pipl + 1;
-		  num_pi  = num_pi + 1;
-		  num_pi_phot = num_pi_phot + 1;
-		  num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
-		  index_pipl[num_pipl - 1] = i;
-		  index_pi[num_pi - 1] = i;
-		  ind_pi_phot[num_pi_phot - 1] = i;
-		  
-		  h2_pipl_beta_p->Fill(p[i],b[i]);
-		  h2_pipl_E_p->Fill(p[i],edep[sc[i]-1]);
-		  h2_pipl_delt_p->Fill(p[i],delta);
-		  
-		  
-		}	 //vert cut ends
-	      } //fidcut ends
-	    }//delta cut ends
-	  }//pipl ends
+	    if(piplus_ID(i)!=0) continue;
+	  }
+	//---------------------------------------------
+	//----------END OF PI PLUS SELECTION-----------
+	//---------------------------------------------
+
+
+	//-------------------------------------------------------------------
+	//-------CALLS TO AS YET UNIMPLEMENTED KAON SELECTION FUNCTIONS------
+	//-------------------------------------------------------------------
+
+	//-------------------------------------------------------------------
+	//-----END CALLS TO AS YET UNIMPLEMENTED KAON SELECTION FUNCTIONS----
+	//-------------------------------------------------------------------
 	
-	
+
+        //---------------------------------------------
+	//---------START OF NEUTRAL SELECTION----------
+	//---------------------------------------------
 	if(ec[i] > 0 && dc[i] <= 0  && sc[i] <= 0  && stat[i] > 0 && q[i] == 0) //neutral particles, only EC
 	  {
-	    neut_zvert = vz[i];
-	    neut_yvert = vy[i];
-	    neut_xvert = vx[i];
-	    neut_ecx = ech_x[ec[i]-1];
-	    neut_ecy = ech_y[ec[i]-1];
-	    neut_ecz = ech_z[ec[i]-1];
-	    TVector3 V3_phot_ec_xyz;
-	    V3_phot_ec_xyz.SetXYZ(ech_x[ec[i]-1],ech_y[ec[i]-1],ech_z[ec[i]-1]);
-	    TVector3 V3_phot_ec_uvw = FindUVW(V3_phot_ec_xyz);
-	    
-	    neut_ecpath_corr = TMath::Sqrt((neut_ecx-neut_xvert)*(neut_ecx-neut_xvert)+(neut_ecy-neut_yvert)*(neut_ecy-neut_yvert)+(neut_ecz-neut_zvert)*(neut_ecz-neut_zvert));
-	    neut_ectime_corr = neut_ecpath_corr/(b[i]*c*ns_to_s) - EC_time_offset[make_pair(ftarget,ec_sect[ec[i]-1])];
-	    neut_beta_corr = neut_ecpath_corr/(neut_ectime_corr*c*ns_to_s);
-	    neut_phi = TMath::ATan2(cy[i],cx[i])*TMath::RadToDeg();
-	    neut_phi_mod = neut_phi + 30; //Add 30 degree
-	    if (neut_phi_mod < 0){
-	      neut_phi_mod = neut_phi_mod + 360;  //Neutral particle is between 0 and 360 degree
-	    }
-	    neut_theta = TMath::ACos(cz[i])*TMath::RadToDeg();
-	    
-	    V3_phot_angles.SetXYZ(p[i]*cx[i],p[i]*cy[i],p[i]*cz[i]);
-	    ec_delta = ec_t[ec[i]-1] - neut_ecpath_corr/(c*ns_to_s) + EC_time_offset[make_pair(ftarget,ec_sect[ec[i]-1])] - tr_time;
-	    
-	    h1_beta_ec->Fill(b[i]);
-	    h1_beta_ec_corr->Fill(neut_beta_corr);
-	    h1_beta_ec_corr_sect[ec_sect[ec[i]-1]-1]->Fill(neut_beta_corr);
-	    
-	    if(neut_beta_corr > EC_photon_beta[ftarget]){   //photon identification
-	      
-	      h2_neutral_theta_phi_EC_all->Fill(neut_phi_mod,neut_theta);
-	      h2_neutral_costheta_phi_EC_all->Fill(neut_phi_mod,cz[i]);
-	      
-	      if(Phot_fid(V3_phot_angles)){ //photon fiducial function
-		
-		ec_num_n = ec_num_n + 1;
-		ec_index_n[ec_num_n - 1]=i;
-		num_pi_phot = num_pi_phot + 1;
-		ind_pi_phot[num_pi_phot - 1] = i;
-		//Photon EC energy deposit
-		photon_ece = TMath::Max( ec_ei[ec[i] - 1] + ec_eo[ec[i] - 1],etot[ec[i] - 1]);
-		
-		//Cut on Radiation photon via angle with respect to the electron
-		//within 40 degrees in theta and 30 degrees in phi
-		if(V3_phot_angles.Angle(V3_el)*TMath::RadToDeg() < phot_rad_cut && abs(neut_phi_mod-el_phi_mod) < phot_e_phidiffcut ) {
-		  ec_radstat_n[num_pi_phot - 1] = true; //select radiation photons
-		  h1_photon_EC_E->Fill(photon_ece/EC_sampling_frac);
-		  num_phot_rad = num_phot_rad + 1;
-		}
-		if(!ec_radstat_n[num_pi_phot - 1]) num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
-		
-		h1_time_ec->Fill(ec_delta);
-		h2_neutral_theta_phi_EC_all_fidcut->Fill(neut_phi_mod,neut_theta);
-		h1_beta_ec_corr_cut->Fill(neut_beta_corr);
-		h1_photon_E->Fill(photon_ece/EC_sampling_frac);
-		h1_phot_e_angle->Fill(V3_phot_angles.Angle(V3_el)*TMath::RadToDeg());
-		h2_phot_e_angle_vsphotE->Fill(photon_ece/EC_sampling_frac,V3_phot_angles.Angle(V3_el)*TMath::RadToDeg());
-	      }//end if photon fiducial
-	    }//n beta
-	  } //if neutral particles
+	    if(neutral_ID(i)!=0) continue;
+	  }
 	
       } //end of hadron loop
-    
+
+
     
     //could attempt some pi0/eta id from two photon decay
-    //ecPhotonLoop()
     //two photons
     if((num_p==1) && (ec_num_n == 2)){
-
       pi0_ID();
-      /*
-//---
-      //Photon EC energy deposit
-      Double_t photon_ece1 = TMath::Max( ec_ei[ec[ec_index_n[0]]-1] + ec_eo[ec[ec_index_n[0]]-1],etot[ec[ec_index_n[0]]-1]);
-      Double_t photon_ece2 = TMath::Max( ec_ei[ec[ec_index_n[1]]-1] + ec_eo[ec[ec_index_n[1]]-1],etot[ec[ec_index_n[1]]-1]);
-      TLorentzVector V4_gamma[2];
-
-      TVector3 V3_phot[2];
-      //V3_phot[0].SetXYZ(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
-      //V3_phot[1].SetXYZ(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]]);
-      V3_phot[0].SetXYZ(ech_x[ec[ec_index_n[0]]-1],ech_y[ec[ec_index_n[0]]-1],ech_z[ec[ec_index_n[0]]-1]);
-      V3_phot[1].SetXYZ(ech_x[ec[ec_index_n[1]]-1],ech_y[ec[ec_index_n[1]]-1],ech_z[ec[ec_index_n[1]]-1]);
-
-      V4_gamma[0].SetPxPyPzE(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]],photon_ece1/EC_sampling_frac);
-      V4_gamma[1].SetPxPyPzE(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]],photon_ece2/EC_sampling_frac);
-
-//       V4_gamma[0].SetVect(V3_phot[0]);
-//       V4_gamma[0].SetE(photon_ece1/EC_sampling_frac);
-//       V4_gamma[1].SetVect(V3_phot[1]);
-//       V4_gamma[1].SetE(photon_ece2/EC_sampling_frac);
-
-      //cout<<ec_ei[ec[ec_index_n[0]]-1]<<endl;
-      //cout<<ec_eo[ec[ec_index_n[0]]-1]<<endl;
-      //cout<<etot[ec[ec_index_n[0]]-1]<<endl<<endl;
-
-
-      //fill a two photon invariant mass
-      TLorentzVector lGammaGamma = V4_gamma[0] + V4_gamma[1];
-      TLorentzVector lPi0;
-      TLorentzVector lP(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(p[index_p[0]]*p[index_p[0]]+ m_prot*m_prot ) );
-      Double_t InvM_gg = TMath::Sqrt((2*photon_ece1/EC_sampling_frac*photon_ece2/EC_sampling_frac)*(1-TMath::Cos(V3_phot[0].Angle(V3_phot[1]))));
-      //h1_2gammaInvM->Fill(lGammaGamma.M());
-      //h1_2gammaInvM->Fill(photon_ece2/EC_sampling_frac);
-      //h1_2gammaInvM->Fill((V4_gamma[0] + V4_gamma[1]).M());
-      h1_2gammaInvM->Fill(TMath::Sqrt((2*photon_ece1/EC_sampling_frac*photon_ece2/EC_sampling_frac)*(1-TMath::Cos(V3_phot[0].Angle(V3_phot[1])))));
-
-      p_kin = lP.E() - m_prot;
-
-      //clean up selection?
-      //2 photon invariant mass cut
-      if((InvM_gg > 0.1) && (InvM_gg < 0.2)){
-
-	//look at opening angle
-	Double_t ggAngle = V3_phot[0].Angle(V3_phot[1]);
-	h1_2gammaAngle->Fill(ggAngle*TMath::RadToDeg());
-	//h1_2gammaAngle->Fill(V4_gamma[0].Angle(V4_gamma[1]));
-
-	//reconstruct beam energy from final state particles
-	//double en_recon1_pi0 = V4_el.E() + p_kin + lGammaGamma.E();
-
-	lPi0.SetVectM(lGammaGamma.Vect(),0.135);
-
-	double en_recon1_pi0 = V4_el.E() + p_kin + lPi0.E();
-
-	//h1_en_recon1_pi0->Fill(en_recon1_pi0, 1/Mott_cross_sec);
-	h1_en_recon1_pi0->Fill(en_recon1_pi0);
-	
-	h1_InvM_ppi0->Fill(W_var);
-	h1_InvM_ppi0_2->Fill((lP + lPi0).M());
-
-      }
-
-//---
- */
     }
-
-
+    
     //Skip event if there is at least one radiation photon
     if (num_phot_rad > 0) {
       continue;
     }
-
 
     //Filling Histograms with multiplicities
     h1_Npi->Fill(num_pi);
@@ -1538,9 +957,13 @@ void e2a_eppi_v1::Loop()
 	V3_p = V4_p.Vect();
 	TLorentzVector V4_p_corr;
 	//double prot_mom_corr = ProtonMomCorrection_He3_4Cell(ftarget,V4_p,prot_vert_corr);
-	double prot_mom_corr = ProtonMomCorrection_He3_4Cell(ftarget,V4_p,p_vert_corr);
+
+	double ppp_vert_corr = (vz[index_p[0]]+vz_corr(vz_corr_func,(V4_p.Phi()*TMath::RadToDeg() + 30),V4_p.Theta()*TMath::RadToDeg())); //temporary measure to allow moving to proton ID to function
+
+	double prot_mom_corr = ProtonMomCorrection_He3_4Cell(ftarget,V4_p,ppp_vert_corr);
 	V4_p_corr.SetPxPyPzE(prot_mom_corr*cx[index_p[0]],prot_mom_corr*cy[index_p[0]],prot_mom_corr*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+prot_mom_corr*prot_mom_corr));
 	p_kin = V4_p_corr.E() - m_prot;
+
 	if(num_pi==3 && ec_num_n==0 && num_n==0)
 	  {
 	    TLorentzVector V4_pi[3];
@@ -1558,9 +981,9 @@ void e2a_eppi_v1::Loop()
 	    
 	    for(int g=0; g<3; g++)
 	      {
-		en_recon1[g] = V4_el.E() + p_kin + V4_pi[g].E();
-		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi[g].E() + 2*V4_el.Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-		  (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi[g].E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+		en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
+		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
 	      }
 	    double N1pi1p[3] = {0};
 	    double N2pi1p[3] = {0};
@@ -1640,12 +1063,12 @@ void e2a_eppi_v1::Loop()
 
 			rotation->rot_2pi_1p (V3_pi1, q_pi1, V3_p, V3_q, N_1pion_1prot, &N_2pion_1prot, N_tot);
 
-			en_recon1[0] = V4_el.E() + p_kin + V4_pi[i].E();
-			en_recon1[1] = V4_el.E() + p_kin + V4_pi[j].E();
-			en_recon3[0] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi[i].E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi[i].E() + 2*V4_el.Rho()*V4_pi[i].Rho()*cos(V3_pi[i].Angle(V3_el)) + m_pion*m_pion)/
-			  (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi[i].E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi[i].Rho()*cz[index_pi[i]]));
-			en_recon3[1] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi[j].E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi[j].E() + 2*V4_el.Rho()*V4_pi[j].Rho()*cos(V3_pi[j].Angle(V3_el)) + m_pion*m_pion)/
-			  (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi[j].E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi[j].Rho()*cz[index_pi[j]]));
+			en_recon1[0] = V4_el->E() + p_kin + V4_pi[i].E();
+			en_recon1[1] = V4_el->E() + p_kin + V4_pi[j].E();
+			en_recon3[0] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[i].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[i].E() + 2*V4_el->Rho()*V4_pi[i].Rho()*cos(V3_pi[i].Angle(V3_el)) + m_pion*m_pion)/
+			  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[i].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[i].Rho()*cz[index_pi[i]]));
+			en_recon3[1] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[j].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[j].E() + 2*V4_el->Rho()*V4_pi[j].Rho()*cos(V3_pi[j].Angle(V3_el)) + m_pion*m_pion)/
+			  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[j].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[j].Rho()*cz[index_pi[j]]));
 			if(N_2pion_1prot!=0 && N3pi1p !=0)
 			  {
 			    h1_rot1_3pi_1p->Fill(en_recon1[0], -(N_1pion_1prot[0]/N_2pion_1prot)*(N2pi1p[count]/N3pi1p)*(1/Mott_cross_sec));
@@ -1749,9 +1172,9 @@ void e2a_eppi_v1::Loop()
 	    
 	    for(int g=0; g<2; g++)
 	      {
-		en_recon1[g] = V4_el.E() + p_kin + V4_pi[g].E();
-		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi[g].E() + 2*V4_el.Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-		  (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi[g].E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+		en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
+		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
 	      }
 	    double N_1pi_1p_0phot[2] = {0};
 	    double N_1pi_1p_1phot[2] = {0};
@@ -2031,9 +1454,9 @@ void e2a_eppi_v1::Loop()
 	  
 	  for(int g=0; g<2; g++)
 	    {
-	      en_recon1[g] = V4_el.E() + p_kin + V4_pi[g].E();
-	      en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi[g].E() + 2*V4_el.Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-		(2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi[g].E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+	      en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
+	      en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		(2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
 	    }
 	  rotation->rot_2pi_1p (V3_pi, q_pi, V3_p, V3_q, N_1pi_1p, &N_2pi_1p, N_tot);
 	  
@@ -2130,14 +1553,14 @@ void e2a_eppi_v1::Loop()
         TLorentzVector V4_pi(p[index_pipl[0]]*cx[index_pipl[0]],p[index_pipl[0]]*cy[index_pipl[0]],p[index_pipl[0]]*cz[index_pipl[0]], TMath::Sqrt(p[index_pipl[0]]*p[index_pipl[0]]+m_pion*m_pion));
         TVector3 V3_pi = V4_pi.Vect();
         // First reconstruction method
-        double en_recon1 = V4_el.E() + p_kin + V4_pi.E();
+        double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
 
 	h1_p_kin->Fill(p_kin);
 	h1_p_kin_pipl->Fill(p_kin);
 	h1_pi_E->Fill(V4_pi.E());
 	h1_pi_E_pipl->Fill(V4_pi.E());
-	h1_el_E->Fill(V4_el.E());
-	h1_el_E_pipl->Fill(V4_el.E());
+	h1_el_E->Fill(V4_el->E());
+	h1_el_E_pipl->Fill(V4_el->E());
 
         h1_en_recon1->Fill(en_recon1, 1/Mott_cross_sec);
         h1_en_recon1_pipl->Fill(en_recon1, 1/Mott_cross_sec);
@@ -2152,8 +1575,8 @@ void e2a_eppi_v1::Loop()
 
 
         //Third reconstruction method
-        double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                              (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+        double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+                                              (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
         h1_en_recon3->Fill(en_recon3, 1/Mott_cross_sec);
         h1_en_recon3_pipl->Fill(en_recon3, 1/Mott_cross_sec);
 
@@ -2177,7 +1600,7 @@ void e2a_eppi_v1::Loop()
         TLorentzVector V4_pi(p[index_pimi[0]]*cx[index_pimi[0]],p[index_pimi[0]]*cy[index_pimi[0]],p[index_pimi[0]]*cz[index_pimi[0]], TMath::Sqrt(p[index_pimi[0]]*p[index_pimi[0]]+m_pion*m_pion));
         TVector3 V3_pi = V4_pi.Vect();
         // First reconstruction method
-        double en_recon1 = V4_el.E() + p_kin + V4_pi.E();
+        double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
 	
 
 
@@ -2185,8 +1608,8 @@ void e2a_eppi_v1::Loop()
 	h1_p_kin_pimi->Fill(p_kin);
 	h1_pi_E->Fill(V4_pi.E());
 	h1_pi_E_pimi->Fill(V4_pi.E());
-	h1_el_E->Fill(V4_el.E());
-	h1_el_E_pimi->Fill(V4_el.E());
+	h1_el_E->Fill(V4_el->E());
+	h1_el_E_pimi->Fill(V4_el->E());
 
 
         h1_en_recon1->Fill(en_recon1, 1/Mott_cross_sec);
@@ -2197,8 +1620,8 @@ void e2a_eppi_v1::Loop()
         h1_en_recon2_pimi->Fill(E_rec, 1/Mott_cross_sec);
         h2_kin_e_Wvar->Fill(E_rec, W_var, 1/Mott_cross_sec);
         //Third reconstruction method
-        double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                              (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pimi[0]]));
+        double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+                                              (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pimi[0]]));
         h1_en_recon3->Fill(en_recon3, 1/Mott_cross_sec);
         h1_en_recon3_pimi->Fill(en_recon3, 1/Mott_cross_sec);
 
@@ -2236,9 +1659,9 @@ void e2a_eppi_v1::Loop()
     double N_1pi_1p_0phot = 0;
     double N_1pi_1p_1phot = 0;
 
-    double en_recon1 = V4_el.E() + p_kin + V4_pi.E();
-    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                          (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
+    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+                                          (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
 
     rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], &N_1pi_1p_0phot, &N_1pi_1p_1phot, N_tot);
 
@@ -2301,9 +1724,9 @@ void e2a_eppi_v1::Loop()
     radstat[0] = ec_radstat_n[0];
     radstat[1] = ec_radstat_n[1];
 
-    double en_recon1 = V4_el.E() + p_kin + V4_pi.E();
-    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                          (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
+    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+                                          (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
 
     rotation->rot_2phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, radstat, &N_1pi_1p_0phot, &N_1pi_1p_1phot, &N_1pi_1p_2phot, N_tot);
 
@@ -2404,14 +1827,14 @@ void e2a_eppi_v1::Loop()
     if((num_p == 1)&&(num_pi == 1)){
       //cout << "1p 1pi event" << endl;
 
-	/*----------------------------This is a test, remove for normal running---------------------------------
-	
-	//1.1 GeV, reconstructed energy cut
-	if(fabs(1.161 - en_recon1) > 0.05){
-	  continue;
-	}	    
-			    
-        ------------------------------------------------------------------------------------------------------*/
+	//----------------------------This is a test, remove for normal running---------------------------------
+	//
+	////1.1 GeV, reconstructed energy cut
+	//if(fabs(1.161 - en_recon1) > 0.05){
+	//  continue;
+	//}	    
+	//------------------------------------------------------------------------------------------------------
+    
 
       h1_Q2_1p1pi->Fill(Q2);
 
@@ -2433,7 +1856,7 @@ void e2a_eppi_v1::Loop()
       prot_vz_corr = corrections.first;
       prot_p_corr = corrections.second;
 
-      h1_InvM_ep->Fill((V4_uncorrprot + V4_el).M());
+      h1_InvM_ep->Fill((V4_uncorrprot + *V4_el).M());
 
        TLorentzVector V4_targ(0,0,0,m_prot);
 
@@ -2445,9 +1868,9 @@ void e2a_eppi_v1::Loop()
 	//Missing mass + missing E go here
 	//h1_MM_eppipl->Fill((V4_beam.M() + m_prot) - (V4_el + V4_uncorrprot + V4_uncorrpipl).M());
 	//h1_MM_eppipl->Fill((V4_beam.M() + target_mass[ftarget]) - (V4_el + V4_uncorrprot + V4_uncorrpipl).M());
-	h1_MM_eppipl->Fill(((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpipl)).Rho());
+	h1_MM_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).Rho());
 	//h1_ME_eppipl->Fill(V4_beam.E() - (V4_el + V4_uncorrprot + V4_uncorrpipl).E());
-	h1_ME_eppipl->Fill(((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpipl)).E());
+	h1_ME_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).E());
 
 	h1_prot_mom_pipl->Fill(p[index_p[0]]);
 	h1_pipl_mom->Fill(p[index_pipl[0]]);
@@ -2458,7 +1881,7 @@ void e2a_eppi_v1::Loop()
 	h1_InvM_ppip->Fill((V4_corrprot + V4_uncorrpipl).M());
 	h1_InvM_ppip2->Fill(W_var);
 	//do a missing energy cut, then fill inv mass histos, binned in q^2
-	if(((((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpipl)).E()) > -0.05) && ((((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpipl)).E()) < 0.15)){
+	if(((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).E()) < 0.15)){
 	  h1_Q2_deltaplus_ME_cut->Fill(Q2);
 	  h1_InvM_ppip_MEcut->Fill((V4_corrprot + V4_uncorrpipl).M());
 	  h1_InvM_ppip_MEcut2->Fill(W_var);
@@ -2471,8 +1894,8 @@ void e2a_eppi_v1::Loop()
 	TLorentzVector V4_uncorrpimi(p[index_pimi[0]]*cx[index_pimi[0]],p[index_pimi[0]]*cy[index_pimi[0]],p[index_pimi[0]]*cz[index_pimi[0]],TMath::Sqrt(p[index_pimi[0]]*p[index_pimi[0]]+ m_pimi*m_pimi ) );
 	
 	//h1_InvM_ep->Fill((V4_uncorrprot + V4_el).M());
-	h1_InvM_epi->Fill((V4_uncorrpimi + V4_el).M());
-	h1_InvM_eppi->Fill((V4_corrprot + V4_uncorrpimi + V4_el).M());
+	h1_InvM_epi->Fill((V4_uncorrpimi + *V4_el).M());
+	h1_InvM_eppi->Fill((V4_corrprot + V4_uncorrpimi + *V4_el).M());
 	h1_InvM_ppi->Fill((V4_corrprot + V4_uncorrpimi).M());
 	h1_InvM_ppim->Fill((V4_corrprot + V4_uncorrpimi).M());
 	h1_InvM_ppim2->Fill(W_var);
@@ -2483,7 +1906,7 @@ void e2a_eppi_v1::Loop()
 
 
 	//more kinematic quantities
-	del_pt = V4_el.Py() + V4_corrprot.Py() + V4_uncorrpimi.Py();
+	del_pt = V4_el->Py() + V4_corrprot.Py() + V4_uncorrpimi.Py();
 	//alpha_t
 
 	h1_del_pt->Fill(del_pt);
@@ -2491,12 +1914,12 @@ void e2a_eppi_v1::Loop()
 	//Missing mass + missing E go here
 	//h1_MM_eppimi->Fill((V4_beam.M() + m_prot) - (V4_el + V4_uncorrprot + V4_uncorrpimi).M());
 	//h1_MM_eppimi->Fill((V4_beam.M() + target_mass[ftarget]) - (V4_el + V4_uncorrprot + V4_uncorrpimi).M());
-	h1_MM_eppimi->Fill(((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpimi)).Rho());
+	h1_MM_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).Rho());
 	//h1_ME_eppimi->Fill(V4_beam.E() - (V4_el + V4_uncorrprot + V4_uncorrpimi).E());
-	h1_ME_eppimi->Fill(((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpimi)).E());
+	h1_ME_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).E());
 
 	//do a missing energy cut, then fill inv mass histos, binned in q^2
-	if(((((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpimi)).E()) > -0.05) && ((((V4_beam + V4_targ) - (V4_el + V4_uncorrprot + V4_uncorrpimi)).E()) < 0.15)){
+	if(((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).E()) < 0.15)){
 	  h1_Q2_deltazero_ME_cut->Fill(Q2);
 	  h1_InvM_ppim_MEcut->Fill((V4_corrprot + V4_uncorrpimi).M());
 	  h1_InvM_ppim_MEcut2->Fill(W_var);
@@ -2534,20 +1957,20 @@ void e2a_eppi_v1::Loop()
 
     }
 
-//more shit needed here
+//more stuff needed here
 
     //---
 
 
-    /*-----------------------------------------------------------------------------------*
-     *-------------Corrections for extra hadrons (protons and pions)                     *
-     *-----------------------------------------------------------------------------------*
-     * Everything up to here should be generic enough for A(e,e'), A(e,e'p), A(e,e'p pi) *
-     * All we've done until now is identify particles                                    *
-     *-----------------------------------------------------------------------------------*
-     * We go as high as 4 particles                                                      *
-     * Multiplicities increase with energy (duh)                                         *
-     *-----------------------------------------------------------------------------------*/
+    // *-----------------------------------------------------------------------------------*
+    // *-------------Corrections for extra hadrons (protons and pions)                     *
+    // *-----------------------------------------------------------------------------------*
+    // * Everything up to here should be generic enough for A(e,e'), A(e,e'p), A(e,e'p pi) *
+    // * All we've done until now is identify particles                                    *
+    // *-----------------------------------------------------------------------------------*
+    // * We go as high as 4 particles                                                      *
+    // * Multiplicities increase with energy (duh)                                         *
+    // *-----------------------------------------------------------------------------------*
 
 
 
@@ -2613,23 +2036,23 @@ double p2_kin[2];
 	  
           TLorentzVector V4_prot_corr1(V3_2prot_corr[0],TMath::Sqrt(m_prot*m_prot+prot_p_corr[0]*prot_p_corr[0]));
           TLorentzVector V4_prot_corr2(V3_2prot_corr[1],TMath::Sqrt(m_prot*m_prot+prot_p_corr[1]*prot_p_corr[1]));
-          TLorentzVector V4_prot_el_tot1=V4_prot_corr1+V4_el;
-          TLorentzVector V4_prot_el_tot2=V4_prot_corr2+V4_el;
+          TLorentzVector V4_prot_el_tot1=V4_prot_corr1+*V4_el;
+          TLorentzVector V4_prot_el_tot2=V4_prot_corr2+*V4_el;
 	  //---to here
 	  //Could be replaced by a loop
 
-          h1_Wepp->Fill((V4_target+V4_beam-V4_prot_corr1-V4_prot_corr2-V4_el).M());
-          h1_Wepp_uncorr->Fill((V4_target+V4_beam-V4_prot_corr1-V4_prot_corr2-V4_el_uncorr).M());
+          h1_Wepp->Fill((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2-*V4_el).M());
+          h1_Wepp_uncorr->Fill((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2-*V4_el_uncorr).M());
 	  
-          h2_Wepp_ephi_corr->Fill(el_phi_mod,(V4_target+V4_beam-V4_prot_corr1-V4_prot_corr2-V4_el).M());
-          h2_Wepp_ephi->Fill(el_phi_mod,(V4_target+V4_beam-V4_prot_corr1-V4_prot_corr2-V4_el_uncorr).M());
+          h2_Wepp_ephi_corr->Fill(el_phi_mod,(V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2-*V4_el).M());
+          h2_Wepp_ephi->Fill(el_phi_mod,(V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2-*V4_el_uncorr).M());
 	  
           //h2_Wepp_ephi_corr_uncorrprot->Fill(el_phi_mod,(V4_target+V4_beam-V4_prot_uncorr1-V4_prot_uncorr2-V4_el).M());
           //h2_Wepp_ephi_uncorrprot->Fill(el_phi_mod,(V4_target+V4_beam-V4_prot_uncorr1-V4_prot_uncorr2-V4_el_uncorr).M());
-          h2_Wepp_ephi_corr_uncorrprot->Fill(el_phi_mod,(V4_target+V4_beam-V4_p_uncorr[0]-V4_p_uncorr[1]-V4_el).M());
-          h2_Wepp_ephi_uncorrprot->Fill(el_phi_mod,(V4_target+V4_beam-V4_p_uncorr[0]-V4_p_uncorr[1]-V4_el_uncorr).M());
+          h2_Wepp_ephi_corr_uncorrprot->Fill(el_phi_mod,(V4_target+*V4_beam-V4_p_uncorr[0]-V4_p_uncorr[1]-*V4_el).M());
+          h2_Wepp_ephi_uncorrprot->Fill(el_phi_mod,(V4_target+*V4_beam-V4_p_uncorr[0]-V4_p_uncorr[1]-*V4_el_uncorr).M());
 	  
-          double mult = 0.5*((V4_target+V4_beam-V4_prot_corr1-V4_prot_corr2).Mag2()-m_neut*m_neut)/((V4_target+V4_beam-V4_prot_corr1-V4_prot_corr2).E()*V4_el_uncorr.Rho()-((V4_target+V4_beam-V4_prot_corr1-V4_prot_corr2).Vect()).Dot(V4_el_uncorr.Vect()));
+          double mult = 0.5*((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2).Mag2()-m_neut*m_neut)/((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2).E()*V4_el_uncorr->Rho()-((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2).Vect()).Dot(V4_el_uncorr->Vect()));
 	  
           h1_e_mom_corrfuct[sc_sect[sc[ind_em]-1]-1]->Fill(mult);
 	  
@@ -2640,8 +2063,8 @@ double p2_kin[2];
           double p_perp_tot_2p[2]={0};
           N_prot_both = 0;
           double P_N_2p[2]={0};
-          V3_q=(V4_beam-V4_el).Vect();
-          rotation->prot2_rot_func(V3_2prot_corr, V3_2prot_uncorr, V4_el, E_tot_2p, p_perp_tot_2p, P_N_2p , &N_prot_both);
+          V3_q=(*V4_beam-*V4_el).Vect();
+          rotation->prot2_rot_func(V3_2prot_corr, V3_2prot_uncorr, *V4_el, E_tot_2p, p_perp_tot_2p, P_N_2p , &N_prot_both);
 	  
           if(num_pi_phot==0 && N_prot_both!=0){
             for(int f = 0; f < num_p; f++){    //looping through two protons
@@ -2653,7 +2076,7 @@ double p2_kin[2];
               h1_E_tot_p_bkgd_fracfeed->Fill((E_tot_2p[f]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],P_N_2p[f]*1/Mott_cross_sec);
               h1_E_rec_p_bkgd_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_N_2p[f]*1/Mott_cross_sec);
               h2_pperp_W->Fill(W_var,p_perp_tot_2p[f],-P_N_2p[f]*1/Mott_cross_sec);
-              h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_2prot_uncorr[f]) *TMath::RadToDeg(),-P_N_2p[f]*1/Mott_cross_sec);
+              h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_2prot_uncorr[f]) *TMath::RadToDeg(),-P_N_2p[f]*1/Mott_cross_sec);
               h2_Ecal_Eqe->Fill(E_rec,E_tot_2p[f],-P_N_2p[f]*1/Mott_cross_sec);
               h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot_2p[f],-P_N_2p[f]*1/Mott_cross_sec);
               h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot_2p[f],-P_N_2p[f]*1/Mott_cross_sec);
@@ -2700,7 +2123,7 @@ double p2_kin[2];
             double P_2p1pito1p0pi[2]={0};
             double Ptot=0;
 	    
-            rotation->prot2_pi1_rot_func(V3_2prot_corr,V3_2prot_uncorr,V3_1pi, q[ind_pi_phot[0]],V4_el,Ecal_2p1pi_to2p0pi,p_miss_perp_2p1pi_to2p0pi,P_2p1pito2p0pi, P_2p1pito1p1pi, P_2p1pito1p0pi,&Ptot);
+            rotation->prot2_pi1_rot_func(V3_2prot_corr,V3_2prot_uncorr,V3_1pi, q[ind_pi_phot[0]],*V4_el,Ecal_2p1pi_to2p0pi,p_miss_perp_2p1pi_to2p0pi,P_2p1pito2p0pi, P_2p1pito1p1pi, P_2p1pito1p0pi,&Ptot);
 	    
             for(int z=0; z < N_2prot; z++){ //looping over two protons
   //---------------------------------- 2p 1pi ->2p 0pi   ----------------------------------------------
@@ -2712,7 +2135,7 @@ double p2_kin[2];
               h1_E_tot_2p1pi_2p0pi_fracfeed->Fill((Ecal_2p1pi_to2p0pi[z]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],P_2p1pito2p0pi[z]*1/Mott_cross_sec);
               h1_E_rec_2p1pi_2p0pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_2p1pito2p0pi[z]*1/Mott_cross_sec);
               h2_pperp_W->Fill(W_var,p_miss_perp_2p1pi_to2p0pi[z],P_2p1pito2p0pi[z]*1/Mott_cross_sec);
-              h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_2prot_uncorr[z]) *TMath::RadToDeg(),P_2p1pito2p0pi[z]*1/Mott_cross_sec);
+              h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_2prot_uncorr[z]) *TMath::RadToDeg(),P_2p1pito2p0pi[z]*1/Mott_cross_sec);
               h2_Ecal_Eqe->Fill(E_rec,Ecal_2p1pi_to2p0pi[z],P_2p1pito2p0pi[z]*1/Mott_cross_sec);
               h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/Ecal_2p1pi_to2p0pi[z],P_2p1pito2p0pi[z]*1/Mott_cross_sec);
               h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-Ecal_2p1pi_to2p0pi[z],P_2p1pito2p0pi[z]*1/Mott_cross_sec);
@@ -2740,7 +2163,7 @@ double p2_kin[2];
               h1_E_tot_2p1pi_1p1pi_fracfeed->Fill((E_tot_2p[z]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],P_2p1pito1p1pi[z]*1/Mott_cross_sec);
               h1_E_rec_2p1pi_1p1pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_2p1pito1p1pi[z]*1/Mott_cross_sec);
               h2_pperp_W->Fill(W_var,p_perp_tot_2p[z],P_2p1pito1p1pi[z]*1/Mott_cross_sec);
-              h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_2prot_uncorr[z])*TMath::RadToDeg(),P_2p1pito1p1pi[z]*1/Mott_cross_sec);
+              h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_2prot_uncorr[z])*TMath::RadToDeg(),P_2p1pito1p1pi[z]*1/Mott_cross_sec);
               h2_Ecal_Eqe->Fill(E_rec,E_tot_2p[z],P_2p1pito1p1pi[z]*1/Mott_cross_sec);
               h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot_2p[z],P_2p1pito1p1pi[z]*1/Mott_cross_sec);
               h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot_2p[z],P_2p1pito1p1pi[z]*1/Mott_cross_sec);
@@ -2767,7 +2190,7 @@ double p2_kin[2];
               h1_E_tot_2p1pi_1p0pi_fracfeed->Fill((E_tot_2p[z]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],P_2p1pito1p0pi[z]*1/Mott_cross_sec);
               h1_E_rec_2p1pi_1p0pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_2p1pito1p0pi[z]*1/Mott_cross_sec);
               h2_pperp_W->Fill(W_var,p_perp_tot_2p[z],-P_2p1pito1p0pi[z]*1/Mott_cross_sec);
-              h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_2prot_uncorr[z])*TMath::RadToDeg(),-P_2p1pito1p0pi[z]*1/Mott_cross_sec);
+              h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_2prot_uncorr[z])*TMath::RadToDeg(),-P_2p1pito1p0pi[z]*1/Mott_cross_sec);
               h2_Ecal_Eqe->Fill(E_rec,E_tot_2p[z],-P_2p1pito1p0pi[z]*1/Mott_cross_sec);
               h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot_2p[z],-P_2p1pito1p0pi[z]*1/Mott_cross_sec);
               h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot_2p[z],-P_2p1pito1p0pi[z]*1/Mott_cross_sec);
@@ -2806,7 +2229,7 @@ double p2_kin[2];
             ecstat_pi2[0] = ec_radstat_n[0];
             ecstat_pi2[1] = ec_radstat_n[1];
 
-            rotation->prot2_pi2_rot_func(V3_2prot_corr,V3_2prot_uncorr,V3_2pi,q_pi2 ,V4_el, Ecal_2p2pi,p_miss_perp_2p2pi,Ptot_2p);
+            rotation->prot2_pi2_rot_func(V3_2prot_corr,V3_2prot_uncorr,V3_2pi,q_pi2 ,*V4_el, Ecal_2p2pi,p_miss_perp_2p2pi,Ptot_2p);
 
             for(int z = 0; z < N_2prot; z++){ //looping over two protons
 
@@ -2819,7 +2242,7 @@ double p2_kin[2];
               h1_E_tot_2p2pi_fracfeed->Fill((E_tot_2p[z]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],Ptot_2p[z]*1/Mott_cross_sec);
               h1_E_rec_2p2pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],Ptot_2p[z]*1/Mott_cross_sec);
               h2_pperp_W->Fill(W_var,p_perp_tot_2p[z],Ptot_2p[z]*1/Mott_cross_sec);
-              h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_2prot_uncorr[z])*TMath::RadToDeg(),Ptot_2p[z]*1/Mott_cross_sec);
+              h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_2prot_uncorr[z])*TMath::RadToDeg(),Ptot_2p[z]*1/Mott_cross_sec);
               h2_Ecal_Eqe->Fill(E_rec,E_tot_2p[z],Ptot_2p[z]*1/Mott_cross_sec);
               h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot_2p[z],Ptot_2p[z]*1/Mott_cross_sec);
               h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot_2p[z],Ptot_2p[z]*1/Mott_cross_sec);
@@ -2878,10 +2301,10 @@ double p2_kin[2];
     double N_1pi_2p_0phot = 0;
 
     double en_recon1[2];
-    en_recon1[0] = V4_el.E() + p2_kin[0] + V4_pi.E();
-    en_recon1[1] = V4_el.E() + p2_kin[1] + V4_pi.E();
-    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                          (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+    en_recon1[0] = V4_el->E() + p2_kin[0] + V4_pi.E();
+    en_recon1[1] = V4_el->E() + p2_kin[1] + V4_pi.E();
+    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+                                          (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
 
     rotation->rot_1phot_1pi_2p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], N_1pi_1p_0phot, N_1pi_1p_1phot, &N_1pi_2p_0phot, &N_1pi_2p_1phot, N_tot);
 
@@ -3081,164 +2504,164 @@ double p2_kin[2];
     V4_pi.SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
     V3_pi = V4_pi.Vect();
     double qpi = q[index_pi[0]];
-
+    
     N_1pi_1p[0]=N_1pi_1p[1]=0;
     double N_1pi_2p = 0;
     double en_recon1[2];
     double en_recon3;
-    double rot_angle;
-
-    en_recon1[0] = V4_el.E() + p2_kin[0] + V4_pi.E();
-    en_recon1[1] = V4_el.E() + p2_kin[1] + V4_pi.E();
-    en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                            (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pi[0]]));
-
-
-rotation->rot_1pi_2p(V3_pi, qpi, V3_p, V3_q, N_1pi_1p, &N_1pi_2p, N_tot);
+    //double rot_angle;
+    
+    en_recon1[0] = V4_el->E() + p2_kin[0] + V4_pi.E();
+    en_recon1[1] = V4_el->E() + p2_kin[1] + V4_pi.E();
+    en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+      (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pi[0]]));
+    
+    
+    rotation->rot_1pi_2p(V3_pi, qpi, V3_p, V3_q, N_1pi_1p, &N_1pi_2p, N_tot);
     //fill the histograms here
-      if(N_1pi_2p!=0){
-          // First reconstruction method
-          h1_rot1_1pi_2p->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          h2_rot_1pi_2p->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          if(qpi>0)
-          {
-            h1_rot1_1pi_2p_pipl->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	    h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          else
-          {
-            h1_rot1_1pi_2p_pimi->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	    h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h1_Q2_sub->Fill(Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h1_omega_sub->Fill(omega,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_cal_Wvar->Fill(en_recon1[0], W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          h1_rot1_1pi_2p->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          h2_rot_1pi_2p->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          if(qpi>0)
-          {
-            h1_rot1_1pi_2p_pipl->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	    h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          else
-          {
-            h1_rot1_1pi_2p_pimi->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	    h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h1_Q2_sub->Fill(Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h1_omega_sub->Fill(omega,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_cal_Wvar->Fill(en_recon1[1], W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          //Second reconstruction method
-          h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          if(qpi>0)
-          {
-            h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          else
-          {
-            h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          if(qpi>0)
-          {
-            h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          else
-          {
-            h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          //Third reconstruction method
-          h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          if(qpi>0)
-          {
-            h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          else
-          {
-            h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          if(qpi>0)
-          {
-            h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
-          else
-          {
-            h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-            h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-          }
+    if(N_1pi_2p!=0){
+      // First reconstruction method
+      h1_rot1_1pi_2p->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+      h2_rot_1pi_2p->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+      if(qpi>0)
+	{
+	  h1_rot1_1pi_2p_pipl->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      else
+	{
+	  h1_rot1_1pi_2p_pimi->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h1_Q2_sub->Fill(Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h1_omega_sub->Fill(omega,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_cal_Wvar->Fill(en_recon1[0], W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      h1_rot1_1pi_2p->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+      h2_rot_1pi_2p->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+      if(qpi>0)
+	{
+	  h1_rot1_1pi_2p_pipl->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      else
+	{
+	  h1_rot1_1pi_2p_pimi->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h1_Q2_sub->Fill(Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h1_omega_sub->Fill(omega,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_cal_Wvar->Fill(en_recon1[1], W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      //Second reconstruction method
+      h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+      if(qpi>0)
+	{
+	  h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      else
+	{
+	  h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+      if(qpi>0)
+	{
+	  h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      else
+	{
+	  h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      //Third reconstruction method
+      h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+      if(qpi>0)
+	{
+	  h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      else
+	{
+	  h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+      if(qpi>0)
+	{
+	  h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
+      else
+	{
+	  h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	}
     }
-}
-
-TLorentzVector V4_pi[2];
-TVector3 V3_pi[2], V3_pi_rot[2];
-double N_all2 = 0;
-double N_p1_pi1 = 0, N_p1_pi2 = 0, N_p2_pi2 = 0, N_p2_pi1 = 0;
-if(num_pi == 2 && ec_num_n==0 && num_n==0)
-{
-  V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-  V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
-  V3_pi[0] = V4_pi[0].Vect();
-  V3_pi[1] = V4_pi[1].Vect();
-
-  double N_1pi_1p_[4]={0}, N_1pi_2p_[2] = {0}, N_2pi_1p_[2] = {0};
-  double en_recon1[4];
-  double en_recon3[2];
-  double rot_angle;
-  double qpi[2];
-  qpi[0] = q[index_pi[0]];
-  qpi[1] = q[index_pi[1]];
-
-  en_recon1[0] = V4_el.E() + p2_kin[0] + V4_pi[0].E();
-  en_recon1[1] = V4_el.E() + p2_kin[0] + V4_pi[1].E();
-  en_recon1[2] = V4_el.E() + p2_kin[1] + V4_pi[0].E();
-  en_recon1[3] = V4_el.E() + p2_kin[1] + V4_pi[1].E();
-for(int g = 0; g<2;g++){
-    en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi[g].E() + 2*V4_el.Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-                                          (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi[g].E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
-}
-
-
-for(int g=0; g<N_tot; g++){
-
-rot_angle=gRandom->Uniform(0,2*TMath::Pi());
-
-    V3_pi_rot[0]=V3_pi[0];
-    V3_pi_rot[1]=V3_pi[1];
-    V3_p_rot[0]=V3_p[0];
-    V3_p_rot[1]=V3_p[1];
-    V3_pi_rot[0].Rotate(rot_angle,V3_q);
-    V3_pi_rot[1].Rotate(rot_angle,V3_q);
-    V3_p_rot[0].Rotate(rot_angle,V3_q);
-    V3_p_rot[1].Rotate(rot_angle,V3_q);
-
-    for(int z=0;z<2;z++){
-      if(q[index_pi[z]]>0) pi2_stat[z]=PiplFiducialCut(fbeam_en,V3_pi_rot[z], &cphil, &cphir);
-      else  pi2_stat[z]=PimiFiducialCut(fbeam_en,V3_pi_rot[z], &pimi_phimin, &pimi_phimax);
-    }
-    if(PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && pi2_stat[1])  N_all2=N_all2+1;
-    if(PFiducialCut(fbeam_en,V3_p_rot[0]) && !PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && !pi2_stat[1])  N_1pi_1p_[0]=N_1pi_1p_[0]+1;
-    if(PFiducialCut(fbeam_en,V3_p_rot[0]) && !PFiducialCut(fbeam_en,V3_p_rot[1]) &&  !pi2_stat[0] && pi2_stat[1])  N_1pi_1p_[1]=N_1pi_1p_[1]+1;
-    if(!PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && !pi2_stat[1])  N_1pi_1p_[2]=N_1pi_1p_[2]+1;
-    if(!PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  !pi2_stat[0] && pi2_stat[1])  N_1pi_1p_[3]=N_1pi_1p_[3]+1;
-    if(PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && !pi2_stat[1])  N_1pi_2p_[0]=N_1pi_2p_[0]+1;
-    if(PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  !pi2_stat[0] && pi2_stat[1])  N_1pi_2p_[1]=N_1pi_2p_[1]+1;
-    if(PFiducialCut(fbeam_en,V3_p_rot[0]) && !PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && pi2_stat[1])  N_2pi_1p_[0]=N_2pi_1p_[0]+1;
-    if(!PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && pi2_stat[1])  N_2pi_1p_[1]=N_2pi_1p_[1]+1;
-  }//end of N_tot loop
-
-  if(N_all2 !=0){
-
-//---------------------------------------------------2p2pi->1p2pi-------------------------------------------------------
+  }
+  
+  TLorentzVector V4_pi[2];
+  TVector3 V3_pi[2], V3_pi_rot[2];
+  double N_all2 = 0;
+  double N_p1_pi1 = 0, N_p1_pi2 = 0, N_p2_pi2 = 0, N_p2_pi1 = 0;
+  if(num_pi == 2 && ec_num_n==0 && num_n==0)
+    {
+      V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+      V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
+      V3_pi[0] = V4_pi[0].Vect();
+      V3_pi[1] = V4_pi[1].Vect();
+      
+      double N_1pi_1p_[4]={0}, N_1pi_2p_[2] = {0}, N_2pi_1p_[2] = {0};
+      double en_recon1[4];
+      double en_recon3[2];
+      double rot_angle;
+      double qpi[2];
+      qpi[0] = q[index_pi[0]];
+      qpi[1] = q[index_pi[1]];
+      
+      en_recon1[0] = V4_el->E() + p2_kin[0] + V4_pi[0].E();
+      en_recon1[1] = V4_el->E() + p2_kin[0] + V4_pi[1].E();
+      en_recon1[2] = V4_el->E() + p2_kin[1] + V4_pi[0].E();
+      en_recon1[3] = V4_el->E() + p2_kin[1] + V4_pi[1].E();
+      for(int g = 0; g<2;g++){
+	en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+	  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+      }
+      
+      
+      for(int g=0; g<N_tot; g++){
+	
+	rot_angle=gRandom->Uniform(0,2*TMath::Pi());
+	
+	V3_pi_rot[0]=V3_pi[0];
+	V3_pi_rot[1]=V3_pi[1];
+	V3_p_rot[0]=V3_p[0];
+	V3_p_rot[1]=V3_p[1];
+	V3_pi_rot[0].Rotate(rot_angle,V3_q);
+	V3_pi_rot[1].Rotate(rot_angle,V3_q);
+	V3_p_rot[0].Rotate(rot_angle,V3_q);
+	V3_p_rot[1].Rotate(rot_angle,V3_q);
+	
+	for(int z=0;z<2;z++){
+	  if(q[index_pi[z]]>0) pi2_stat[z]=PiplFiducialCut(fbeam_en,V3_pi_rot[z], &cphil, &cphir);
+	  else  pi2_stat[z]=PimiFiducialCut(fbeam_en,V3_pi_rot[z], &pimi_phil, &pimi_phir);
+	}
+	if(PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && pi2_stat[1])  N_all2=N_all2+1;
+	if(PFiducialCut(fbeam_en,V3_p_rot[0]) && !PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && !pi2_stat[1])  N_1pi_1p_[0]=N_1pi_1p_[0]+1;
+	if(PFiducialCut(fbeam_en,V3_p_rot[0]) && !PFiducialCut(fbeam_en,V3_p_rot[1]) &&  !pi2_stat[0] && pi2_stat[1])  N_1pi_1p_[1]=N_1pi_1p_[1]+1;
+	if(!PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && !pi2_stat[1])  N_1pi_1p_[2]=N_1pi_1p_[2]+1;
+	if(!PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  !pi2_stat[0] && pi2_stat[1])  N_1pi_1p_[3]=N_1pi_1p_[3]+1;
+	if(PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && !pi2_stat[1])  N_1pi_2p_[0]=N_1pi_2p_[0]+1;
+	if(PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  !pi2_stat[0] && pi2_stat[1])  N_1pi_2p_[1]=N_1pi_2p_[1]+1;
+	if(PFiducialCut(fbeam_en,V3_p_rot[0]) && !PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && pi2_stat[1])  N_2pi_1p_[0]=N_2pi_1p_[0]+1;
+	if(!PFiducialCut(fbeam_en,V3_p_rot[0]) && PFiducialCut(fbeam_en,V3_p_rot[1]) &&  pi2_stat[0] && pi2_stat[1])  N_2pi_1p_[1]=N_2pi_1p_[1]+1;
+      }//end of N_tot loop
+      
+      if(N_all2 !=0){
+	
+	//---------------------------------------------------2p2pi->1p2pi-------------------------------------------------------
       double N_2pi_1prot=0;
       double P_2p2pi_1p2pi[2][2]={0};
       double N_1pi_1prot[2] = {0};
@@ -3677,16 +3100,16 @@ rot_angle=gRandom->Uniform(0,2*TMath::Pi());
 	  V3_prot[i].SetXYZ(p[index_p[i]]*cx[index_p[i]],p[index_p[i]]*cy[index_p[i]],p[index_p[i]]*cz[index_p[i]]);
 	  V3_prot_corr[i].SetXYZ(prot_p_corr[i]*cx[index_p[i]],prot_p_corr[i]*cy[index_p[i]],prot_p_corr[i]*cz[index_p[i]]);
 	  
-	  V4_prot_el[i]=V4_p_corr[i]+V4_el;
-	  E_cal[i]=V4_el.E()+ V4_p_corr[i].E()-m_prot+bind_en[ftarget];
+	  V4_prot_el[i]=V4_p_corr[i]+*V4_el;
+	  E_cal[i]=V4_el->E()+ V4_p_corr[i].E()-m_prot+bind_en[ftarget];
 	  p_miss_perp[i]=TMath::Sqrt(V4_prot_el[i].Px()*V4_prot_el[i].Px()+V4_prot_el[i].Py()*V4_prot_el[i].Py());
 	}
-      V3_prot_el[0][0]=V4_el.Vect()+V3_prot[0];
-      V3_prot_el[0][1]=V4_el.Vect()+V3_prot[1];
-      V3_prot_el[1][0]=V4_el.Vect()+V3_prot[0];
-      V3_prot_el[1][1]=V4_el.Vect()+V3_prot[2];
-      V3_prot_el[2][0]=V4_el.Vect()+V3_prot[1];
-      V3_prot_el[2][1]=V4_el.Vect()+V3_prot[2];
+      V3_prot_el[0][0]=V4_el->Vect()+V3_prot[0];
+      V3_prot_el[0][1]=V4_el->Vect()+V3_prot[1];
+      V3_prot_el[1][0]=V4_el->Vect()+V3_prot[0];
+      V3_prot_el[1][1]=V4_el->Vect()+V3_prot[2];
+      V3_prot_el[2][0]=V4_el->Vect()+V3_prot[1];
+      V3_prot_el[2][1]=V4_el->Vect()+V3_prot[2];
       
       h1_el_3prot_vertdiff1->Fill(el_vert_corr- prot_vz_corr[0]);
       h1_el_3prot_vertdiff2->Fill(el_vert_corr- prot_vz_corr[1]);
@@ -3701,9 +3124,9 @@ rot_angle=gRandom->Uniform(0,2*TMath::Pi());
 	  for(int i = 0; i < N_3p; i++){
 	    N_p1[i]=0;
 	  }
-	  V3_q=(V4_beam-V4_el).Vect();
+	  V3_q=(*V4_beam-*V4_el).Vect();
 	  
-	  rotation->prot3_rot_func( V3_prot_corr,V3_prot,V4_el,E_cal_3pto2p,p_miss_perp_3pto2p, P_3pto2p,N_p1, E_cal_3pto1p,p_miss_perp_3pto1p,&N_p_three);
+	  rotation->prot3_rot_func( V3_prot_corr,V3_prot,*V4_el,E_cal_3pto2p,p_miss_perp_3pto2p, P_3pto2p,N_p1, E_cal_3pto1p,p_miss_perp_3pto1p,&N_p_three);
 	  
 	  if(num_pi_phot==0 && N_p_three!=0){
 	    for(int count = 0; count < N_comb;count++)    { //Loop over number of combinations
@@ -3718,7 +3141,7 @@ rot_angle=gRandom->Uniform(0,2*TMath::Pi());
 		h1_E_tot_3pto2p_fracfeed->Fill((E_cal_3pto2p[count][j]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en], P_3pto2p[count][j]*1/Mott_cross_sec);
 		h1_E_rec_3pto2p_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en], P_3pto2p[count][j]*1/Mott_cross_sec);
 		h2_pperp_W->Fill(W_var,p_miss_perp_3pto2p[count][j],P_3pto2p[count][j]*1/Mott_cross_sec);
-		h1_theta0->Fill((V4_beam.Vect()).Angle(V3_prot_el[count][j])*TMath::RadToDeg(),P_3pto2p[count][j]*1/Mott_cross_sec);
+		h1_theta0->Fill((V4_beam->Vect()).Angle(V3_prot_el[count][j])*TMath::RadToDeg(),P_3pto2p[count][j]*1/Mott_cross_sec);
 		h2_Ecal_Eqe->Fill(E_rec,E_cal_3pto2p[count][j],P_3pto2p[count][j]*1/Mott_cross_sec);
 		h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_cal_3pto2p[count][j],P_3pto2p[count][j]*1/Mott_cross_sec);
 		h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_cal_3pto2p[count][j],P_3pto2p[count][j]*1/Mott_cross_sec);
@@ -3752,7 +3175,7 @@ rot_angle=gRandom->Uniform(0,2*TMath::Pi());
 	      h1_E_tot_3pto1p_fracfeed->Fill((E_cal[j]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en], P_3pto1p[j]*1/Mott_cross_sec);
 	      h1_E_rec_3pto1p_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_3pto1p[j]*1/Mott_cross_sec);
 	      h2_pperp_W->Fill(W_var,p_miss_perp[j],-P_3pto1p[j]*1/Mott_cross_sec);
-	      h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot[j])*TMath::RadToDeg(),-P_3pto1p[j]*1/Mott_cross_sec);
+	      h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot[j])*TMath::RadToDeg(),-P_3pto1p[j]*1/Mott_cross_sec);
 	      h2_Ecal_Eqe->Fill(E_rec,E_cal[j],-P_3pto1p[j]*1/Mott_cross_sec);
 	      h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_cal[j],-P_3pto1p[j]*1/Mott_cross_sec);
 	      h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_cal[j],-P_3pto1p[j]*1/Mott_cross_sec);
@@ -3783,10 +3206,10 @@ rot_angle=gRandom->Uniform(0,2*TMath::Pi());
 	    double Ecal_3p1pi[N_3p]={0};
 	    double p_miss_perp_3p1pi[N_3p]={0};
 	    TVector3 V3_pi_phot;
-	    V3_q=(V4_beam-V4_el).Vect();
+	    V3_q=(*V4_beam-*V4_el).Vect();
 	    V3_pi_phot.SetXYZ(p[ind_pi_phot[0]]*cx[ind_pi_phot[0]],p[ind_pi_phot[0]]*cy[ind_pi_phot[0]],p[ind_pi_phot[0]]*cz[ind_pi_phot[0]]);
 	    
-	    rotation->prot3_pi1_rot_func(V3_prot_corr,V3_prot, V3_pi_phot,q[ind_pi_phot[0]], V4_el,  Ecal_3p1pi,p_miss_perp_3p1pi, P_tot_3p);
+	    rotation->prot3_pi1_rot_func(V3_prot_corr,V3_prot, V3_pi_phot,q[ind_pi_phot[0]], *V4_el,  Ecal_3p1pi,p_miss_perp_3p1pi, P_tot_3p);
 	    
 	    for(int j = 0; j < N_3p; j++)    { //loop over 3 protons
 	      
@@ -3797,7 +3220,7 @@ rot_angle=gRandom->Uniform(0,2*TMath::Pi());
 	      h1_E_tot_3p1pi_fracfeed->Fill((E_cal[j]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en], P_tot_3p[j]*1/Mott_cross_sec);
 	      h1_E_rec_3p1pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_tot_3p[j]*1/Mott_cross_sec);
 	      h2_pperp_W->Fill(W_var,p_miss_perp[j],P_tot_3p[j]*1/Mott_cross_sec);
-	      h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot[j])*TMath::RadToDeg(),P_tot_3p[j]*1/Mott_cross_sec);
+	      h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot[j])*TMath::RadToDeg(),P_tot_3p[j]*1/Mott_cross_sec);
 	      h2_Ecal_Eqe->Fill(E_rec,E_cal[j],P_tot_3p[j]*1/Mott_cross_sec);
 	      h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_cal[j],P_tot_3p[j]*1/Mott_cross_sec);
 	      h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_cal[j],P_tot_3p[j]*1/Mott_cross_sec);
@@ -3866,10 +3289,10 @@ if(num_p == 3){
     double en_recon3;
     double qpi = q[index_pi[0]];
     for(int i = 0;i<3;i++){
-      en_recon1[i] = V4_el.E() + p3_kin[i] + V4_pi.E();
+      en_recon1[i] = V4_el->E() + p3_kin[i] + V4_pi.E();
     }
-    en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                            (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pi[0]]));
+    en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+                                            (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pi[0]]));
 
     double N_1pi_1p_0phot[3] = {0};
     double N_1pi_1p_1phot[3] = {0};
@@ -4296,8 +3719,8 @@ if(num_p == 3){
                       V3_prot1[0] = V3_prot[i];
                       V3_prot1[1] = V3_prot[j];
                       rotation->rot_1pi_2p (V3_pi, qpi, V3_prot1, V3_q, N_1pion_1prot, &N_1pion_2prot, N_tot);
-                      en_recon1[0] = V4_el.E() + p3_kin[i] + V4_pi.E();
-                      en_recon1[1] = V4_el.E() + p3_kin[j] + V4_pi.E();
+                      en_recon1[0] = V4_el->E() + p3_kin[i] + V4_pi.E();
+                      en_recon1[1] = V4_el->E() + p3_kin[j] + V4_pi.E();
                       if(N_1pi_3p_1phot!=0 && N_1pion_2prot!=0 && N_1pi_3p_!=0)
                       {
 
@@ -4392,8 +3815,8 @@ if(num_p == 3){
                 double N_1pi_1p_1phot_[2] = {0};
                 double N_1pi_2p_1phot_ = 0;
                 double N_1pi_2p_0phot_ = 0;
-                en_recon1[0] = V4_el.E() + p3_kin[i] + V4_pi.E();
-                en_recon1[1] = V4_el.E() + p3_kin[j] + V4_pi.E();
+                en_recon1[0] = V4_el->E() + p3_kin[i] + V4_pi.E();
+                en_recon1[1] = V4_el->E() + p3_kin[j] + V4_pi.E();
                 rotation->rot_1phot_1pi_2p(V3_phot, V3_pi, q[index_pi[0]], V3_p1, V3_q, ec_radstat_n[0], N_1pi_1p_0phot_, N_1pi_1p_1phot_, &N_1pi_2p_0phot_, &N_1pi_2p_1phot_, N_tot);
 
                 //fill histograms here
@@ -4601,10 +4024,10 @@ if(num_p == 3){
     double qpi = 0;
     qpi = q[index_pi[0]];
     for(int i = 0;i<3;i++){
-      en_recon1[i] = V4_el.E() + p3_kin[i] + V4_pi.E();
+      en_recon1[i] = V4_el->E() + p3_kin[i] + V4_pi.E();
     }
-    en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el.E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el.E()*V4_pi.E() + 2*V4_el.Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                            (2*(m_neut - bind_en[ftarget] - V4_el.E() - V4_pi.E()) + 2*(V4_el.Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pi[0]]));
+    en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+                                            (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pi[0]]));
 
     double N_1pi_1p[3] = {0};
     double N_1pi_2p[3] = {0};
@@ -4745,8 +4168,8 @@ if(num_p == 3){
           V3_prot1[0] = V3_prot[i];
           V3_prot1[1] = V3_prot[j];
           rotation->rot_1pi_2p (V3_pi, qpi, V3_prot1, V3_q, N_1pion_1prot, &N_1pion_2prot, N_tot);
-          en_recon1[0] = V4_el.E() + p3_kin[i] + V4_pi.E();
-          en_recon1[1] = V4_el.E() + p3_kin[j] + V4_pi.E();
+          en_recon1[0] = V4_el->E() + p3_kin[i] + V4_pi.E();
+          en_recon1[1] = V4_el->E() + p3_kin[j] + V4_pi.E();
           if(N_1pion_2prot!=0 && N_1pi_3p!=0)
           {
           h1_rot1_1pi_3p->Fill(en_recon1[0], -(N_1pion_1prot[0]/N_1pion_2prot)*(N_1pi_2p[count]/N_1pi_3p)*(1/Mott_cross_sec));
@@ -4874,8 +4297,8 @@ if(num_p == 3){
 	  V3_prot4[i].SetXYZ(p[index_p[i]]*cx[index_p[i]],p[index_p[i]]*cy[index_p[i]],p[index_p[i]]*cz[index_p[i]]);
 	  V3_prot4_corr[i].SetXYZ(prot4_p_corr[i]*cx[index_p[i]],prot4_p_corr[i]*cy[index_p[i]],prot4_p_corr[i]*cz[index_p[i]]);
 	  V4_p4_corr[i].SetPxPyPzE(prot4_p_corr[i]*cx[index_p[i]],prot4_p_corr[i]*cy[index_p[i]],prot4_p_corr[i]*cz[index_p[i]],TMath::Sqrt(m_prot*m_prot+prot4_p_corr[i]*prot4_p_corr[i]));
-	  V4_prot4_el[i]=V4_p4_corr[i]+V4_el;
-	  E_cal_p4[i]=V4_el.E()+ V4_p4_corr[i].E()-m_prot+bind_en[ftarget];
+	  V4_prot4_el[i]=V4_p4_corr[i]+*V4_el;
+	  E_cal_p4[i]=V4_el->E()+ V4_p4_corr[i].E()-m_prot+bind_en[ftarget];
 	  p_miss_perp_p4[i]=TMath::Sqrt(V4_prot4_el[i].Px()*V4_prot4_el[i].Px()+V4_prot4_el[i].Py()*V4_prot4_el[i].Py());
 	} //end loop over 4 protons
       
@@ -4891,7 +4314,7 @@ if(num_p == 3){
 	    (el_vert_corr- prot4_vz_corr[3])>vertdiff_min[ftarget] && (el_vert_corr- prot4_vz_corr[3])<vertdiff_max[ftarget])
         {
 	  
-	  V3_q=(V4_beam-V4_el).Vect();
+	  V3_q=(*V4_beam-*V4_el).Vect();
 	  
 	  if ( num_pi_phot == 0){ //no pion or photon
 	    for(int g = 0; g < N_tot; g++){ //this looks like a 4-proton rotation function -> could be placed maybe in an extra function
@@ -4955,14 +4378,14 @@ if(num_p == 3){
 		V3_prot[0]=V3_prot4_corr[1]; V3_prot[1]=V3_prot4_corr[2]; V3_prot[2]=V3_prot4_corr[3];
 	      }
 	      
-	      rotation->prot3_rot_func( V3_prot, V3_prot_uncorr,V4_el,E_cal_4pto3p,p_miss_perp_4pto3p, P_4pto3p,N_p1,E_cal_43pto1p,p_miss_perp_43pto1p,&N_p_three);
+	      rotation->prot3_rot_func( V3_prot, V3_prot_uncorr,*V4_el,E_cal_4pto3p,p_miss_perp_4pto3p, P_4pto3p,N_p1,E_cal_43pto1p,p_miss_perp_43pto1p,&N_p_three);
 	      
-	      V3_el_prot[0][0]=V4_el.Vect()+V3_prot_uncorr[0];
-	      V3_el_prot[0][1]=V4_el.Vect()+V3_prot_uncorr[1];
-	      V3_el_prot[1][0]=V4_el.Vect()+V3_prot_uncorr[0];
-	      V3_el_prot[1][1]=V4_el.Vect()+V3_prot_uncorr[2];
-	      V3_el_prot[2][0]=V4_el.Vect()+V3_prot_uncorr[1];
-	      V3_el_prot[2][1]=V4_el.Vect()+V3_prot_uncorr[2];
+	      V3_el_prot[0][0]=V4_el->Vect()+V3_prot_uncorr[0];
+	      V3_el_prot[0][1]=V4_el->Vect()+V3_prot_uncorr[1];
+	      V3_el_prot[1][0]=V4_el->Vect()+V3_prot_uncorr[0];
+	      V3_el_prot[1][1]=V4_el->Vect()+V3_prot_uncorr[2];
+	      V3_el_prot[2][0]=V4_el->Vect()+V3_prot_uncorr[1];
+	      V3_el_prot[2][1]=V4_el->Vect()+V3_prot_uncorr[2];
 	      
 	      if( N_p_three!=0 && N_p_four!=0){
 		for(int count = 0; count < N_comb; count++)    { //looping through number of 2 proton combination out of 3 protons
@@ -4977,7 +4400,7 @@ if(num_p == 3){
 		    h1_E_tot_4pto3p_fracfeed->Fill((E_cal_4pto3p[count][j]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en], P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
 		    h1_E_rec_4pto3p_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en], P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
 		    h2_pperp_W->Fill(W_var,p_miss_perp_4pto3p[count][j],-P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
-		    h1_theta0->Fill((V4_beam.Vect()).Angle(V3_el_prot[count][j])*TMath::RadToDeg(),-P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
+		    h1_theta0->Fill((V4_beam->Vect()).Angle(V3_el_prot[count][j])*TMath::RadToDeg(),-P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
 		    h2_Ecal_Eqe->Fill(E_rec,E_cal_4pto3p[count][j],-P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
 		    h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_cal_4pto3p[count][j],-P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
 		    h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_cal_4pto3p[count][j],-P_4pto3p[count][j]*(N_p4_p3[g]/N_p_four)*1/Mott_cross_sec);
@@ -5010,7 +4433,7 @@ if(num_p == 3){
 		  h1_E_tot_43pto1p_fracfeed->Fill((E_cal_43pto1p[j]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en], P_43pto1p[j]*1/Mott_cross_sec);
 		  h1_E_rec_43pto1p_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_43pto1p[j]*1/Mott_cross_sec);
 		  h2_pperp_W->Fill(W_var,p_miss_perp_43pto1p[j],P_43pto1p[j]*1/Mott_cross_sec);
-		  h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot_uncorr[j])*TMath::RadToDeg(),P_43pto1p[j]*1/Mott_cross_sec);
+		  h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot_uncorr[j])*TMath::RadToDeg(),P_43pto1p[j]*1/Mott_cross_sec);
 		  h2_Ecal_Eqe->Fill(E_rec,E_cal_43pto1p[j],P_43pto1p[j]*1/Mott_cross_sec);
 		  h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_cal_43pto1p[j],P_43pto1p[j]*1/Mott_cross_sec);
 		  h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_cal_43pto1p[j],P_43pto1p[j]*1/Mott_cross_sec);
@@ -5051,7 +4474,7 @@ if(num_p == 3){
 		  V3p2_uncorr[0]=V3_prot4[ind1];
 		  V3p2_uncorr[1]=V3_prot4[ind2];
 		  
-		  rotation->prot2_rot_func( V3p2,V3p2_uncorr, V4_el,E_cal_4pto2p,p_miss_perp_4pto2p,  P_4pto2p, &N_two);
+		  rotation->prot2_rot_func( V3p2,V3p2_uncorr, *V4_el,E_cal_4pto2p,p_miss_perp_4pto2p,  P_4pto2p, &N_two);
 		  
 		  if( N_two!=0  && N_p_four!=0){
 		    for(int j = 0; j < N_2p; j++)  {  //looping through  1 proton combination out of 2 protons
@@ -5063,7 +4486,7 @@ if(num_p == 3){
 		      h1_E_tot_4pto2p_fracfeed->Fill((E_cal_4pto2p[j]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en], P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
 		      h1_E_rec_4pto2p_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en], P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
 		      h2_pperp_W->Fill(W_var,p_miss_perp_4pto2p[j], P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
-		      h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3p2_uncorr[j])*TMath::RadToDeg(),P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
+		      h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3p2_uncorr[j])*TMath::RadToDeg(),P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
 		      h2_Ecal_Eqe->Fill(E_rec,E_cal_4pto2p[j],P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
 		      h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_cal_4pto2p[j],P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
 		      h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_cal_4pto2p[j],P_4pto2p[j]*(N_p4_p2[N_4to2]/N_p_four)*1/Mott_cross_sec);
@@ -5101,7 +4524,7 @@ if(num_p == 3){
 		h1_E_tot_4pto1p_fracfeed->Fill((E_cal_p4[j]-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en], P_4pto1p[j]*1/Mott_cross_sec);
 		h1_E_rec_4pto1p_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_4pto1p[j]*1/Mott_cross_sec);
 		h2_pperp_W->Fill(W_var,p_miss_perp_p4[j],-P_4pto1p[j]*1/Mott_cross_sec);
-		h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot4[j])*TMath::RadToDeg(),-P_4pto1p[j]*1/Mott_cross_sec);
+		h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot4[j])*TMath::RadToDeg(),-P_4pto1p[j]*1/Mott_cross_sec);
 		h2_Ecal_Eqe->Fill(E_rec,E_cal_p4[j],-P_4pto1p[j]*1/Mott_cross_sec);
 		h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_cal_p4[j],-P_4pto1p[j]*1/Mott_cross_sec);
 		h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_cal_p4[j],-P_4pto1p[j]*1/Mott_cross_sec);
@@ -5129,7 +4552,7 @@ if(num_p == 3){
     double P_undet=0;
     //TVector3 V3_pi;
     
-    V3_q=(V4_beam-V4_el).Vect();
+    V3_q=(*V4_beam-*V4_el).Vect();
     h1_E_rec->Fill(E_rec,1/Mott_cross_sec);
     
     if (num_pi_phot==0){
@@ -5148,7 +4571,7 @@ if(num_p == 3){
       h1_E_rec_1pi_weight_frac_feed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_undet*1/Mott_cross_sec);
       
       if(!ec_radstat_n[0])  h1_E_rec_1pi->Fill(E_rec,1/Mott_cross_sec);
-      if(ec_num_n==1)       h2_phot_e_angle_Erec->Fill(E_rec,V3_pi.Angle(V4_el.Vect())*TMath::RadToDeg());
+      if(ec_num_n==1)       h2_phot_e_angle_Erec->Fill(E_rec,V3_pi.Angle(V4_el->Vect())*TMath::RadToDeg());
     }
     //----------------------------- e- ,2pi  -----------------------------------------
     
@@ -5282,7 +4705,7 @@ if(num_p == 3){
     if( num_p==1)
       {
 	
-	ind_p = index_p[0];
+	int ind_p = index_p[0];
 	
 	TLorentzVector V4_prot_uncorr(p[ind_p]*cx[ind_p],p[ind_p]*cy[ind_p],p[ind_p]*cz[ind_p],TMath::Sqrt(m_prot*m_prot+p[ind_p]*p[ind_p]));
 	//Proton kinematics
@@ -5310,11 +4733,11 @@ if(num_p == 3){
 	
 	TLorentzVector V4_prot_corr(prot_mom_corr*cx[ind_p],prot_mom_corr*cy[ind_p],prot_mom_corr*cz[ind_p],TMath::Sqrt(m_prot*m_prot+prot_mom_corr*prot_mom_corr));
 	TVector3 V3_prot_uncorr = V4_prot_uncorr.Vect();
-	TLorentzVector V4_prot_el_tot = V4_prot_corr + V4_el;
+	TLorentzVector V4_prot_el_tot = V4_prot_corr + *V4_el;
 	double p_perp_tot=TMath::Sqrt(V4_prot_el_tot.Px()*V4_prot_el_tot.Px()+V4_prot_el_tot.Py()*V4_prot_el_tot.Py());
 	//double p_z_tot=V4_prot_el_tot.Pz();
 	//double p_tot=V4_prot_el_tot.Rho();
-	double E_tot=V4_el.E()+V4_prot_corr.E()-m_prot+bind_en[ftarget];
+	double E_tot=V4_el->E()+V4_prot_corr.E()-m_prot+bind_en[ftarget];
 	
 	//Vertex cut was removed here since it is already in the event selection loop F.H 08/13/19
 	
@@ -5328,7 +4751,7 @@ if(num_p == 3){
 	  bool radstat_pi2[N_2pi]={false};
 	  double P_1p0pi=0;
 	  double P_1p1pi[N_2pi]={0};
-	  V3_q=(V4_beam-V4_el).Vect();
+	  V3_q=(*V4_beam-*V4_el).Vect();
 	  
 	  V3_2pi[0].SetXYZ(p[ind_pi_phot[0]]*cx[ind_pi_phot[0]],p[ind_pi_phot[0]]*cy[ind_pi_phot[0]],p[ind_pi_phot[0]]*cz[ind_pi_phot[0]]);
 	  V3_2pi[1].SetXYZ(p[ind_pi_phot[1]]*cx[ind_pi_phot[1]],p[ind_pi_phot[1]]*cy[ind_pi_phot[1]],p[ind_pi_phot[1]]*cz[ind_pi_phot[1]]);
@@ -5350,7 +4773,7 @@ if(num_p == 3){
 	    h1_E_tot_1p2pi_fracfeed->Fill((E_tot-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],P_1p1pi[z]*1/Mott_cross_sec);
 	    h1_E_rec_1p2pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_1p1pi[z]*1/Mott_cross_sec);
 	    h2_pperp_W->Fill(W_var,p_perp_tot,P_1p1pi[z]*1/Mott_cross_sec);
-	    h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot_uncorr)*TMath::RadToDeg(),P_1p1pi[z]*1/Mott_cross_sec);
+	    h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot_uncorr)*TMath::RadToDeg(),P_1p1pi[z]*1/Mott_cross_sec);
 	    h2_Ecal_Eqe->Fill(E_rec,E_tot,P_1p1pi[z]*1/Mott_cross_sec);
 	    h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot,P_1p1pi[z]*1/Mott_cross_sec);
 	    h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot,P_1p1pi[z]*1/Mott_cross_sec);
@@ -5379,7 +4802,7 @@ if(num_p == 3){
 	  h1_E_tot_1p2pi_1p0pi_fracfeed->Fill((E_tot-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],P_1p0pi*1/Mott_cross_sec);
 	  h1_E_rec_1p2pi_1p0pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_1p0pi*1/Mott_cross_sec);
 	  h2_pperp_W->Fill(W_var,p_perp_tot,-P_1p0pi*1/Mott_cross_sec);
-	  h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot_uncorr)*TMath::RadToDeg(),-P_1p0pi*1/Mott_cross_sec);
+	  h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot_uncorr)*TMath::RadToDeg(),-P_1p0pi*1/Mott_cross_sec);
 	  h2_Ecal_Eqe->Fill(E_rec,E_tot,-P_1p0pi*1/Mott_cross_sec);
 	  h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot,-P_1p0pi*1/Mott_cross_sec);
 	  h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot,-P_1p0pi*1/Mott_cross_sec);
@@ -5413,7 +4836,7 @@ if(num_p == 3){
 	  //double N_nopi=0;
 	  //double N_0pi_1p=0;
 	  double P_1p3pi=0;
-	  V3_q=(V4_beam-V4_el).Vect();
+	  V3_q=(*V4_beam-*V4_el).Vect();
 	  
 	  V3_3pi[0].SetXYZ(p[ind_pi_phot[0]]*cx[ind_pi_phot[0]],p[ind_pi_phot[0]]*cy[ind_pi_phot[0]],p[ind_pi_phot[0]]*cz[ind_pi_phot[0]]);
 	  V3_3pi[1].SetXYZ(p[ind_pi_phot[1]]*cx[ind_pi_phot[1]],p[ind_pi_phot[1]]*cy[ind_pi_phot[1]],p[ind_pi_phot[1]]*cz[ind_pi_phot[1]]);
@@ -5435,7 +4858,7 @@ if(num_p == 3){
 	  h1_E_tot_1p3pi_fracfeed->Fill((E_tot-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],P_1p3pi*1/Mott_cross_sec);
 	  h1_E_rec_1p3pi_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],P_1p3pi*1/Mott_cross_sec);
 	  h2_pperp_W->Fill(W_var,p_perp_tot,P_1p3pi*1/Mott_cross_sec);
-	  h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot_uncorr)*TMath::RadToDeg(),P_1p3pi*1/Mott_cross_sec);
+	  h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot_uncorr)*TMath::RadToDeg(),P_1p3pi*1/Mott_cross_sec);
 	  h2_Ecal_Eqe->Fill(E_rec,E_tot,P_1p3pi*1/Mott_cross_sec);
 	  h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot,P_1p3pi*1/Mott_cross_sec);
 	  h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot,P_1p3pi*1/Mott_cross_sec);
@@ -5459,7 +4882,7 @@ if(num_p == 3){
 	if (num_pi_phot==1) {
 	  double N_piphot_det,N_piphot_undet;
 	  TVector3 V3_pi_phot;
-	  V3_q=(V4_beam-V4_el).Vect();
+	  V3_q=(*V4_beam-*V4_el).Vect();
 	  V3_pi_phot.SetXYZ(p[ind_pi_phot[0]]*cx[ind_pi_phot[0]],p[ind_pi_phot[0]]*cy[ind_pi_phot[0]],p[ind_pi_phot[0]]*cz[ind_pi_phot[0]]);	N_piphot_det=N_piphot_undet=0;
 	  
 	  rotation->prot1_pi1_rot_func(V3_prot_uncorr,V3_pi_phot, q[ind_pi_phot[0]], &N_piphot_det,&N_piphot_undet);
@@ -5474,7 +4897,7 @@ if(num_p == 3){
 	    h1_E_rec_undetfactor_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
 	    h1_E_tot_undetfactor_fracfeed->Fill((E_tot-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
 	    h2_pperp_W->Fill(W_var,p_perp_tot,-(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
-	    h1_theta0->Fill((V4_beam.Vect()).Angle(V4_el.Vect()+V3_prot_uncorr)*TMath::RadToDeg(),-(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
+	    h1_theta0->Fill((V4_beam->Vect()).Angle(V4_el->Vect()+V3_prot_uncorr)*TMath::RadToDeg(),-(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
 	    h2_Ecal_Eqe->Fill(E_rec,E_tot,-(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
 	    h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot,-(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
 	    h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot,-(N_piphot_undet/N_piphot_det)*1/Mott_cross_sec);
@@ -5513,7 +4936,7 @@ if(num_p == 3){
 	  h1_E_tot_cut2_fracfeed->Fill((E_tot-en_beam_Ecal[fbeam_en])/en_beam_Ecal[fbeam_en],1/Mott_cross_sec);
 	  h1_E_rec_cut2_new_fracfeed->Fill((E_rec-en_beam_Eqe[fbeam_en])/en_beam_Eqe[fbeam_en],1/Mott_cross_sec);
 	  h2_pperp_W->Fill(W_var,p_perp_tot,1/Mott_cross_sec);
-	  h1_theta0->Fill((V4_beam.Vect()).Angle(V4_prot_el_tot.Vect()) *TMath::RadToDeg(),1/Mott_cross_sec);
+	  h1_theta0->Fill((V4_beam->Vect()).Angle(V4_prot_el_tot.Vect()) *TMath::RadToDeg(),1/Mott_cross_sec);
 	  h2_Ecal_Eqe->Fill(E_rec,E_tot,1/Mott_cross_sec);
 	  h2_EqeEcalratio_Eqe->Fill(E_rec,E_rec/E_tot,1/Mott_cross_sec);
 	  h2_EqeEcaldiff_Eqe->Fill(E_rec,E_rec-E_tot,1/Mott_cross_sec);
@@ -5544,13 +4967,12 @@ if(num_p == 3){
 	h2_Erec_pperp->Fill(p_perp_tot,E_rec,1/Mott_cross_sec);
 	
       } // 1proton ends
-    
-    
+       
   }
-  /*****************************/
-  /**End of event loop (jentry)*/
-  /*****************************/
-  
+  // *****************************
+  // **End of event loop (jentry)*
+  // *****************************
+
   std::cout << "CounterEvents = " << CounterEvents << std::endl;
 
    fsub_pipl->Write();
@@ -6159,8 +5581,6 @@ void e2a_eppi_v1::Analyse(){
       h1_Etot_p_bkgd_slice_sub_Ecalcut_ratio4p[i][j]=   (TH1F *)   h1_Etot_p_bkgd_slice_sub_Ecalcut_2p1pi_1p0pi[i][j]->Clone(Form("h1_Etot_p_bkgd_slice_sub_Ecalcut_ratio4p_%d_%d",i+1,j+1));
       h1_Etot_p_bkgd_slice_sub_Ecalcut_ratio4p[i][j]->Divide(h_Etot_subtruct_piplpimi09_2p1pi_1p0pi);
       cout<<200+i*200<<"   "<<j+1<<"   "<<h1_Etot_p_bkgd_slice_sub_Ecalcut_ratio4p[i][j]->GetBinContent(1)<<"  Error  "<<h1_Etot_p_bkgd_slice_sub_Ecalcut_ratio4p[i][j]->GetBinError(1)<<endl;
-
-
     }
   }
 
@@ -6318,11 +5738,7 @@ TH2F* h2_sub_kin_cal_pipl = (TH2F*) h2_cal_kin_pipl->Clone("sub_cal_vs_kin_pipl"
  h2_sub_kin_cal_pipl->Add(h2_rot_1pi_3p_1phot_pipl, -1);
  
  
-
   //
-
-
-
 
   gDirectory->Write("hist_Files", TObject::kOverwrite);
   // skim_tree->AutoSave();
@@ -6330,14 +5746,703 @@ TH2F* h2_sub_kin_cal_pipl = (TH2F*) h2_cal_kin_pipl->Clone("sub_cal_vs_kin_pipl"
   file_out->Close();//To suppress compiler warning
 
 
-
-
 }
 //---End Loop function
 
 
+//-------------------------------------------------
+//-----------Particle ID Functions-----------------
+//-------------------------------------------------
+
+//-----electron_ID-----
+//Particle ID function for the electron
+Int_t e2a_eppi_v1::electron_ID(){
+
+
+  if(ec[ind_em] <= 0){
+    //std::cout << "Possible problem with making electron ec vector. EC index below/equal Zero: ec[ind_em] =  " << ec[ind_em] << std::endl;
+    return -1;
+  }
+  if(sc[ind_em] <=0){
+    //std::cout << "Possible problem with making electron ec vector. SC index below/equal zero: sc[ind_em] =  " << sc[ind_em] << std::endl;
+    return -1;
+  }
+
+  //Define electron vectors, angles amd other Information
+  TVector3 e_ec_xyz1(ech_x[ec[ind_em]-1],ech_y[ec[ind_em]-1],ech_z[ec[ind_em]-1]);  //local to electron ID
+  TVector3 el_mom1(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em] ,p[ind_em]*cz[ind_em]); //local to electron ID
+  //double sc_time = sc_t[sc[ind_em] - 1];
+  //double sc_path = sc_r[sc[ind_em] - 1];
+  int sc_paddle = sc_pd[sc[ind_em] - 1];
+  //int sc_sector = sc_sect[sc[ind_em] - 1];
+  el_vert = vz[ind_em];
+
+  double ec_x = ech_x[ec[ind_em]-1];  //local
+  double ec_y = ech_y[ec[ind_em]-1];  //local
+  double ec_z = ech_z[ec[ind_em]-1];  //local
+
+  double el_theta =  TMath::ACos(cz[ind_em])*TMath::RadToDeg();
+
+  el_phi_mod = TMath::ATan2(cy[ind_em],cx[ind_em])*TMath::RadToDeg()+30; //Add extra 30 degree rotation in phi
+  if(el_phi_mod<0){
+    el_phi_mod  = el_phi_mod+360; //Add 360 so that electron phi is between 0 and 360 degree
+  }
+
+  int el_ec_sector = ec_sect[ec[ind_em] - 1];
+  el_vert_corr = el_vert+vz_corr(vz_corr_func,el_phi_mod,el_theta);
+  
+
+  //Variables for electron cuts
+  double ece = TMath::Max( ec_ei[ec[ind_em] - 1] + ec_eo[ec[ind_em] - 1],   etot[ec[ind_em] - 1]);
+  el_segment = int((cc_segm[cc[ind_em]-1]-int(cc_segm[cc[ind_em]-1]/1000)*1000)/10); //does this work in all cases?? F.H. 08/07/19
+  el_cc_sector = cc_sect[cc[ind_em]-1];
+  el_sccc_timediff = sc_t[cc[ind_em]-1]-cc_t[cc[ind_em]-1]-(sc_r[cc[ind_em]-1]-cc_r[cc[ind_em]-1])/(c*ns_to_s);
+  el_cc_nphe = nphe[cc[ind_em]-1]/10.;
+  double ec_SC_timediff_uncorr = ec_t[ec[ind_em]-1]-sc_t[sc[ind_em]-1]-(ec_r[ec[ind_em]-1]-sc_r[sc[ind_em]-1])/(c*ns_to_s);
+  
+  //fsum_e and fsub_p are TF1 Functions for electron E/p cuts
+  fsum_e->SetParameters(epratio_sig_cutrange, max_mom);
+  fsub_e->SetParameters(epratio_sig_cutrange, max_mom);
+
+  
+  //Cuts for 1.1 GeV on energy deposition, momenta, tof and cherenkov
+  if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && ec[ind_em] > 0.5 && sc[ind_em] > 0.5 && cc[ind_em] > 0.5 && q[ind_em] < 0 &&
+     ec_ei[ec[ind_em] - 1] >= 0.03 && ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) && p[ind_em] >= min_good_mom  &&
+     cc_c2[cc[ind_em]-1] <= 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1] )
+    {
+      h1_el_SCpd[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
+      for(int k=1;k<=6;k++){  //k is sector number
+	if(abs(p[ind_em]-0.45)<0.05 && sc_sect[sc[ind_em]-1]==k)  h2_el_theta_phi_p_beffidcut[k-1]->Fill(el_phi_mod,el_theta);
+	if(abs(p[ind_em]-1)<0.05 && sc_sect[sc[ind_em]-1]==k)     h2_el_theta_phi_p_beffidcut2[k-1]->Fill(el_phi_mod,el_theta);
+      }
+    }
+  //---end 1.1 cuts  
+  
+  //Cuts for 2.2 GeV on energy deposition, momenta, tof and cherenkov
+  if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 3. && ec[ind_em] > 0.5 && cc[ind_em] > 0.5 &&  sc[ind_em] > 0.5 && q[ind_em] < 0  &&
+     ec_ei[ec[ind_em] - 1] >= 0.06 && ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) && p[ind_em] >= min_good_mom &&
+     cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1]  &&
+     TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass) <= en_beam[fbeam_en]) //this cut only exists for 2.2 GeV to cut some very rare events with p_e > beam mom" F.H. 08/08/19
+    {
+      h1_el_SCpd[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
+      for(int k=1;k<=6;k++){ //k is sector number
+	if(abs(p[ind_em]-1.)<0.05 && sc_sect[sc[ind_em]-1]==k)	 h2_el_theta_phi_p_beffidcut[k-1]->Fill(el_phi_mod,el_theta);
+	if(abs(p[ind_em]-1.65)<0.05 && sc_sect[sc[ind_em]-1]==k) h2_el_theta_phi_p_beffidcut2[k-1]->Fill(el_phi_mod,el_theta);
+      }
+    }
+  //---end 2.2 cuts  
+  
+  //Cuts for 4.4 GeV on energy deposition, momenta, tof and cherenkov.
+  // It is the only one with ece cut 0.33, keeping approved cuts
+  if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. && ec[ind_em] > 0.5 &&  sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
+     ec_ei[ec[ind_em] - 1] >= 0.055 && ece >= 0.33  && ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) && p[ind_em] >= min_good_mom  &&
+     cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1] )
+    {
+      h1_el_SCpd[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
+      for(int k=1;k<=6;k++){ //k is sector number
+	if(abs(p[ind_em]-2.5)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_beffidcut[k-1]->Fill(el_phi_mod,el_theta);
+	if(abs(p[ind_em]-1.4)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_beffidcut2[k-1]->Fill(el_phi_mod,el_theta);
+      }
+    }
+  //---end 4.4 cuts  
+
+
+
+    h2_el_ec_xy->Fill(ec_x,ec_y);
+
+    h2_el_theta_p[sc_sect[sc[ind_em]-1]-1]->Fill(el_mom1.Mag(),el_theta);
+
+    for(int ii=0; ii<24;ii++){
+      if( ((ii*0.05) < p[ind_em]) && (p[ind_em] < ((ii+1)*0.05))){
+	h2_el_th_vs_phi[ii]->Fill(el_phi_mod,el_theta);      
+	h2_el_th_phi[sc_sect[sc[ind_em]-1]-1][ii]->Fill(el_phi_mod,el_theta);
+      }
+    }
+
+    //should we stop electron_ID here?
+
+    //Main Fiducial Cut for Electron
+    if( !EFiducialCut(fbeam_en, el_mom1) ) return -1; //theta, phi cuts
+    if( !CutUVW(e_ec_xyz1) )               return -1; //u>60, v<360, w<400
+    
+    h2_el_ec_xy_fidcut->Fill(ec_x,ec_y);
+
+    for(int ii=0; ii<24;ii++){
+      if( ((ii*0.05) < p[ind_em]) && (p[ind_em] < ((ii+1)*0.05))){
+	h2_el_th_vs_phi_fid[ii]->Fill(el_phi_mod,el_theta);      
+	h2_el_th_phi_fid[sc_sect[sc[ind_em]-1]-1][ii]->Fill(el_phi_mod,el_theta);
+      }
+    }
+    
+    /** FROM HERE AFTER ELECTRON FIDUCIAL CUTS HAVE BEEN PERFORMED **/
+    //Cuts for 4.4 GeV, no cc and tof cuts (only done for 4.4 GeV)
+    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. && ec[ind_em] > 0.5 &&  sc[ind_em] > 0.5  &&  q[ind_em] < 0 &&
+       ec_ei[ec[ind_em] - 1] >= 0.055  && ece >= 0.33  && p[ind_em] >= min_good_mom)
+      {
+	h2_el_E_p_ratio_withoutCC->Fill(p[ind_em], ece/p[ind_em]);
+	if(cc[ind_em] > 0.5) h2_el_E_p_ratio_withCC->Fill(p[ind_em], ece/p[ind_em]);
+      }
+    
+    //Cuts for 1.1 GeV. No cut on minimum momentum and ec_ei cut
+    if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && ec[ind_em] > 0.5 && sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
+       ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) &&
+       el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1] &&   cc_c2[cc[ind_em]-1] <= 0.1)
+      {
+	// if(ec_ei[ec[ind_em] - 1] >= 0.05)
+	h1_el_Etot_cut->Fill(ece);
+	//  if (p[ind_em]>=min_good_mom)
+	h1_el_Ein_cut->Fill(ec_ei[ec[ind_em] - 1]);
+      }
+    
+    //Cuts for 2.2 GeV. No cut on minimum momentum and ec_ei cut
+    if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 3. && ec[ind_em] > 0.5 && sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
+       ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em]) &&
+       cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1]  &&
+       TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass) <= en_beam[fbeam_en]) //this cut only exists for 2.2 GeV to cut some very rare events with p_e > beam mom" F.H. 08/08/19
+      {
+	// if(ec_ei[ec[ind_em] - 1] >= 0.06)
+	h1_el_Etot_cut->Fill(ece);
+	// if (p[ind_em]>=min_good_mom)
+	h1_el_Ein_cut->Fill(ec_ei[ec[ind_em] - 1]);
+      }
+    
+    //Cuts for 4.4 GeV. No cut on minimum momentum and ec_ei cut
+    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. && ec[ind_em] > 0.5 &&  sc[ind_em] > 0.5 &&  cc[ind_em] > 0.5 && q[ind_em] < 0 &&
+       ece/p[ind_em] >= fsub_e->Eval(p[ind_em]) && ece/p[ind_em] <= fsum_e->Eval(p[ind_em])  &&
+       cc_c2[cc[ind_em]-1] < 0.1 && el_sccc_timediff >= sc_cc_delt_cut_sect[el_cc_sector-1])
+      {
+	// if(ec_ei[ec[ind_em] - 1] >= 0.055)
+	h1_el_Etot_cut->Fill(ece);
+	// if (p[ind_em]>=min_good_mom)
+	h1_el_Ein_cut->Fill(ec_ei[ec[ind_em] - 1]);
+      }
+    
+    //General cut on EC, SC, CC hit and q (charge) for all events
+    if( ec[ind_em] < 0.5 ||  sc[ind_em] < 0.5 ||  cc[ind_em] < 0.5 || q[ind_em] >=0)
+      {
+	return -1;
+      }
+
+    
+    h1_el_Etot->Fill(ece);
+    h1_el_Ein->Fill(ec_ei[ec[ind_em] - 1]);
+    h2_el_E_p_ratio->Fill(p[ind_em], ece/p[ind_em]);
+    h1_el_cc_chi2->Fill(cc_c2[cc[ind_em]-1]);
+    h1_el_cc_deltat[el_cc_sector-1]->Fill(el_sccc_timediff);
+
+    if(el_cc_nphe>2.5)      h1_el_cc_deltat_cut[el_cc_sector-1]->Fill(el_sccc_timediff);
+    if(el_vert_corr<vert_max[ftarget] && el_vert_corr>vert_min[ftarget])  h1_el_cc_nphe->Fill(el_cc_nphe);
+    if(el_vert_corr<vert_max[ftarget] && el_vert_corr>vert_min[ftarget] && el_sccc_timediff>sc_cc_delt_cut_sect[el_cc_sector-1] &&  cc_c2[cc[ind_em]-1]<0.1)
+      {
+	h1_el_cc_nphe_cut->Fill(el_cc_nphe);
+      }
+    
+    h2_el_Ein_Eout->Fill(ec_eo[ec[ind_em]-1],ec_ei[ec[ind_em]-1]);
+    h2_el_Einout_Etot->Fill(ece,ec_ei[ec[ind_em]-1]+ec_eo[ec[ind_em]-1]);
+    
+    //Cut on 1.1 GeV events (E/p, energy deposit, TOF and cherenkov)
+    if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] <2. &&
+       ( ec_ei[ec[ind_em] - 1] < 0.03 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
+	 p[ind_em] < min_good_mom || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||   cc_c2[cc[ind_em]-1] > 0.1 ) )
+      {
+        return -1;
+      }
+    
+    //Cut on 2.2 GeV events (E/p, energy deposit, TOF and cherenkov)
+    if(en_beam[fbeam_en] < 3.  && en_beam[fbeam_en] > 2 &&
+       ( ec_ei[ec[ind_em] - 1] < 0.06 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
+	 p[ind_em] < min_good_mom || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||
+	 TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass)>en_beam[fbeam_en] ) ) //only here a cut on electron momentum to cut some very scarse events where p_e > beam energy (see Mariana's anaysis note)
+      {
+        return -1;
+      }
+    
+    //Cut on 4.4 GeV events (E/p, energy deposit, TOF and cherenkov)
+    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. &&
+       ( ec_ei[ec[ind_em] - 1] < 0.055 || ece < 0.33 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
+	 p[ind_em] < min_good_mom  || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff<sc_cc_delt_cut_sect[el_cc_sector-1] ) )
+      {
+        return -1;
+      }
+    
+    h1_el_SCpdfidcut[ec_sect[ec[ind_em]-1]-1]->Fill(sc_pd[sc[ind_em]-1]);
+
+    //Plotting electron phi-theta for each sector for each beam energy. Phi is modified (phi_mod = phi + 30)
+    //4.4 GeV
+    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. ){
+      for(int k=1;k<=6;k++){  //k is sector number
+	if(abs(p[ind_em]-2.5)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut[k-1]->Fill(el_phi_mod,el_theta);
+	if(abs(p[ind_em]-1.4)<0.05 && sc_sect[sc[ind_em]-1]==k)	h2_el_theta_phi_p_fidcut2[k-1]->Fill(el_phi_mod,el_theta);
+      }
+    }
+    //2.2 GeV
+    else if (en_beam[fbeam_en] < 3. && en_beam[fbeam_en] > 2){
+      for(int k=1;k<=6;k++){  //k is sector number
+	if(abs(p[ind_em]-1.)<0.05 && sc_sect[sc[ind_em]-1]==k)	  h2_el_theta_phi_p_fidcut[k-1]->Fill(el_phi_mod,el_theta);
+	if(abs(p[ind_em]-1.65)<0.05 && sc_sect[sc[ind_em]-1]==k)  h2_el_theta_phi_p_fidcut2[k-1]->Fill(el_phi_mod,el_theta);
+      }
+    }
+    else { //1.1 GeV
+      for(int k=1;k<=6;k++){  //k is sector number
+	if(abs(p[ind_em]-0.45)<0.05 && sc_sect[sc[ind_em]-1]==k)  h2_el_theta_phi_p_fidcut[k-1]->Fill(el_phi_mod,el_theta);
+	if(abs(p[ind_em]-1)<0.05 && sc_sect[sc[ind_em]-1]==k)     h2_el_theta_phi_p_fidcut2[k-1]->Fill(el_phi_mod,el_theta);
+      }
+    }
+    
+    h2_el_E_p_ratio_cut->Fill(p[ind_em], ece/p[ind_em]);
+    //Fill histogram for cherenkov photo electrons with vertex cut
+    if( el_vert_corr < vert_max[ftarget] && el_vert_corr > vert_min[ftarget]) h1_el_cc_nphe_cut2->Fill(el_cc_nphe);
+    
+    if(sc_paddle == 5) {
+      h1_el_ec_sc_timediff->Fill(ec_SC_timediff_uncorr);
+      h1_el_ec_sc_timediff_corr->Fill(ec_SC_timediff_uncorr-EC_time_offset[make_pair(ftarget,el_ec_sector)]);
+    }
+    h1_el_ec_sc_timediff_allSCpd->Fill(ec_SC_timediff_uncorr);
+    h1_el_ec_sc_timediff_corr_allSCpd->Fill(ec_SC_timediff_uncorr-EC_time_offset[make_pair(ftarget,el_ec_sector)]);
+    h1_el_ec_sc_timediff_sect[el_cc_sector-1]->Fill(ec_SC_timediff_uncorr);
+    h1_el_ec_sc_timediff_sect_corr[el_cc_sector-1]->Fill(ec_SC_timediff_uncorr-EC_time_offset[make_pair(ftarget,el_ec_sector)]);
+    TVector3 v3_el_ec_uvw = FindUVW(e_ec_xyz1);
+    h2_el_ec_sc_timediff_ecu[el_cc_sector-1]->Fill(v3_el_ec_uvw.X(),ec_SC_timediff_uncorr);
+    h2_el_ec_sc_timediff_ecv[el_cc_sector-1]->Fill(v3_el_ec_uvw.Y(),ec_SC_timediff_uncorr);
+    h2_el_ec_sc_timediff_ecw[el_cc_sector-1]->Fill(v3_el_ec_uvw.Z(),ec_SC_timediff_uncorr);
+    h2_el_ec_sc_timediff_SCpd[el_cc_sector-1]->Fill(sc_paddle,ec_SC_timediff_uncorr);
+    
+    //Electron vertex cut
+    if( !(el_vert_corr < vert_max[ftarget] && el_vert_corr > vert_min[ftarget]) ) return -1;
+
+    
+    //Main Electron 4-Vectors with and without momentum correction. Units are GeV  - these vectors should probably be pointers too
+    //V4_el_uncorr->SetXYZM(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em],p[ind_em]*cz[ind_em],TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass));
+    //V4_el->SetXYZM(elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cx[ind_em], elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cy[ind_em], elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cz[ind_em], TMath::Sqrt(p[ind_em]*p[ind_em]*elmom_corr_fact[el_ec_sector-1]*elmom_corr_fact[el_ec_sector-1]+e_mass*e_mass));
+
+    V4_el_uncorr->SetPxPyPzE(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em],p[ind_em]*cz[ind_em],TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass));
+    V4_el->SetPxPyPzE(elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cx[ind_em], elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cy[ind_em], elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cz[ind_em], TMath::Sqrt(p[ind_em]*p[ind_em]*elmom_corr_fact[el_ec_sector-1]*elmom_corr_fact[el_ec_sector-1]+e_mass*e_mass));
+
+
+//Everything from here isn't electron ID. Function should return TLorentzVector of the scattered electron, and everything from here should be done in the main loop
+    h1_el_mom->Fill(V4_el_uncorr->Rho());
+    h1_el_mom_corr->Fill(V4_el->Rho());
+    h1_el_mom_ratio->Fill(V4_el->Rho()/V4_el_uncorr->Rho());
+    h2_el_pcorr_puncorr->Fill(V4_el->Rho(),V4_el->Rho()/V4_el_uncorr->Rho());
+    h2_el_mom_diff->Fill(V4_el->Rho(),V4_el->Rho()-V4_el_uncorr->Rho());
+
+    //Electron momentum vector corrected
+    //V3_el=V4_el.Vect();
+    Mott_cross_sec = (fine_struc_const*fine_struc_const*(cz[ind_em]+1)) / (2*(V4_el->E())*(V4_el->E())*(1-cz[ind_em])*(1-cz[ind_em]));
+
+    //Don't we need to change this to the resonance case? 
+    //Energy reconstruction for electron only method
+    //double E_rec_old = (2*(m_prot-bind_en[ftarget])*V4_el.E()+m_prot*m_prot-(m_prot-bind_en[ftarget])*(m_prot-bind_en[ftarget]))/(2*(m_prot-bind_en[ftarget]-V4_el.E()+V4_el.Rho()*cz[ind_em]));  //using the same value of single nucleon separation E for Ecal and Eqe
+    
+    //double E_rec= (m_prot*bind_en[ftarget]+m_prot*V4_el.E())/(m_prot-V4_el.E()+V4_el.Rho()*cz[ind_em]);  //using the same value of single nucleon separation E Ecal and Eqe
+
+    E_rec = (m_delta*m_delta-(m_prot-bind_en[ftarget])*(m_prot-bind_en[ftarget])+2*(m_prot-bind_en[ftarget])*V4_el->E())/(2*(m_prot-bind_en[ftarget]-V4_el->E()+V4_el->Rho()*cz[ind_em]));
+    
+    //Calculation of kinematic quantities (nu, Q2, x bjorken, q and W) - should these be pointers now we're in a function?
+    nu = -((*V4_el - *V4_beam).E());
+    omega = (*V4_beam-*V4_el).E();
+    Q2 = -(*V4_el-*V4_beam).Mag2();
+
+    x_bjk = Q2/(2*m_prot*nu);
+    V3_q = (*V4_beam-*V4_el).Vect();
+    W_var = TMath::Sqrt((m_prot+nu)*(m_prot+nu)-V3_q*V3_q);
+
+    h2_el_theta_p_cut[sc_sect[sc[ind_em]-1]-1]->Fill(V4_el->Rho(),el_theta);
+
+    
+    //Set q vector for the following rotations for the subtraction procedure
+    rotation->SetQVector(V3_q);
+    //    rotation->PrintQVector();
+
+
+    //Temporary Q^2 cut
+    ////if (Q2 > 0.2){
+    ////if ((Q2 < 0.2) || (Q2 > 0.3)){
+    ////if (Q2 < 0.3){
+    ////  return -1;
+    ////}
+
+     //----    
+     //Filling Histograms for electron kinematics
+     h1_xbjk->Fill(x_bjk);
+     h1_xbjk_weight->Fill(x_bjk,1/Mott_cross_sec);
+     h1_Q2->Fill(Q2);
+     h1_Q2_weight->Fill(Q2,1/Mott_cross_sec);
+     h2_Q2_nu->Fill(nu,Q2);
+     h2_Q2_nu_weight->Fill(nu,Q2,1/Mott_cross_sec);
+     h2_Q2_xbjk_weight->Fill(x_bjk,Q2,1/Mott_cross_sec);
+     h1_Wvar->Fill(W_var);
+     h1_Wvar_weight->Fill(W_var,1/Mott_cross_sec);
+     h2_Q2_W->Fill(W_var,Q2);
+     h2_xB_W->Fill(W_var,x_bjk);
+     h2_Q2_W_weight->Fill(W_var,Q2,1/Mott_cross_sec);
+    
+     h1_el_Mott_crosssec->Fill(Mott_cross_sec);
+     h2_el_theta_phi->Fill(el_phi_mod,el_theta);
+     h1_el_theta->Fill(el_theta);
+     h2_el_phi_vert_uncorr->Fill(el_vert,el_phi_mod);
+     h2_el_phi_vert->Fill(el_vert_corr,el_phi_mod);
+     h1_el_vertuncorr->Fill(el_vert);
+     h1_el_vertcorr->Fill(el_vert_corr);
+     h2_el_vertcorr_runN->Fill(runnb,el_vert_corr);
+     //---
+
+
+
+  return(0);
+}
+
+
+//----hadron_ID----
+//Functions called within hadron loop
+//proton_ID
+Int_t e2a_eppi_v1::proton_ID(int ii){
+
+  int ind_p = ii;
+
+   double p_vert_corr; //Proton Vertex Corrected
+
+   double beta  = p[ind_p]/TMath::Sqrt(p[ind_p]*p[ind_p]+m_prot*m_prot);
+   double delta = sc_t[sc[ind_p]-1] - sc_r[sc[ind_p]-1] / (beta*c*ns_to_s) - tr_time;
+   //prot_phi = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg();
+   double prot_phi_mod = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg() + 30; //Add extra 30 degree rotation in phi
+   if(prot_phi_mod<0){
+     prot_phi_mod = prot_phi_mod + 360;   //Proton will be between 0 and 360
+   }
+   double prot_theta = TMath::ACos(cz[ind_p])*TMath::RadToDeg();
+  
+   //fsum_e and fsub_p are TF1 Functions for proton delta cuts
+   fsum_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
+   fsub_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
+   h2_prot_Deltat_p->Fill(p[ind_p],delta);
+  
+   //proton pid cut and momentum > 0.3GeV cut to get rid of low momentum protons that have a high energy loss and we don't know the efficiency precisely for
+   if(delta < fsum_prot->Eval(p[ind_p]) && delta > fsub_prot->Eval(p[ind_p]) && p[ind_p] >= prot_accept_mom_lim){
+    
+     TLorentzVector V4_uncorrprot(p[ind_p]*cx[ind_p],p[ind_p]*cy[ind_p],p[ind_p]*cz[ind_p],TMath::Sqrt(p[ind_p]*p[ind_p]+ m_prot*m_prot ) );
+     //Why calculate phi, then phi_mod? why not get phi from the 4-vector, then the modified value???
+     p_vert_corr = vz[ind_p]+vz_corr(vz_corr_func,prot_phi_mod,prot_theta);
+    
+     h2_prot_px_py_p->Fill(cx[ind_p],cy[ind_p]);
+    
+     for(int k=1;k<=6;k++){ // k is sector number
+       if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
+ 	h2_prot_theta_phi_p_beffidcut[k-1]->Fill(prot_phi_mod,prot_theta);
+       }
+       if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k)	 { //2.2 and 4.4 GeV
+ 	h2_prot_theta_phi_p_beffidcut[k-1]->Fill(prot_phi_mod,prot_theta);
+       }
+     }
+    
+     h2_prot_theta_p[sc_sect[sc[ind_p]-1]-1]->Fill(p[ii],prot_theta);
+    
+     if(PFiducialCut(fbeam_en, V4_uncorrprot.Vect())){ //proton fiducial cuts
+      
+       h2_prot_theta_p_cut[sc_sect[sc[ind_p]-1]-1]->Fill(p[ii],prot_theta);
+       for(int k = 1; k <= 6; k++){ //k is sector number
+ 	if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
+ 	  h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
+ 	}
+ 	if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //2.2 and 4.4 GeV
+ 	  h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
+ 	}
+       }
+       h1_el_prot_vertdiff_all->Fill(el_vert_corr - p_vert_corr);
+       h2_prot_px_py_p_fidcut->Fill(cx[ind_p],cy[ind_p]);
+       h2_prot_E_p->Fill(p[ind_p],edep[sc[ind_p]-1]);
+       h2_prot_beta_p->Fill(p[ind_p],b[ind_p]);
+       h2_prot_theta_phi->Fill(prot_phi_mod,prot_theta);
+      
+       //main vertex cut for protons
+       if( (el_vert_corr-p_vert_corr) > vertdiff_min[ftarget] && (el_vert_corr-p_vert_corr) < vertdiff_max[ftarget] ){
+ 	num_p = num_p + 1;
+ 	index_p[num_p-1] = ii;
+       }
+     } //end of fiducial cuts
+   } //end of if delta condition
+
+   return(0);
+}
+
+
+//piplus_ID
+Int_t e2a_eppi_v1::piplus_ID(int ii){
+  Float_t pipl_phimin = 0, pipl_phimax = 0;
+  const double pipl_vertcut = 2.5; //Vertexcut Pi plus
+
+  double pipl_vert_corr;
+
+  TVector3 V3_pipl(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii]);
+  double beta = p[ii]/TMath::Sqrt(p[ii]*p[ii]+m_pipl*m_pipl);
+  double delta= sc_t[sc[ii]-1]-sc_r[sc[ii]-1]/(beta*c*ns_to_s) - tr_time;
+  
+  //fsum_piplus and fsub_piplus are TF1 Functions for piplus delta cuts
+  fsub_pipl->SetParameters(pipl_delt_cutrange,pipl_maxmom);
+  fsum_pipl->SetParameters(pipl_delt_cutrange,pipl_maxmom);
+  
+  h1_pos_m->Fill(TMath::Sqrt(p[ii]*p[ii]/(b[ii]*b[ii])-p[ii]*p[ii]));
+  h2_pos_delt_p->Fill(p[ii],delta);
+  h2_pos_beta_p->Fill(p[ii],b[ii]);
+  h2_pos_E_p->Fill(p[ii],edep[sc[ii]-1]);
+  //Pion pid delta cut
+  if(delta < fsum_pipl->Eval(p[ii]) && delta > fsub_pipl->Eval(p[ii]) && p[ii] >= pion_accept_mom_lim){
+    
+    //pipl_vert=vz[ii];
+    //pipl_phi = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg();
+    double pipl_phi_mod = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg() + 30; //Add 30 degrees
+    if (pipl_phi_mod < 0){
+      pipl_phi_mod = pipl_phi_mod + 360;  //Pi plus is between 0 and 360 degree
+    }
+    double pipl_theta = TMath::ACos(cz[ii])*TMath::RadToDeg();
+    pipl_vert_corr = vz[ii] + vz_corr(vz_corr_func,pipl_phi_mod,pipl_theta);
+    
+    //Some if conditions for histograms
+    if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-4)<1)   h2_pipl_theta_phi_p->Fill(pipl_phi_mod,pipl_theta); //4.4 GeV
+    if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-2)<1)   h2_pipl_theta_phi_p->Fill(pipl_phi_mod,pipl_theta); //2.2 GeV
+    if(abs(p[ii]-0.5)<0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-1)<1)   h2_pipl_theta_phi_p->Fill(pipl_phi_mod,pipl_theta); //1.1 GeV
+    for(int k = 1; k <= 6; k++){ //k is sector number
+      if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. &&  abs(p[ii]-0.3)<0.025 && sc_sect[sc[ii]-1]==k) { //1.1 GeV
+	h2_pipl_theta_phi_p_beffidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
+      }
+      if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ii]-0.975)<0.025 && sc_sect[sc[ii]-1]==k) { //2.2 and 4.4 GeV
+	h2_pipl_theta_phi_p_beffidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
+      }
+    }
+    h2_pipl_theta_phi_beffid->Fill(pipl_phi_mod,pipl_theta);
+    h2_pipl_theta_p[sc_sect[sc[ii]-1]-1]->Fill(p[ii],pipl_theta);
+    
+    if (PiplFiducialCut(fbeam_en, V3_pipl, &pipl_phimin, &pipl_phimax)){ //Pi Plus fiducial cut
+      
+      h2_pipl_theta_p_cut[sc_sect[sc[ii]-1]-1]->Fill(p[ii],pipl_theta);
+      h1_pipl_prot_vertdiff->Fill(el_vert_corr-pipl_vert_corr);
+      if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-4)<1)	h2_pipl_theta_phi_fidcut->Fill(pipl_phi_mod,pipl_theta); //4.4 GeV
+      if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-2)<1)	h2_pipl_theta_phi_fidcut->Fill(pipl_phi_mod,pipl_theta); //2.2 GeV
+      if(abs(p[ii]-0.5)<0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-1)<1)	h2_pipl_theta_phi_fidcut->Fill(pipl_phi_mod,pipl_theta); //1.1 GeV
+      for(int k = 1; k <= 6; k++){ //k is sector number
+	if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ii]-0.3)<0.025   && sc_sect[sc[ii]-1]==k) { //1.1 GeV
+	  h2_pipl_theta_phi_p_fidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
+	}
+	if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ii]-0.975)<0.025 && sc_sect[sc[ii]-1]==k) {//2.2 and 4.4 GeV
+	  h2_pipl_theta_phi_p_fidcut[k-1]->Fill(pipl_phi_mod,pipl_theta);
+	}
+      }
+      
+      h2_pipl_theta_phi->Fill(pipl_phi_mod,pipl_theta);
+      
+      if (abs(el_vert_corr-pipl_vert_corr) < pipl_vertcut){ //pi plus vertex cut
+	num_pipl = num_pipl + 1;
+	num_pi  = num_pi + 1;
+	num_pi_phot = num_pi_phot + 1;
+	num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
+	index_pipl[num_pipl - 1] = ii;
+	index_pi[num_pi - 1] = ii;
+	ind_pi_phot[num_pi_phot - 1] = ii;
+	
+	h2_pipl_beta_p->Fill(p[ii],b[ii]);
+	h2_pipl_E_p->Fill(p[ii],edep[sc[ii]-1]);
+	h2_pipl_delt_p->Fill(p[ii],delta);
+	
+	
+      }	 //vert cut ends
+    } //fidcut ends
+  }//delta cut ends
+  
+  return(0);
+}
+
+//piminus_ID
+Int_t e2a_eppi_v1::piminus_ID(int ii){
+
+  Float_t pimi_phimin = 0, pimi_phimax = 0;  //these are currently needed for the pi minus fiducial cut function, but that function doesn't seem to do anything other than set them
+  const double pimi_vertcut = 2.5; //Vertexcut Pi minus  
+  
+  TVector3 V3_pimi(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii]);
+  
+  double pimi_vert_corr;
+  double beta = p[ii]/TMath::Sqrt(p[ii]*p[ii]+m_pimi*m_pimi);
+  double delta = sc_t[sc[ii]-1]-sc_r[sc[ii]-1]/(beta*c*ns_to_s) - tr_time;
+  
+  //fsum_pimi and fsub_pimi are TF1 Functions for piminus delta cuts
+  fsub_pimi->SetParameters(pimi_delt_cutrange,pimi_maxmom);
+  fsum_pimi->SetParameters(pimi_delt_cutrange,pimi_maxmom);
+  
+  h1_neg_m->Fill(TMath::Sqrt(p[ii]*p[ii]/(b[ii]*b[ii])-p[ii]*p[ii]));
+  h2_neg_delt_p->Fill(p[ii],delta);
+  h2_neg_E_p->Fill(p[ii],edep[sc[ii]-1]);
+  h2_neg_beta_p->Fill(p[ii],b[ii]);
+  
+  //Pion pid delta cut
+  if(delta < fsum_pimi->Eval(p[ii]) && delta > fsub_pimi->Eval(p[ii]) && p[ii] >= pion_accept_mom_lim){
+    
+    //pimi_phi = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg();
+    double pimi_phi_mod = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg() + 30;  //Add extra 30 degree rotation in phi
+    if (pimi_phi_mod<0){
+      pimi_phi_mod = pimi_phi_mod + 360;  //Pi minus is between 0 and 360 degree
+    }
+    
+    double pimi_phi_mod2 = pimi_phi_mod - ((sc_sect[sc[ii]-1]-1)*60) - 30;
+    
+    double pimi_theta = TMath::ACos(cz[ii])*TMath::RadToDeg();
+    
+    pimi_vert_corr = vz[ii] + vz_corr(vz_corr_func, pimi_phi_mod,pimi_theta);
+    
+    //Some if conditions for histograms
+    if(abs(p[ii]-1.) < 0.02 && sc_sect[sc[ii]-1]==1 && abs(en_beam[fbeam_en]-4.)<1)   h2_pimi_theta_phi_p->Fill(pimi_phi_mod,pimi_theta); //4.4 GeV, why is scsect ==1 here F.H. 12/08/19
+    if(abs(p[ii]-1.) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-2.)<1)   h2_pimi_theta_phi_p->Fill(pimi_phi_mod,pimi_theta); //2.2 GeV
+    if(abs(p[ii]-0.5) <0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-1.)<1)   h2_pimi_theta_phi_p->Fill(pimi_phi_mod,pimi_theta); //1.1 GeV
+    
+    //I think determining the sector via the sc_sect variable is off SF 09/17/20
+    for(int k=1;k<=6;k++){ //k is sector number
+      if(en_beam[fbeam_en]> 1. && en_beam[fbeam_en]< 2. &&  abs(p[ii]-0.3)<0.025 && sc_sect[sc[ii]-1]==k)  { //1.1 GeV
+	h2_pimi_theta_phi_p_beffidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
+      }
+      if(en_beam[fbeam_en]> 2. && en_beam[fbeam_en]< 5. && abs(p[ii]-0.975)<0.025 && sc_sect[sc[ii]-1]==k) { //2.2 and 4.4 GeV
+	h2_pimi_theta_phi_p_beffidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
+      }
+    }
+    h2_pimi_theta_phi_beffid->Fill(pimi_phi_mod,pimi_theta);
+    h2_pimi_theta_p[sc_sect[sc[ii]-1]-1]->Fill(p[ii],pimi_theta);
+    
+    for(int jj=0; jj<24;jj++){
+      if( ((jj*0.05) < p[ii]) && (p[ii] < ((jj+1)*0.05))){
+	h2_pimi_th_vs_phi[jj]->Fill(pimi_phi_mod,pimi_theta);      
+	h2_pimi_th_phi[sc_sect[sc[ii]-1]-1][jj]->Fill(pimi_phi_mod2,pimi_theta);
+      }
+    }
+    
+    if(PimiFiducialCut(fbeam_en, V3_pimi, &pimi_phimin, &pimi_phimax)){  //Pi minus fiducial cuts
+      
+      h2_pimi_theta_p_cut[sc_sect[sc[ii]-1]-1]->Fill(p[ii],pimi_theta);
+      h1_pimi_prot_vertdiff->Fill(el_vert_corr-pimi_vert_corr);
+      //some conditions for histogram
+      
+      for(int jj=0; jj<24;jj++){
+	if( ((jj*0.05) < p[ii]) && (p[ii] < ((jj+1)*0.05))){
+	  h2_pimi_th_vs_phi_fid[jj]->Fill(pimi_phi_mod,pimi_theta);      
+	  h2_pimi_th_phi_fid[sc_sect[sc[ii]-1]-1][jj]->Fill(pimi_phi_mod2,pimi_theta);
+	}
+      }
+      
+      if(abs(p[ii]-1.)< 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-4.)<1)	h2_pimi_theta_phi_fidcut->Fill(pimi_phi_mod,pimi_theta); //4.4 GeV
+      if(abs(p[ii]-1.)< 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-2.)<1)	h2_pimi_theta_phi_fidcut->Fill(pimi_phi_mod,pimi_theta); //2.2 GeV
+      if(abs(p[ii]-0.5)<0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-1.)<1)	h2_pimi_theta_phi_fidcut->Fill(pimi_phi_mod,pimi_theta); //1.1 GeV
+      
+      for(int k=1;k<=6;k++){ //k is sector number
+	if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. &&  abs(p[ii]-0.3)<0.025 && sc_sect[sc[ii]-1]==k) { //1.1 GeV
+	  h2_pimi_theta_phi_p_fidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
+	}
+	if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. &&  abs(p[ii]-0.975)<0.025 && sc_sect[sc[ii]-1]==k) { //2.2 GeV and 4.4 GeV
+	  h2_pimi_theta_phi_p_fidcut[k-1]->Fill(pimi_phi_mod,pimi_theta);
+	}
+      }
+      h2_pimi_theta_phi->Fill(pimi_phi_mod,pimi_theta);
+      //main vertex cut for pi minus. It's beam energy dependent for the proton...
+      if(abs(el_vert_corr-pimi_vert_corr) < pimi_vertcut){
+	
+	num_pimi = num_pimi + 1;
+	num_pi = num_pi + 1;
+	num_pi_phot = num_pi_phot + 1;
+	num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
+	index_pimi[num_pimi - 1] = ii;
+	index_pi[num_pi - 1] = ii;
+	ind_pi_phot[num_pi_phot - 1] = ii;
+	
+	h2_pimi_beta_p->Fill(p[ii],b[ii]);
+	h2_pimi_E_p->Fill(p[ii],edep[sc[ii]-1]);
+	h2_pimi_delt_p->Fill(p[ii],delta);
+	
+      } //if piminus vertex cut
+    } //if Piminus fiducials
+  } //if piminus delta cut
+  
+  
+  return(0);
+}
+
+//placeholders for kplus and kminus to implement later (useful work for a student)
+Int_t e2a_eppi_v1::kplus_ID(int ii){
+
+  return(0);
+}
+
+
+Int_t e2a_eppi_v1::kminus_ID(int ii){
+
+  return(0);
+}
+
+
+
+Int_t e2a_eppi_v1::neutral_ID(int ii){
+  const double phot_rad_cut = 40;
+  const double phot_e_phidiffcut=30; //electron - photon phi difference cut
+  double neut_zvert = vz[ii];
+  double neut_yvert = vy[ii];
+  double neut_xvert = vx[ii];
+  double neut_ecx = ech_x[ec[ii]-1];
+  double neut_ecy = ech_y[ec[ii]-1];
+  double neut_ecz = ech_z[ec[ii]-1];
+  TVector3 V3_phot_ec_xyz;
+  V3_phot_ec_xyz.SetXYZ(ech_x[ec[ii]-1],ech_y[ec[ii]-1],ech_z[ec[ii]-1]);
+  TVector3 V3_phot_ec_uvw = FindUVW(V3_phot_ec_xyz);
+  
+  double neut_ecpath_corr = TMath::Sqrt((neut_ecx-neut_xvert)*(neut_ecx-neut_xvert)+(neut_ecy-neut_yvert)*(neut_ecy-neut_yvert)+(neut_ecz-neut_zvert)*(neut_ecz-neut_zvert));
+  double neut_ectime_corr = neut_ecpath_corr/(b[ii]*c*ns_to_s) - EC_time_offset[make_pair(ftarget,ec_sect[ec[ii]-1])];
+  double neut_beta_corr = neut_ecpath_corr/(neut_ectime_corr*c*ns_to_s);
+  //neut_phi = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg();
+  double neut_phi_mod = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg() + 30; //Add 30 degree
+  if (neut_phi_mod < 0){
+    neut_phi_mod = neut_phi_mod + 360;  //Neutral particle is between 0 and 360 degree
+  }
+  double neut_theta = TMath::ACos(cz[ii])*TMath::RadToDeg();
+  
+  TVector3 V3_phot_angles(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii]);
+  double ec_delta = ec_t[ec[ii]-1] - neut_ecpath_corr/(c*ns_to_s) + EC_time_offset[make_pair(ftarget,ec_sect[ec[ii]-1])] - tr_time;
+  
+  h1_beta_ec->Fill(b[ii]);
+  h1_beta_ec_corr->Fill(neut_beta_corr);
+  h1_beta_ec_corr_sect[ec_sect[ec[ii]-1]-1]->Fill(neut_beta_corr);
+  
+  if(neut_beta_corr > EC_photon_beta[ftarget]){   //photon identification
+    
+    h2_neutral_theta_phi_EC_all->Fill(neut_phi_mod,neut_theta);
+    h2_neutral_costheta_phi_EC_all->Fill(neut_phi_mod,cz[ii]);
+    
+    if(Phot_fid(V3_phot_angles)){ //photon fiducial function
+      
+      ec_num_n = ec_num_n + 1;
+      ec_index_n[ec_num_n - 1]=ii;
+      num_pi_phot = num_pi_phot + 1;
+      ind_pi_phot[num_pi_phot - 1] = ii;
+      //Photon EC energy deposit
+      double photon_ece = TMath::Max( ec_ei[ec[ii] - 1] + ec_eo[ec[ii] - 1],etot[ec[ii] - 1]);
+      
+      //Cut on Radiation photon via angle with respect to the electron
+      //within 40 degrees in theta and 30 degrees in phi
+      if(V3_phot_angles.Angle(V3_el)*TMath::RadToDeg() < phot_rad_cut && abs(neut_phi_mod-el_phi_mod) < phot_e_phidiffcut ) {
+	ec_radstat_n[num_pi_phot - 1] = true; //select radiation photons
+	h1_photon_EC_E->Fill(photon_ece/EC_sampling_frac);
+	num_phot_rad = num_phot_rad + 1;
+      }
+      if(!ec_radstat_n[num_pi_phot - 1]) num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
+      
+      h1_time_ec->Fill(ec_delta);
+      h2_neutral_theta_phi_EC_all_fidcut->Fill(neut_phi_mod,neut_theta);
+      h1_beta_ec_corr_cut->Fill(neut_beta_corr);
+      h1_photon_E->Fill(photon_ece/EC_sampling_frac);
+      h1_phot_e_angle->Fill(V3_phot_angles.Angle(V3_el)*TMath::RadToDeg());
+      h2_phot_e_angle_vsphotE->Fill(photon_ece/EC_sampling_frac,V3_phot_angles.Angle(V3_el)*TMath::RadToDeg());
+    }//end if photon fiducial
+  }//n beta
+  
+  return(0);
+}
+
+
+
 //-----pi0_ID-----
 //Particle ID function for the pi0
+//proof of principle based on two photon events only, improve pion ID, and expand to higher photon multiplicities
 void e2a_eppi_v1::pi0_ID(){
 
 //---
@@ -6391,7 +6496,7 @@ void e2a_eppi_v1::pi0_ID(){
 
 	lPi0.SetVectM(lGammaGamma.Vect(),0.135);
 
-	double en_recon1_pi0 = V4_el.E() + p_kin + lPi0.E();
+	double en_recon1_pi0 = V4_el->E() + p_kin + lPi0.E();
 
 	//h1_en_recon1_pi0->Fill(en_recon1_pi0, 1/Mott_cross_sec);
 	h1_en_recon1_pi0->Fill(en_recon1_pi0);

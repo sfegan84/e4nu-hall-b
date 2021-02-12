@@ -260,6 +260,13 @@ public :
    virtual void     Show(Long64_t entry = -1);
 
    //PID functions called within Loop()
+   virtual Int_t     electron_ID();
+   virtual Int_t     proton_ID(int ii);
+   virtual Int_t     piplus_ID(int ii);
+   virtual Int_t     piminus_ID(int ii);
+   virtual Int_t     kplus_ID(int ii);
+   virtual Int_t     kminus_ID(int ii);
+   virtual Int_t     neutral_ID(int ii);
    virtual void     pi0_ID();  //start with this one, as it's extra
 
    Bool_t EFiducialCut(std::string beam_en, TVector3 momentum) {
