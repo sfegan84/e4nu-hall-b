@@ -8,6 +8,7 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <utility>
+#include <vector>
 
 #include <TH1D.h>
 #include <TFile.h>
@@ -414,6 +415,10 @@ TLorentzVector V4_target;
 TVector3 V3_el;
 TVector3 V3_q;
 
+std::vector<TLorentzVector> loc_proton_v4;
+std::vector<TLorentzVector> loc_pion_v4;
+std::vector<TLorentzVector> loc_pipl_v4;
+std::vector<TLorentzVector> loc_pimi_v4;
 
 TLorentzVector *lTmp;
 
@@ -574,7 +579,6 @@ double del_pt;
   V4_target.SetXYZM(0,0,0,target_mass[ftarget]);
 
 
-
   std::cout << "loading fiducials and corrections..." << std::endl;
   //there is definitely a better way to store all these parameters for use by the code, rather than load in all these root files, on to-do list
 
@@ -719,6 +723,7 @@ double del_pt;
 
   int CounterEvents = 0;
 
+
   /*****************************/
   /** Beginning of Event Loop **/
   /*****************************/
@@ -848,6 +853,13 @@ double del_pt;
 
     //double photon_ece;
 
+
+    //reset vector containing TLorentzVectors for hadrons (the vector will replace the need to remake 4-vectors for every single particle in every single event)
+    loc_proton_v4.clear();
+    loc_pion_v4.clear();
+    loc_pipl_v4.clear();
+    loc_pimi_v4.clear();
+
     CounterEvents ++;
 
 
@@ -908,15 +920,26 @@ double del_pt;
 	  {
 	    if(neutral_ID(i)!=0) continue;
 	  }
-	
+        //---------------------------------------------
+	//----------END OF NEUTRAL SELECTION-----------
+	//---------------------------------------------
+
+
       } //end of hadron loop
 
 
+//--------------------------------------------------------
+// VERY IMPORTANT NOTE: ONCE YOU REACH HERE (and once I'm done setting it up)
+// THE HADRON LOOP WILL PROVIDE std::vector OBJECTS FOR EACH PARTICLE SPECIES
+// (PROTON, PI+, PI-), NEGATING THE NEED TO MAKE YOUR OWN FROM THE DATA COMPONENTS
+// THE SIZE OF THESE OBJECTS WILL ALSO REPLACE THE num_p, num_pi, etc. COUNTERS
+// THIS WILL MAKE ALL SUBSEQUENT ANALYSIS STEPS MUCH SIMPLER TO CODE
+//--------------------------------------------------------
     
-    //could attempt some pi0/eta id from two photon decay
+    //provisional attempt at some pi0/eta id from two photon decay
     //two photons
     if((num_p==1) && (ec_num_n == 2)){
-      pi0_ID();
+      pi0_ID();  //expand to cases other than ec_num_n == 2
     }
     
     //Skip event if there is at least one radiation photon
@@ -926,7 +949,8 @@ double del_pt;
 
     //Filling Histograms with multiplicities
     h1_Npi->Fill(num_pi);
-    h1_Nprot->Fill(num_p);
+    //h1_Nprot->Fill(num_p);
+    h1_Nprot->Fill(loc_proton_v4.size());
 
     if (num_p > 0) {
 	h1_Nprot_NonZeroProt->Fill(num_p);
@@ -934,8 +958,10 @@ double del_pt;
     }
 
     h1_Nphot->Fill(ec_num_n);
-    h1_Npipl->Fill(num_pipl);
-    h1_Npimi->Fill(num_pimi);
+    h1_Npipl->Fill(loc_pipl_v4.size());
+    //h1_Npipl->Fill(num_pipl);
+    h1_Npimi->Fill(loc_pimi_v4.size());
+    //h1_Npimi->Fill(num_pimi);
     h1_Npiphot->Fill(num_pi_phot);
     h1_Npiphot_norad->Fill(num_pi_phot_nonrad);
     h2_N_prot_pi->Fill(num_pi,num_p);
@@ -950,29 +976,39 @@ double del_pt;
     double N_2pi_1p=0,N_1pi_1p[2]={0};
     if (num_p == 1)
       {
+	//---
+	//March 11, 2021
+	//a bit hack-y while I test the new 4-vector storage
+	//---
 	h2_phot_pi_1p->Fill(num_pi, ec_num_n);
-	TLorentzVector V4_p;
+
 	TVector3 V3_p;
-	V4_p.SetPxPyPzE(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+p[index_p[0]]*p[index_p[0]]));
-	V3_p = V4_p.Vect();
-	TLorentzVector V4_p_corr;
+	V3_p = (loc_proton_v4.at(0)).Vect();
+
+	TLorentzVector V4_p_corr;  //should we just move correction to proton_ID? - Yes, as it is experiment dependent
 	//double prot_mom_corr = ProtonMomCorrection_He3_4Cell(ftarget,V4_p,prot_vert_corr);
+	
+	//double ppp_vert_corr = (vz[index_p[0]]+vz_corr(vz_corr_func,(V4_p.Phi()*TMath::RadToDeg() + 30),V4_p.Theta()*TMath::RadToDeg())); //temporary measure to allow moving to proton ID to function
+	double ppp_vert_corr = (vz[index_p[0]]+vz_corr(vz_corr_func,((loc_proton_v4.at(0)).Phi()*TMath::RadToDeg() + 30),(loc_proton_v4.at(0)).Theta()*TMath::RadToDeg())); //temporary measure to allow moving to proton ID to function
+	
+	//double prot_mom_corr = ProtonMomCorrection_He3_4Cell(ftarget,V4_p,ppp_vert_corr);
+	double prot_mom_corr = ProtonMomCorrection_He3_4Cell(ftarget,loc_proton_v4.at(0),ppp_vert_corr);
 
-	double ppp_vert_corr = (vz[index_p[0]]+vz_corr(vz_corr_func,(V4_p.Phi()*TMath::RadToDeg() + 30),V4_p.Theta()*TMath::RadToDeg())); //temporary measure to allow moving to proton ID to function
-
-	double prot_mom_corr = ProtonMomCorrection_He3_4Cell(ftarget,V4_p,ppp_vert_corr);
 	V4_p_corr.SetPxPyPzE(prot_mom_corr*cx[index_p[0]],prot_mom_corr*cy[index_p[0]],prot_mom_corr*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+prot_mom_corr*prot_mom_corr));
-	p_kin = V4_p_corr.E() - m_prot;
 
+	p_kin = V4_p_corr.E() - m_prot;
+	
 	if(num_pi==3 && ec_num_n==0 && num_n==0)
 	  {
-	    TLorentzVector V4_pi[3];
+	    //TLorentzVector V4_pi[3];
 	    TVector3 V3_pi[3];
 	    double q_pi[3] = {0};
+
 	    for(int i=0; i<3;i++)
 	      {
-		V4_pi[i].SetPxPyPzE(p[index_pi[i]]*cx[index_pi[i]],p[index_pi[i]]*cy[index_pi[i]],p[index_pi[i]]*cz[index_pi[i]],TMath::Sqrt(p[index_pi[i]]*p[index_pi[i]]+m_pion*m_pion));
-		V3_pi[i] = V4_pi[i].Vect();
+		//V4_pi[i].SetPxPyPzE(p[index_pi[i]]*cx[index_pi[i]],p[index_pi[i]]*cy[index_pi[i]],p[index_pi[i]]*cz[index_pi[i]],TMath::Sqrt(p[index_pi[i]]*p[index_pi[i]]+m_pion*m_pion));
+		//V3_pi[i] = V4_pi[i].Vect();
+		V3_pi[i] = (loc_pion_v4.at(i)).Vect();
 		q_pi[i] = q[index_pi[i]];
 	      }
 	    
@@ -981,9 +1017,12 @@ double del_pt;
 	    
 	    for(int g=0; g<3; g++)
 	      {
-		en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
-		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+		//en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
+		en_recon1[g] = V4_el->E() + p_kin + (loc_pion_v4.at(g)).E();
+		//en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		//  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(g)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(g)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(g)).Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(g)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(g)).Rho()*cz[index_pi[g]]));
 	      }
 	    double N1pi1p[3] = {0};
 	    double N2pi1p[3] = {0};
@@ -998,10 +1037,10 @@ double del_pt;
 		for(int j=0;j<3;j++)
 		  {
 		    h1_rot1_3pi_1p->Fill(en_recon1[j], (N1pi1p[j]/N3pi1p)*(1/Mott_cross_sec));
-
+		    
 		    h2_rot_3pi_1p->Fill(E_rec, en_recon1[j], (N1pi1p[j]/N3pi1p)*(1/Mott_cross_sec));
-
-
+		    
+		    
 		    if(q_pi[j]>0)
 		      {
 			h1_rot1_3pi_1p_pipl->Fill(en_recon1[j], (N1pi1p[j]/N3pi1p)*(1/Mott_cross_sec));
@@ -1060,15 +1099,22 @@ double del_pt;
 			V3_pi1[1] = V3_pi[j];
 			q_pi1[0] = q_pi[i];
 			q_pi1[1] = q_pi[j];
-
+			
 			rotation->rot_2pi_1p (V3_pi1, q_pi1, V3_p, V3_q, N_1pion_1prot, &N_2pion_1prot, N_tot);
+			
+			//en_recon1[0] = V4_el->E() + p_kin + V4_pi[i].E();
+			//en_recon1[1] = V4_el->E() + p_kin + V4_pi[j].E();
+			en_recon1[0] = V4_el->E() + p_kin + (loc_pion_v4.at(i)).E();
+			en_recon1[1] = V4_el->E() + p_kin + (loc_pion_v4.at(j)).E();
+			//en_recon3[0] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[i].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[i].E() + 2*V4_el->Rho()*V4_pi[i].Rho()*cos(V3_pi[i].Angle(V3_el)) + m_pion*m_pion)/
+			//  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[i].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[i].Rho()*cz[index_pi[i]]));
+			//en_recon3[1] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[j].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[j].E() + 2*V4_el->Rho()*V4_pi[j].Rho()*cos(V3_pi[j].Angle(V3_el)) + m_pion*m_pion)/
+			//  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[j].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[j].Rho()*cz[index_pi[j]]));
+			en_recon3[0] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(i)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(i)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(i)).Rho()*cos(V3_pi[i].Angle(V3_el)) + m_pion*m_pion)/
+			  (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(i)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(i)).Rho()*cz[index_pi[i]]));
+			en_recon3[1] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(j)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(j)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(j)).Rho()*cos(V3_pi[j].Angle(V3_el)) + m_pion*m_pion)/
+			  (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(j)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(j)).Rho()*cz[index_pi[j]]));
 
-			en_recon1[0] = V4_el->E() + p_kin + V4_pi[i].E();
-			en_recon1[1] = V4_el->E() + p_kin + V4_pi[j].E();
-			en_recon3[0] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[i].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[i].E() + 2*V4_el->Rho()*V4_pi[i].Rho()*cos(V3_pi[i].Angle(V3_el)) + m_pion*m_pion)/
-			  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[i].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[i].Rho()*cz[index_pi[i]]));
-			en_recon3[1] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[j].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[j].E() + 2*V4_el->Rho()*V4_pi[j].Rho()*cos(V3_pi[j].Angle(V3_el)) + m_pion*m_pion)/
-			  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[j].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[j].Rho()*cz[index_pi[j]]));
 			if(N_2pion_1prot!=0 && N3pi1p !=0)
 			  {
 			    h1_rot1_3pi_1p->Fill(en_recon1[0], -(N_1pion_1prot[0]/N_2pion_1prot)*(N2pi1p[count]/N3pi1p)*(1/Mott_cross_sec));
@@ -1156,13 +1202,15 @@ double del_pt;
 	  }//end of 3pi 0 photon statement
 	if (num_pi==2 && ec_num_n==1)
 	  {
- double q_pi[2] = {0};
-	    TLorentzVector V4_pi[2];
+	    double q_pi[2] = {0};
+	    //TLorentzVector V4_pi[2];
 	    TVector3 V3_pi[2];
-	    V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-	    V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
-	    V3_pi[0] = V4_pi[0].Vect();
-	    V3_pi[1] = V4_pi[1].Vect();
+	    //V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	    //V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
+	    //V3_pi[0] = V4_pi[0].Vect();
+	    //V3_pi[1] = V4_pi[1].Vect();
+	    V3_pi[0] = (loc_pion_v4.at(0)).Vect();
+	    V3_pi[1] = (loc_pion_v4.at(1)).Vect();
 	    q_pi[0] = q[index_pi[0]];
 	    q_pi[1] = q[index_pi[1]];
 	    TVector3 V3_phot(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
@@ -1172,9 +1220,12 @@ double del_pt;
 	    
 	    for(int g=0; g<2; g++)
 	      {
-		en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
-		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+		//en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
+		//en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		//  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+		en_recon1[g] = V4_el->E() + p_kin + (loc_pion_v4.at(g)).E();
+		en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(g)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(g)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(g)).Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(g)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(g)).Rho()*cz[index_pi[g]]));
 	      }
 	    double N_1pi_1p_0phot[2] = {0};
 	    double N_1pi_1p_1phot[2] = {0};
@@ -1439,13 +1490,15 @@ double del_pt;
 	    }
 	  }//end of 2 pi 1 photon statement
 	if (num_pi==2 && ec_num_n==0 && num_n==0 ) {
- double q_pi[2] = {0};
-	  TLorentzVector V4_pi[2];
+	  double q_pi[2] = {0};
+	  //TLorentzVector V4_pi[2];
 	  TVector3 V3_pi[2];
-	  V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-	  V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
-	  V3_pi[0] = V4_pi[0].Vect();
-	  V3_pi[1] = V4_pi[1].Vect();
+	  //V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	  //V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
+	  //V3_pi[0] = V4_pi[0].Vect();
+	  //V3_pi[1] = V4_pi[1].Vect();
+	  V3_pi[0] = (loc_pion_v4.at(0)).Vect();
+	  V3_pi[1] = (loc_pion_v4.at(1)).Vect();
 	  q_pi[0] = q[index_pi[0]];
 	  q_pi[1] = q[index_pi[1]];
 	  
@@ -1454,9 +1507,12 @@ double del_pt;
 	  
 	  for(int g=0; g<2; g++)
 	    {
-	      en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
-	      en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-		(2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+	      //en_recon1[g] = V4_el->E() + p_kin + V4_pi[g].E();
+	      //en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		//(2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+	      en_recon1[g] = V4_el->E() + p_kin + (loc_pion_v4.at(g)).E();
+	      en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(g)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(g)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(g)).Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+		(2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(g)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(g)).Rho()*cz[index_pi[g]]));
 	    }
 	  rotation->rot_2pi_1p (V3_pi, q_pi, V3_p, V3_q, N_1pi_1p, &N_2pi_1p, N_tot);
 	  
@@ -1546,284 +1602,285 @@ double del_pt;
 	  
 	}//end of 2pi 0 photon statement
 	
-	    if(num_pi==1 && ec_num_n==0 && num_n==0)
+	if(num_pi==1 && ec_num_n==0 && num_n==0)
 	  {
-      if(num_pipl==1 )
-      {
-        TLorentzVector V4_pi(p[index_pipl[0]]*cx[index_pipl[0]],p[index_pipl[0]]*cy[index_pipl[0]],p[index_pipl[0]]*cz[index_pipl[0]], TMath::Sqrt(p[index_pipl[0]]*p[index_pipl[0]]+m_pion*m_pion));
-        TVector3 V3_pi = V4_pi.Vect();
-        // First reconstruction method
-        double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
-
-	h1_p_kin->Fill(p_kin);
-	h1_p_kin_pipl->Fill(p_kin);
-	h1_pi_E->Fill(V4_pi.E());
-	h1_pi_E_pipl->Fill(V4_pi.E());
-	h1_el_E->Fill(V4_el->E());
-	h1_el_E_pipl->Fill(V4_el->E());
-
-        h1_en_recon1->Fill(en_recon1, 1/Mott_cross_sec);
-        h1_en_recon1_pipl->Fill(en_recon1, 1/Mott_cross_sec);
-
-        //Second reconstruction method
-        h1_en_recon2->Fill(E_rec, 1/Mott_cross_sec);
-        h1_en_recon2_pipl->Fill(E_rec, 1/Mott_cross_sec);
-
-	h2_Ecal_Ekin->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
-	h2_Ecal_Ekin_pipl->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
-
-
-
-        //Third reconstruction method
-        double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                              (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
-        h1_en_recon3->Fill(en_recon3, 1/Mott_cross_sec);
-        h1_en_recon3_pipl->Fill(en_recon3, 1/Mott_cross_sec);
-
-
-	if(Q2<0.2){
-	  h1_en_recon1_Q2_1->Fill(en_recon1, 1/Mott_cross_sec);
-	  h1_en_recon1_pipl->Fill(en_recon1, 1/Mott_cross_sec);
-	  
-	  //Second reconstruction method
-	  h1_en_recon2_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
-	  h1_en_recon2_pipl_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
-	  
-	  //Third reconstruction method
-	  h1_en_recon3_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
-	  h1_en_recon3_pipl_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
-	}
-      }
-      if(num_pimi==1)
-      {
-
-        TLorentzVector V4_pi(p[index_pimi[0]]*cx[index_pimi[0]],p[index_pimi[0]]*cy[index_pimi[0]],p[index_pimi[0]]*cz[index_pimi[0]], TMath::Sqrt(p[index_pimi[0]]*p[index_pimi[0]]+m_pion*m_pion));
-        TVector3 V3_pi = V4_pi.Vect();
-        // First reconstruction method
-        double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
+	    if(num_pipl==1 )
+	      {
+		//TLorentzVector V4_pi(p[index_pipl[0]]*cx[index_pipl[0]],p[index_pipl[0]]*cy[index_pipl[0]],p[index_pipl[0]]*cz[index_pipl[0]], TMath::Sqrt(p[index_pipl[0]]*p[index_pipl[0]]+m_pion*m_pion));
+		//TVector3 V3_pi = V4_pi.Vect();
+		TVector3 V3_pi = (loc_pion_v4.at(0)).Vect();
+		// First reconstruction method
+		double en_recon1 = V4_el->E() + p_kin + (loc_pion_v4.at(0)).E();
+		
+		h1_p_kin->Fill(p_kin);
+		h1_p_kin_pipl->Fill(p_kin);
+		h1_pi_E->Fill((loc_pion_v4.at(0)).E());
+		h1_pi_E_pipl->Fill((loc_pion_v4.at(0)).E());
+		h1_el_E->Fill(V4_el->E());
+		h1_el_E_pipl->Fill(V4_el->E());
+		
+		h1_en_recon1->Fill(en_recon1, 1/Mott_cross_sec);
+		h1_en_recon1_pipl->Fill(en_recon1, 1/Mott_cross_sec);
+		
+		//Second reconstruction method
+		h1_en_recon2->Fill(E_rec, 1/Mott_cross_sec);
+		h1_en_recon2_pipl->Fill(E_rec, 1/Mott_cross_sec);
+		
+		h2_Ecal_Ekin->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
+		h2_Ecal_Ekin_pipl->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
+		
+		
+		
+		//Third reconstruction method
+		double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(0)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(0)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(0)).Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(0)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(0)).Rho()*cz[index_pipl[0]]));
+		h1_en_recon3->Fill(en_recon3, 1/Mott_cross_sec);
+		h1_en_recon3_pipl->Fill(en_recon3, 1/Mott_cross_sec);
+		
+		
+		if(Q2<0.2){
+		  h1_en_recon1_Q2_1->Fill(en_recon1, 1/Mott_cross_sec);
+		  h1_en_recon1_pipl->Fill(en_recon1, 1/Mott_cross_sec);
+		  
+		  //Second reconstruction method
+		  h1_en_recon2_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
+		  h1_en_recon2_pipl_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
+		  
+		  //Third reconstruction method
+		  h1_en_recon3_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
+		  h1_en_recon3_pipl_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
+		}
+	      }
+	    if(num_pimi==1)
+	      {
+		
+		//TLorentzVector V4_pi(p[index_pimi[0]]*cx[index_pimi[0]],p[index_pimi[0]]*cy[index_pimi[0]],p[index_pimi[0]]*cz[index_pimi[0]], TMath::Sqrt(p[index_pimi[0]]*p[index_pimi[0]]+m_pion*m_pion));
+		TVector3 V3_pi = (loc_pion_v4.at(0)).Vect();
+		// First reconstruction method
+		double en_recon1 = V4_el->E() + p_kin + (loc_pion_v4.at(0)).E();
+		
+		
+		
+		h1_p_kin->Fill(p_kin);
+		h1_p_kin_pimi->Fill(p_kin);
+		h1_pi_E->Fill((loc_pion_v4.at(0)).E());
+		h1_pi_E_pimi->Fill((loc_pion_v4.at(0)).E());
+		h1_el_E->Fill(V4_el->E());
+		h1_el_E_pimi->Fill(V4_el->E());
+		
+		
+		h1_en_recon1->Fill(en_recon1, 1/Mott_cross_sec);
+		h1_en_recon1_pimi->Fill(en_recon1, 1/Mott_cross_sec);
+		h2_cal_Wvar->Fill(en_recon1, W_var, 1/Mott_cross_sec);
+		//Second reconstruction method
+		h1_en_recon2->Fill(E_rec, 1/Mott_cross_sec);
+		h1_en_recon2_pimi->Fill(E_rec, 1/Mott_cross_sec);
+		h2_kin_e_Wvar->Fill(E_rec, W_var, 1/Mott_cross_sec);
+		//Third reconstruction method
+		double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(0)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(0)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(0)).Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+		  (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(0)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(0)).Rho()*cz[index_pimi[0]]));
+		h1_en_recon3->Fill(en_recon3, 1/Mott_cross_sec);
+		h1_en_recon3_pimi->Fill(en_recon3, 1/Mott_cross_sec);
+		
+		h2_Ecal_Ekin->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
+		h2_Ecal_Ekin_pimi->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
+		
+		if(Q2<0.2){
+		  h1_en_recon1_Q2_1->Fill(en_recon1, 1/Mott_cross_sec);
+		  h1_en_recon1_pimi->Fill(en_recon1, 1/Mott_cross_sec);
+		  
+		  //Second reconstruction method
+		  h1_en_recon2_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
+		  h1_en_recon2_pimi_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
+		  
+		  //Third reconstruction method
+		  h1_en_recon3_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
+		  h1_en_recon3_pimi_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
+		}
+		
+		h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, 1/Mott_cross_sec);
+		h1_Q2_sub->Fill(Q2,1/Mott_cross_sec);
+		h1_omega_sub->Fill(omega,1/Mott_cross_sec);
+		h1_Wvar_sub->Fill(W_var,1/Mott_cross_sec);
+		h2_Wvar_Q2_sub->Fill(W_var, Q2,1/Mott_cross_sec);
+		h2_Q2_omega_sub->Fill(omega,Q2,1/Mott_cross_sec);
+	      }
+	  }//end of 1pi 0 photon statement
 	
-
-
-	h1_p_kin->Fill(p_kin);
-	h1_p_kin_pimi->Fill(p_kin);
-	h1_pi_E->Fill(V4_pi.E());
-	h1_pi_E_pimi->Fill(V4_pi.E());
-	h1_el_E->Fill(V4_el->E());
-	h1_el_E_pimi->Fill(V4_el->E());
-
-
-        h1_en_recon1->Fill(en_recon1, 1/Mott_cross_sec);
-        h1_en_recon1_pimi->Fill(en_recon1, 1/Mott_cross_sec);
-        h2_cal_Wvar->Fill(en_recon1, W_var, 1/Mott_cross_sec);
-        //Second reconstruction method
-        h1_en_recon2->Fill(E_rec, 1/Mott_cross_sec);
-        h1_en_recon2_pimi->Fill(E_rec, 1/Mott_cross_sec);
-        h2_kin_e_Wvar->Fill(E_rec, W_var, 1/Mott_cross_sec);
-        //Third reconstruction method
-        double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                              (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pimi[0]]));
-        h1_en_recon3->Fill(en_recon3, 1/Mott_cross_sec);
-        h1_en_recon3_pimi->Fill(en_recon3, 1/Mott_cross_sec);
-
-	h2_Ecal_Ekin->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
-	h2_Ecal_Ekin_pimi->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
-
-	if(Q2<0.2){
-	  h1_en_recon1_Q2_1->Fill(en_recon1, 1/Mott_cross_sec);
-	  h1_en_recon1_pimi->Fill(en_recon1, 1/Mott_cross_sec);
-	  
-	  //Second reconstruction method
-	  h1_en_recon2_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
-	  h1_en_recon2_pimi_Q2_1->Fill(E_rec, 1/Mott_cross_sec);
-	  
-	  //Third reconstruction method
-	  h1_en_recon3_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
-	  h1_en_recon3_pimi_Q2_1->Fill(en_recon3, 1/Mott_cross_sec);
-	}
-
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, 1/Mott_cross_sec);
-        h1_Q2_sub->Fill(Q2,1/Mott_cross_sec);
-        h1_omega_sub->Fill(omega,1/Mott_cross_sec);
-        h1_Wvar_sub->Fill(W_var,1/Mott_cross_sec);
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,1/Mott_cross_sec);
-        h2_Q2_omega_sub->Fill(omega,Q2,1/Mott_cross_sec);
-    }
-  }//end of 1pi 0 photon statement
-
-
-  if(num_pi==1 && ec_num_n==1)
-  {
-    TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-    TVector3 V3_pi = V4_pi.Vect();
-    TVector3 V3_phot(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
-    double N_1pi_1p_0phot = 0;
-    double N_1pi_1p_1phot = 0;
-
-    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
-    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                          (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
-
-    rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], &N_1pi_1p_0phot, &N_1pi_1p_1phot, N_tot);
-
-    //fill histograms here
-    if(N_1pi_1p_1phot!=0)
-    {
-      h1_rot1_1pi_1p_1phot->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_1p_1phot->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot1_1pi_1p_1phot_pipl->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_1p_1phot_pipl->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot1_1pi_1p_1phot_pimi->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_1p_1phot_pimi->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1, W_var, -(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot2_1pi_1p_1phot->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot2_1pi_1p_1phot_pipl->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot2_1pi_1p_1phot_pimi->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot3_1pi_1p_1phot->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot3_1pi_1p_1phot_pipl->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot3_1pi_1p_1phot_pimi->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
-      }
-    }
-  }//end of 1 pi 1 photon statement
-  if(num_pi==1 && ec_num_n==2)
-  {
-    TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-    TVector3 V3_pi = V4_pi.Vect();
-    TVector3 V3_phot[2];
-    V3_phot[0].SetXYZ(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
-    V3_phot[1].SetXYZ(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]]);
-    double N_1pi_1p_0phot = 0;
-    double N_1pi_1p_1phot = 0;
-    double N_1pi_1p_2phot = 0;
-    bool radstat[2];
-    radstat[0] = ec_radstat_n[0];
-    radstat[1] = ec_radstat_n[1];
-
-    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
-    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                          (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
-
-    rotation->rot_2phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, radstat, &N_1pi_1p_0phot, &N_1pi_1p_1phot, &N_1pi_1p_2phot, N_tot);
-
-    if(N_1pi_1p_2phot!=0)
-    {
-      h1_rot1_1pi_1p_2phot->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_1p_2phot->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot1_1pi_1p_2phot_pipl->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_1p_2phot_pipl->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot1_1pi_1p_2phot_pimi->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_1p_2phot_pimi->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1, W_var, -(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot2_1pi_1p_2phot->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot2_1pi_1p_2phot_pipl->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot2_1pi_1p_2phot_pimi->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot3_1pi_1p_2phot->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot3_1pi_1p_2phot_pipl->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot3_1pi_1p_2phot_pimi->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-    }
-    double N1pi1p0phot = 0;
-    double N1pi1p1phot = 0;
-    rotation->rot_1phot_1pi_1p(V3_phot[0], V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], &N_1pi_1p_0phot, &N1pi1p1phot, N_tot);
-    rotation->rot_1phot_1pi_1p(V3_phot[1], V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[1], &N_1pi_1p_0phot, &N1pi1p1phot, N_tot);
-    if(N_1pi_1p_2phot!=0 && N1pi1p1phot!=0)
-    {
-      h1_rot1_1pi_1p_2phot->Fill(en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_1p_2phot->Fill(E_rec, en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot1_1pi_1p_2phot_pipl->Fill(en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_1p_2phot_pipl->Fill(E_rec, en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot1_1pi_1p_2phot_pimi->Fill(en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_1p_2phot_pimi->Fill(E_rec, en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1, W_var, (N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot2_1pi_1p_2phot->Fill(E_rec, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot2_1pi_1p_2phot_pipl->Fill(E_rec, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot2_1pi_1p_2phot_pimi->Fill(E_rec, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, (N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot3_1pi_1p_2phot->Fill(en_recon3, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot3_1pi_1p_2phot_pipl->Fill(en_recon3, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot3_1pi_1p_2phot_pimi->Fill(en_recon3, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
-      }
-    }
-  }//end of 1 pi 2 photon statement
-}//end of 1proton statement
 	
-
+	if(num_pi==1 && ec_num_n==1)
+	  {
+	    TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	    TVector3 V3_pi = V4_pi.Vect();
+	    TVector3 V3_phot(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
+	    double N_1pi_1p_0phot = 0;
+	    double N_1pi_1p_1phot = 0;
+	    
+	    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
+	    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+	      (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+	    
+	    rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], &N_1pi_1p_0phot, &N_1pi_1p_1phot, N_tot);
+	    
+	    //fill histograms here
+	    if(N_1pi_1p_1phot!=0)
+	      {
+		h1_rot1_1pi_1p_1phot->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		h2_rot_1pi_1p_1phot->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot1_1pi_1p_1phot_pipl->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h2_rot_1pi_1p_1phot_pipl->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot1_1pi_1p_1phot_pimi->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h2_rot_1pi_1p_1phot_pimi->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h2_cal_Wvar->Fill(en_recon1, W_var, -(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		  }
+		
+		h1_rot2_1pi_1p_1phot->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot2_1pi_1p_1phot_pipl->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot2_1pi_1p_1phot_pimi->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		  }
+		
+		h1_rot3_1pi_1p_1phot->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot3_1pi_1p_1phot_pipl->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot3_1pi_1p_1phot_pimi->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		    h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p_0phot/N_1pi_1p_1phot)*(1/Mott_cross_sec));
+		  }
+	      }
+	  }//end of 1 pi 1 photon statement
+	if(num_pi==1 && ec_num_n==2)
+	  {
+	    TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	    TVector3 V3_pi = V4_pi.Vect();
+	    TVector3 V3_phot[2];
+	    V3_phot[0].SetXYZ(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
+	    V3_phot[1].SetXYZ(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]]);
+	    double N_1pi_1p_0phot = 0;
+	    double N_1pi_1p_1phot = 0;
+	    double N_1pi_1p_2phot = 0;
+	    bool radstat[2];
+	    radstat[0] = ec_radstat_n[0];
+	    radstat[1] = ec_radstat_n[1];
+	    
+	    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
+	    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+	      (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+	    
+	    rotation->rot_2phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, radstat, &N_1pi_1p_0phot, &N_1pi_1p_1phot, &N_1pi_1p_2phot, N_tot);
+	    
+	    if(N_1pi_1p_2phot!=0)
+	      {
+		h1_rot1_1pi_1p_2phot->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		h2_rot_1pi_1p_2phot->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot1_1pi_1p_2phot_pipl->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_rot_1pi_1p_2phot_pipl->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot1_1pi_1p_2phot_pimi->Fill(en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_rot_1pi_1p_2phot_pimi->Fill(E_rec, en_recon1, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_cal_Wvar->Fill(en_recon1, W_var, -(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		
+		h1_rot2_1pi_1p_2phot->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot2_1pi_1p_2phot_pipl->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot2_1pi_1p_2phot_pimi->Fill(E_rec, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		
+		h1_rot3_1pi_1p_2phot->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot3_1pi_1p_2phot_pipl->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot3_1pi_1p_2phot_pimi->Fill(en_recon3, (N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p_0phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+	      }
+	    double N1pi1p0phot = 0;
+	    double N1pi1p1phot = 0;
+	    rotation->rot_1phot_1pi_1p(V3_phot[0], V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], &N_1pi_1p_0phot, &N1pi1p1phot, N_tot);
+	    rotation->rot_1phot_1pi_1p(V3_phot[1], V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[1], &N_1pi_1p_0phot, &N1pi1p1phot, N_tot);
+	    if(N_1pi_1p_2phot!=0 && N1pi1p1phot!=0)
+	      {
+		h1_rot1_1pi_1p_2phot->Fill(en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		h2_rot_1pi_1p_2phot->Fill(E_rec, en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot1_1pi_1p_2phot_pipl->Fill(en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_rot_1pi_1p_2phot_pipl->Fill(E_rec, en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot1_1pi_1p_2phot_pimi->Fill(en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_rot_1pi_1p_2phot_pimi->Fill(E_rec, en_recon1, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h1_Q2_sub->Fill(Q2,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h1_omega_sub->Fill(omega,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h1_Wvar_sub->Fill(W_var,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_Wvar_Q2_sub->Fill(W_var, Q2,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_Q2_omega_sub->Fill(omega,Q2,(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_cal_Wvar->Fill(en_recon1, W_var, (N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		
+		h1_rot2_1pi_1p_2phot->Fill(E_rec, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot2_1pi_1p_2phot_pipl->Fill(E_rec, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot2_1pi_1p_2phot_pimi->Fill(E_rec, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_kin_e_Wvar->Fill(E_rec, W_var, (N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		
+		h1_rot3_1pi_1p_2phot->Fill(en_recon3, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		if(q[index_pi[0]]>0)
+		  {
+		    h1_rot3_1pi_1p_2phot_pipl->Fill(en_recon3, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+		else
+		  {
+		    h1_rot3_1pi_1p_2phot_pimi->Fill(en_recon3, -(N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		    h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N1pi1p0phot/N1pi1p1phot)*(N_1pi_1p_1phot/N_1pi_1p_2phot)*(1/Mott_cross_sec));
+		  }
+	      }
+	  }//end of 1 pi 2 photon statement
+      }//end of 1proton statement
+    
+    
     if((num_p == 1)&&(num_pi == 1)){
       //cout << "1p 1pi event" << endl;
 
@@ -1835,31 +1892,30 @@ double del_pt;
 	//}	    
 	//------------------------------------------------------------------------------------------------------
     
-
       h1_Q2_1p1pi->Fill(Q2);
 
-      TLorentzVector V4_uncorrprot(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(p[index_p[0]]*p[index_p[0]]+ m_prot*m_prot ) );
-
-      TLorentzVector V4_p_uncorr;
+      //TLorentzVector V4_p_uncorr;
       double prot_p_corr;
       double prot_vz_corr;
 
       //proton z-vertex and momentum corrections, in that order
       std::pair <double,double> corrections;
       
-      V4_p_uncorr.SetPxPyPzE(prot_p_corr*cx[index_p[0]],prot_p_corr*cy[index_p[0]],prot_p_corr*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+prot_p_corr*prot_p_corr));
+      //V4_p_uncorr.SetPxPyPzE(prot_p_corr*cx[index_p[0]],prot_p_corr*cy[index_p[0]],prot_p_corr*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+prot_p_corr*prot_p_corr));
 
-      TLorentzVector V4_corrprot(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(p[index_p[0]]*p[index_p[0]]+ m_prot*m_prot ) );
-      
-      //Correct proton vertex and momentum
-      corrections = makeProtonCorrections(vz_corr_func,0,V4_p_uncorr,cx[index_p[0]],cy[index_p[0]],cz[index_p[0]],p[index_p[0]],vz[index_p[0]], ftarget);
+      //Correct proton vertex and momentum - This should be incorporable into proton_ID()
+      //corrections = makeProtonCorrections(vz_corr_func,0,V4_p_uncorr,cx[index_p[0]],cy[index_p[0]],cz[index_p[0]],p[index_p[0]],vz[index_p[0]], ftarget);
+      corrections = makeProtonCorrections(vz_corr_func,0,loc_proton_v4.at(0),cx[index_p[0]],cy[index_p[0]],cz[index_p[0]],p[index_p[0]],vz[index_p[0]], ftarget);
       prot_vz_corr = corrections.first;
       prot_p_corr = corrections.second;
 
-      h1_InvM_ep->Fill((V4_uncorrprot + *V4_el).M());
-
-       TLorentzVector V4_targ(0,0,0,m_prot);
-
+      //TLorentzVector V4_corrprot(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(p[index_p[0]]*p[index_p[0]]+ m_prot*m_prot ) );
+      TLorentzVector V4_corrprot(prot_p_corr*cx[index_p[0]],prot_p_corr*cy[index_p[0]],prot_p_corr*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+prot_p_corr*prot_p_corr));
+      
+      h1_InvM_ep->Fill((loc_proton_v4.at(0) + *V4_el).M());
+      
+      TLorentzVector V4_targ(0,0,0,m_prot);
+      
       //pi plus
       if(num_pipl == 1){
 	h1_Q2_deltaplus->Fill(Q2);
@@ -1868,9 +1924,9 @@ double del_pt;
 	//Missing mass + missing E go here
 	//h1_MM_eppipl->Fill((V4_beam.M() + m_prot) - (V4_el + V4_uncorrprot + V4_uncorrpipl).M());
 	//h1_MM_eppipl->Fill((V4_beam.M() + target_mass[ftarget]) - (V4_el + V4_uncorrprot + V4_uncorrpipl).M());
-	h1_MM_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).Rho());
+	h1_MM_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).Rho());
 	//h1_ME_eppipl->Fill(V4_beam.E() - (V4_el + V4_uncorrprot + V4_uncorrpipl).E());
-	h1_ME_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).E());
+	h1_ME_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).E());
 
 	h1_prot_mom_pipl->Fill(p[index_p[0]]);
 	h1_pipl_mom->Fill(p[index_pipl[0]]);
@@ -1881,7 +1937,7 @@ double del_pt;
 	h1_InvM_ppip->Fill((V4_corrprot + V4_uncorrpipl).M());
 	h1_InvM_ppip2->Fill(W_var);
 	//do a missing energy cut, then fill inv mass histos, binned in q^2
-	if(((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpipl)).E()) < 0.15)){
+	if(((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).E()) < 0.15)){
 	  h1_Q2_deltaplus_ME_cut->Fill(Q2);
 	  h1_InvM_ppip_MEcut->Fill((V4_corrprot + V4_uncorrpipl).M());
 	  h1_InvM_ppip_MEcut2->Fill(W_var);
@@ -1914,12 +1970,12 @@ double del_pt;
 	//Missing mass + missing E go here
 	//h1_MM_eppimi->Fill((V4_beam.M() + m_prot) - (V4_el + V4_uncorrprot + V4_uncorrpimi).M());
 	//h1_MM_eppimi->Fill((V4_beam.M() + target_mass[ftarget]) - (V4_el + V4_uncorrprot + V4_uncorrpimi).M());
-	h1_MM_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).Rho());
+	h1_MM_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).Rho());
 	//h1_ME_eppimi->Fill(V4_beam.E() - (V4_el + V4_uncorrprot + V4_uncorrpimi).E());
-	h1_ME_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).E());
+	h1_ME_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).E());
 
 	//do a missing energy cut, then fill inv mass histos, binned in q^2
-	if(((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + V4_uncorrprot + V4_uncorrpimi)).E()) < 0.15)){
+	if(((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).E()) < 0.15)){
 	  h1_Q2_deltazero_ME_cut->Fill(Q2);
 	  h1_InvM_ppim_MEcut->Fill((V4_corrprot + V4_uncorrpimi).M());
 	  h1_InvM_ppim_MEcut2->Fill(W_var);
@@ -1996,7 +2052,7 @@ double p2_kin[2];
 
     if(num_p == 2){
       
-      TLorentzVector V4_p_uncorr[num_p]; //eventually replace with a vector of TLorentzVector objects, that can scale dynamically to the number of protons. Same for other variables
+      TLorentzVector V4_p_uncorr[num_p]; //eventually replace with a vector of TLorentzVector objects, filled in the proton ID function, that can scale dynamically to the number of protons. Same for other variables
       //float prot_vz[num_p];
       //double p_phi[num_p];
       //double p_phi_mod[num_p];
@@ -2026,18 +2082,30 @@ double p2_kin[2];
 	  (el_vert_corr-prot_vz_corr[1]) > vertdiff_min[ftarget] && (el_vert_corr-prot_vz_corr[1]) < vertdiff_max[ftarget])
         {
 	  //---here
-          TVector3 V3_2prot_uncorr[2];
-          V3_2prot_uncorr[0].SetXYZ(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]]);
-          V3_2prot_uncorr[1].SetXYZ(p[index_p[1]]*cx[index_p[1]],p[index_p[1]]*cy[index_p[1]],p[index_p[1]]*cz[index_p[1]]);
-	  
-          TVector3 V3_2prot_corr[2];
-          V3_2prot_corr[0].SetXYZ(prot_p_corr[0]*cx[index_p[0]],prot_p_corr[0]*cy[index_p[0]],prot_p_corr[0]*cz[index_p[0]]);
-          V3_2prot_corr[1].SetXYZ(prot_p_corr[1]*cx[index_p[1]],prot_p_corr[1]*cy[index_p[1]],prot_p_corr[1]*cz[index_p[1]]);
-	  
+          TVector3 V3_2prot_uncorr[2];  //pretty sure this, if neccessary, is just V4_p_uncorr.Vect()
+          TVector3 V3_2prot_corr[2];    //pretty sure this, if neccessary, is just V4_p_corr.Vect()
+	  TLorentzVector V4_pro_corr[2];
+          TLorentzVector V4_pro_el_tot[2];
+
+
+	  for(int ii=0;ii<2;ii++){
+	    V3_2prot_uncorr[ii].SetXYZ(p[index_p[ii]]*cx[index_p[ii]],p[index_p[ii]]*cy[index_p[ii]],p[index_p[ii]]*cz[index_p[ii]]);
+	    //V3_2prot_uncorr[1].SetXYZ(p[index_p[1]]*cx[index_p[1]],p[index_p[1]]*cy[index_p[1]],p[index_p[1]]*cz[index_p[1]]);
+
+	    V3_2prot_corr[ii].SetXYZ(prot_p_corr[ii]*cx[index_p[ii]],prot_p_corr[ii]*cy[index_p[ii]],prot_p_corr[ii]*cz[index_p[ii]]);
+	    //V3_2prot_corr[1].SetXYZ(prot_p_corr[1]*cx[index_p[1]],prot_p_corr[1]*cy[index_p[1]],prot_p_corr[1]*cz[index_p[1]]);
+
+	    V4_pro_corr[ii].SetVectM(V3_2prot_corr[ii],TMath::Sqrt(m_prot*m_prot+prot_p_corr[ii]*prot_p_corr[ii]));
+
+	    V4_pro_el_tot[ii]=V4_pro_corr[ii]+*V4_el;
+	  }
+
           TLorentzVector V4_prot_corr1(V3_2prot_corr[0],TMath::Sqrt(m_prot*m_prot+prot_p_corr[0]*prot_p_corr[0]));
           TLorentzVector V4_prot_corr2(V3_2prot_corr[1],TMath::Sqrt(m_prot*m_prot+prot_p_corr[1]*prot_p_corr[1]));
           TLorentzVector V4_prot_el_tot1=V4_prot_corr1+*V4_el;
           TLorentzVector V4_prot_el_tot2=V4_prot_corr2+*V4_el;
+
+
 	  //---to here
 	  //Could be replaced by a loop
 
@@ -6097,72 +6165,74 @@ Int_t e2a_eppi_v1::electron_ID(){
 //Functions called within hadron loop
 //proton_ID
 Int_t e2a_eppi_v1::proton_ID(int ii){
-
   int ind_p = ii;
-
-   double p_vert_corr; //Proton Vertex Corrected
-
-   double beta  = p[ind_p]/TMath::Sqrt(p[ind_p]*p[ind_p]+m_prot*m_prot);
-   double delta = sc_t[sc[ind_p]-1] - sc_r[sc[ind_p]-1] / (beta*c*ns_to_s) - tr_time;
-   //prot_phi = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg();
-   double prot_phi_mod = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg() + 30; //Add extra 30 degree rotation in phi
-   if(prot_phi_mod<0){
-     prot_phi_mod = prot_phi_mod + 360;   //Proton will be between 0 and 360
-   }
-   double prot_theta = TMath::ACos(cz[ind_p])*TMath::RadToDeg();
   
-   //fsum_e and fsub_p are TF1 Functions for proton delta cuts
-   fsum_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
-   fsub_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
-   h2_prot_Deltat_p->Fill(p[ind_p],delta);
+  double p_vert_corr; //Proton Vertex Corrected
   
-   //proton pid cut and momentum > 0.3GeV cut to get rid of low momentum protons that have a high energy loss and we don't know the efficiency precisely for
-   if(delta < fsum_prot->Eval(p[ind_p]) && delta > fsub_prot->Eval(p[ind_p]) && p[ind_p] >= prot_accept_mom_lim){
+  double beta  = p[ind_p]/TMath::Sqrt(p[ind_p]*p[ind_p]+m_prot*m_prot);
+  double delta = sc_t[sc[ind_p]-1] - sc_r[sc[ind_p]-1] / (beta*c*ns_to_s) - tr_time;
+  //prot_phi = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg();
+  double prot_phi_mod = TMath::ATan2(cy[ind_p],cx[ind_p])*TMath::RadToDeg() + 30; //Add extra 30 degree rotation in phi
+  if(prot_phi_mod<0){
+    prot_phi_mod = prot_phi_mod + 360;   //Proton will be between 0 and 360
+  }
+  double prot_theta = TMath::ACos(cz[ind_p])*TMath::RadToDeg();
+  
+  //fsum_e and fsub_p are TF1 Functions for proton delta cuts
+  fsum_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
+  fsub_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
+  h2_prot_Deltat_p->Fill(p[ind_p],delta);
+  
+  //proton pid cut and momentum > 0.3GeV cut to get rid of low momentum protons that have a high energy loss and we don't know the efficiency precisely for
+  if(delta < fsum_prot->Eval(p[ind_p]) && delta > fsub_prot->Eval(p[ind_p]) && p[ind_p] >= prot_accept_mom_lim){
     
-     TLorentzVector V4_uncorrprot(p[ind_p]*cx[ind_p],p[ind_p]*cy[ind_p],p[ind_p]*cz[ind_p],TMath::Sqrt(p[ind_p]*p[ind_p]+ m_prot*m_prot ) );
-     //Why calculate phi, then phi_mod? why not get phi from the 4-vector, then the modified value???
-     p_vert_corr = vz[ind_p]+vz_corr(vz_corr_func,prot_phi_mod,prot_theta);
+    TLorentzVector V4_uncorrprot(p[ind_p]*cx[ind_p],p[ind_p]*cy[ind_p],p[ind_p]*cz[ind_p],TMath::Sqrt(p[ind_p]*p[ind_p]+ m_prot*m_prot ) );
+    //Why calculate phi, then phi_mod? why not get phi from the 4-vector, then the modified value???
+    p_vert_corr = vz[ind_p]+vz_corr(vz_corr_func,prot_phi_mod,prot_theta);
     
-     h2_prot_px_py_p->Fill(cx[ind_p],cy[ind_p]);
+    h2_prot_px_py_p->Fill(cx[ind_p],cy[ind_p]);
     
-     for(int k=1;k<=6;k++){ // k is sector number
-       if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
+    for(int k=1;k<=6;k++){ // k is sector number
+      if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
  	h2_prot_theta_phi_p_beffidcut[k-1]->Fill(prot_phi_mod,prot_theta);
-       }
-       if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k)	 { //2.2 and 4.4 GeV
+      }
+      if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k)	 { //2.2 and 4.4 GeV
  	h2_prot_theta_phi_p_beffidcut[k-1]->Fill(prot_phi_mod,prot_theta);
-       }
-     }
+      }
+    }
     
-     h2_prot_theta_p[sc_sect[sc[ind_p]-1]-1]->Fill(p[ii],prot_theta);
+    h2_prot_theta_p[sc_sect[sc[ind_p]-1]-1]->Fill(p[ii],prot_theta);
     
-     if(PFiducialCut(fbeam_en, V4_uncorrprot.Vect())){ //proton fiducial cuts
+    if(PFiducialCut(fbeam_en, V4_uncorrprot.Vect())){ //proton fiducial cuts
+      h2_prot_theta_p_cut[sc_sect[sc[ind_p]-1]-1]->Fill(p[ii],prot_theta);
+      for(int k = 1; k <= 6; k++){ //k is sector number
+	if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
+	  h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
+	}
+	if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //2.2 and 4.4 GeV
+	  h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
+	}
+      }
+      h1_el_prot_vertdiff_all->Fill(el_vert_corr - p_vert_corr);
+      h2_prot_px_py_p_fidcut->Fill(cx[ind_p],cy[ind_p]);
+      h2_prot_E_p->Fill(p[ind_p],edep[sc[ind_p]-1]);
+      h2_prot_beta_p->Fill(p[ind_p],b[ind_p]);
+      h2_prot_theta_phi->Fill(prot_phi_mod,prot_theta);
       
-       h2_prot_theta_p_cut[sc_sect[sc[ind_p]-1]-1]->Fill(p[ii],prot_theta);
-       for(int k = 1; k <= 6; k++){ //k is sector number
- 	if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ind_p]-0.6) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //1.1 GeV
- 	  h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
- 	}
- 	if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ind_p]-0.975) < 0.025 && sc_sect[sc[ind_p]-1]==k) { //2.2 and 4.4 GeV
- 	  h2_prot_theta_phi_p_fidcut[k-1]->Fill(prot_phi_mod,prot_theta);
- 	}
-       }
-       h1_el_prot_vertdiff_all->Fill(el_vert_corr - p_vert_corr);
-       h2_prot_px_py_p_fidcut->Fill(cx[ind_p],cy[ind_p]);
-       h2_prot_E_p->Fill(p[ind_p],edep[sc[ind_p]-1]);
-       h2_prot_beta_p->Fill(p[ind_p],b[ind_p]);
-       h2_prot_theta_phi->Fill(prot_phi_mod,prot_theta);
-      
-       //main vertex cut for protons
-       if( (el_vert_corr-p_vert_corr) > vertdiff_min[ftarget] && (el_vert_corr-p_vert_corr) < vertdiff_max[ftarget] ){
- 	num_p = num_p + 1;
- 	index_p[num_p-1] = ii;
-       }
-     } //end of fiducial cuts
-   } //end of if delta condition
-
-   return(0);
+      //main vertex cut for protons
+      if( (el_vert_corr-p_vert_corr) > vertdiff_min[ftarget] && (el_vert_corr-p_vert_corr) < vertdiff_max[ftarget] ){
+	num_p = num_p + 1;
+	index_p[num_p-1] = ii;
+	
+	//push back a proton 4-vector
+	loc_proton_v4.push_back(V4_uncorrprot);
+      }
+    } //end of fiducial cuts
+  } //end of if delta condition  
+  
+  return(0);
 }
+
 
 
 //piplus_ID
@@ -6187,6 +6257,8 @@ Int_t e2a_eppi_v1::piplus_ID(int ii){
   //Pion pid delta cut
   if(delta < fsum_pipl->Eval(p[ii]) && delta > fsub_pipl->Eval(p[ii]) && p[ii] >= pion_accept_mom_lim){
     
+    TLorentzVector V4_uncorrpipl(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii],TMath::Sqrt(p[ii]*p[ii]+ m_pipl*m_pipl ) );
+
     //pipl_vert=vz[ii];
     //pipl_phi = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg();
     double pipl_phi_mod = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg() + 30; //Add 30 degrees
@@ -6242,7 +6314,9 @@ Int_t e2a_eppi_v1::piplus_ID(int ii){
 	h2_pipl_E_p->Fill(p[ii],edep[sc[ii]-1]);
 	h2_pipl_delt_p->Fill(p[ii],delta);
 	
-	
+	//push back pi plus 4-vector
+	loc_pion_v4.push_back(V4_uncorrpipl);
+	loc_pipl_v4.push_back(V4_uncorrpipl);
       }	 //vert cut ends
     } //fidcut ends
   }//delta cut ends
@@ -6274,6 +6348,8 @@ Int_t e2a_eppi_v1::piminus_ID(int ii){
   //Pion pid delta cut
   if(delta < fsum_pimi->Eval(p[ii]) && delta > fsub_pimi->Eval(p[ii]) && p[ii] >= pion_accept_mom_lim){
     
+    TLorentzVector V4_uncorrpimi(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii],TMath::Sqrt(p[ii]*p[ii]+ m_pimi*m_pimi ) );
+
     //pimi_phi = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg();
     double pimi_phi_mod = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg() + 30;  //Add extra 30 degree rotation in phi
     if (pimi_phi_mod<0){
@@ -6350,7 +6426,10 @@ Int_t e2a_eppi_v1::piminus_ID(int ii){
 	h2_pimi_beta_p->Fill(p[ii],b[ii]);
 	h2_pimi_E_p->Fill(p[ii],edep[sc[ii]-1]);
 	h2_pimi_delt_p->Fill(p[ii],delta);
-	
+
+	loc_pion_v4.push_back(V4_uncorrpimi);
+	loc_pimi_v4.push_back(V4_uncorrpimi);
+
       } //if piminus vertex cut
     } //if Piminus fiducials
   } //if piminus delta cut
@@ -6376,6 +6455,8 @@ Int_t e2a_eppi_v1::kminus_ID(int ii){
 Int_t e2a_eppi_v1::neutral_ID(int ii){
   const double phot_rad_cut = 40;
   const double phot_e_phidiffcut=30; //electron - photon phi difference cut
+
+
   double neut_zvert = vz[ii];
   double neut_yvert = vy[ii];
   double neut_xvert = vx[ii];
