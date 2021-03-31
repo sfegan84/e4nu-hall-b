@@ -1710,15 +1710,15 @@ double del_pt;
 	
 	if(num_pi==1 && ec_num_n==1)
 	  {
-	    TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-	    TVector3 V3_pi = V4_pi.Vect();
+	    //TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	    TVector3 V3_pi = (loc_pion_v4.at(0)).Vect();
 	    TVector3 V3_phot(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
 	    double N_1pi_1p_0phot = 0;
 	    double N_1pi_1p_1phot = 0;
 	    
-	    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
-	    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-	      (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+	    double en_recon1 = V4_el->E() + p_kin + (loc_pion_v4.at(0)).E();
+	    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(0)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(0)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(0)).Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+	      (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(0)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(0)).Rho()*cz[index_pipl[0]]));
 	    
 	    rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], &N_1pi_1p_0phot, &N_1pi_1p_1phot, N_tot);
 	    
@@ -1769,8 +1769,8 @@ double del_pt;
 	  }//end of 1 pi 1 photon statement
 	if(num_pi==1 && ec_num_n==2)
 	  {
-	    TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-	    TVector3 V3_pi = V4_pi.Vect();
+	    //TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	    TVector3 V3_pi = (loc_pion_v4.at(0)).Vect();
 	    TVector3 V3_phot[2];
 	    V3_phot[0].SetXYZ(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
 	    V3_phot[1].SetXYZ(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]]);
@@ -1781,9 +1781,9 @@ double del_pt;
 	    radstat[0] = ec_radstat_n[0];
 	    radstat[1] = ec_radstat_n[1];
 	    
-	    double en_recon1 = V4_el->E() + p_kin + V4_pi.E();
-	    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-	      (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+	    double en_recon1 = V4_el->E() + p_kin + (loc_pion_v4.at(0)).E();
+	    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(0)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(0)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(0)).Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+	      (2*(m_neut - bind_en[ftarget] - V4_el->E() - (loc_pion_v4.at(0)).E()) + 2*(V4_el->Rho()*cz[ind_em] + (loc_pion_v4.at(0)).Rho()*cz[index_pipl[0]]));
 	    
 	    rotation->rot_2phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, radstat, &N_1pi_1p_0phot, &N_1pi_1p_1phot, &N_1pi_1p_2phot, N_tot);
 	    
@@ -1919,27 +1919,29 @@ double del_pt;
       //pi plus
       if(num_pipl == 1){
 	h1_Q2_deltaplus->Fill(Q2);
-	TLorentzVector V4_uncorrpipl(p[index_pipl[0]]*cx[index_pipl[0]],p[index_pipl[0]]*cy[index_pipl[0]],p[index_pipl[0]]*cz[index_pipl[0]],TMath::Sqrt(p[index_pipl[0]]*p[index_pipl[0]]+ m_pipl*m_pipl ) );
+	//TLorentzVector V4_uncorrpipl(p[index_pipl[0]]*cx[index_pipl[0]],p[index_pipl[0]]*cy[index_pipl[0]],p[index_pipl[0]]*cz[index_pipl[0]],TMath::Sqrt(p[index_pipl[0]]*p[index_pipl[0]]+ m_pipl*m_pipl ) );
 
 	//Missing mass + missing E go here
 	//h1_MM_eppipl->Fill((V4_beam.M() + m_prot) - (V4_el + V4_uncorrprot + V4_uncorrpipl).M());
 	//h1_MM_eppipl->Fill((V4_beam.M() + target_mass[ftarget]) - (V4_el + V4_uncorrprot + V4_uncorrpipl).M());
-	h1_MM_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).Rho());
+	h1_MM_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pipl_v4.at(0))).Rho());
 	//h1_ME_eppipl->Fill(V4_beam.E() - (V4_el + V4_uncorrprot + V4_uncorrpipl).E());
-	h1_ME_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).E());
+	h1_ME_eppipl->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pipl_v4.at(0))).E());
 
 	h1_prot_mom_pipl->Fill(p[index_p[0]]);
 	h1_pipl_mom->Fill(p[index_pipl[0]]);
 
 	//W_var
 
-	h1_InvM_ppi->Fill((V4_corrprot + V4_uncorrpipl).M());
-	h1_InvM_ppip->Fill((V4_corrprot + V4_uncorrpipl).M());
+	//h1_InvM_ppi->Fill((V4_corrprot + V4_uncorrpipl).M());
+	//h1_InvM_ppip->Fill((V4_corrprot + V4_uncorrpipl).M());
+	h1_InvM_ppi->Fill((V4_corrprot + loc_pipl_v4.at(0)).M());
+	h1_InvM_ppip->Fill((V4_corrprot + loc_pipl_v4.at(0)).M());
 	h1_InvM_ppip2->Fill(W_var);
 	//do a missing energy cut, then fill inv mass histos, binned in q^2
-	if(((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpipl)).E()) < 0.15)){
+	if(((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pipl_v4.at(0))).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pipl_v4.at(0))).E()) < 0.15)){
 	  h1_Q2_deltaplus_ME_cut->Fill(Q2);
-	  h1_InvM_ppip_MEcut->Fill((V4_corrprot + V4_uncorrpipl).M());
+	  h1_InvM_ppip_MEcut->Fill((V4_corrprot + loc_pipl_v4.at(0)).M());
 	  h1_InvM_ppip_MEcut2->Fill(W_var);
 	}
       }
@@ -1947,13 +1949,13 @@ double del_pt;
       //pi minus
       if(num_pimi == 1){
 	h1_Q2_deltazero->Fill(Q2);
-	TLorentzVector V4_uncorrpimi(p[index_pimi[0]]*cx[index_pimi[0]],p[index_pimi[0]]*cy[index_pimi[0]],p[index_pimi[0]]*cz[index_pimi[0]],TMath::Sqrt(p[index_pimi[0]]*p[index_pimi[0]]+ m_pimi*m_pimi ) );
+	//TLorentzVector V4_uncorrpimi(p[index_pimi[0]]*cx[index_pimi[0]],p[index_pimi[0]]*cy[index_pimi[0]],p[index_pimi[0]]*cz[index_pimi[0]],TMath::Sqrt(p[index_pimi[0]]*p[index_pimi[0]]+ m_pimi*m_pimi ) );
 	
 	//h1_InvM_ep->Fill((V4_uncorrprot + V4_el).M());
-	h1_InvM_epi->Fill((V4_uncorrpimi + *V4_el).M());
-	h1_InvM_eppi->Fill((V4_corrprot + V4_uncorrpimi + *V4_el).M());
-	h1_InvM_ppi->Fill((V4_corrprot + V4_uncorrpimi).M());
-	h1_InvM_ppim->Fill((V4_corrprot + V4_uncorrpimi).M());
+	h1_InvM_epi->Fill((loc_pimi_v4.at(0) + *V4_el).M());
+	h1_InvM_eppi->Fill((V4_corrprot + loc_pimi_v4.at(0) + *V4_el).M());
+	h1_InvM_ppi->Fill((V4_corrprot + loc_pimi_v4.at(0)).M());
+	h1_InvM_ppim->Fill((V4_corrprot + loc_pimi_v4.at(0)).M());
 	h1_InvM_ppim2->Fill(W_var);
 	
 	
@@ -1962,7 +1964,7 @@ double del_pt;
 
 
 	//more kinematic quantities
-	del_pt = V4_el->Py() + V4_corrprot.Py() + V4_uncorrpimi.Py();
+	del_pt = V4_el->Py() + V4_corrprot.Py() + loc_pimi_v4.at(0).Py();
 	//alpha_t
 
 	h1_del_pt->Fill(del_pt);
@@ -1970,14 +1972,14 @@ double del_pt;
 	//Missing mass + missing E go here
 	//h1_MM_eppimi->Fill((V4_beam.M() + m_prot) - (V4_el + V4_uncorrprot + V4_uncorrpimi).M());
 	//h1_MM_eppimi->Fill((V4_beam.M() + target_mass[ftarget]) - (V4_el + V4_uncorrprot + V4_uncorrpimi).M());
-	h1_MM_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).Rho());
+	h1_MM_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pimi_v4.at(0))).Rho());
 	//h1_ME_eppimi->Fill(V4_beam.E() - (V4_el + V4_uncorrprot + V4_uncorrpimi).E());
-	h1_ME_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).E());
+	h1_ME_eppimi->Fill(((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pimi_v4.at(0))).E());
 
 	//do a missing energy cut, then fill inv mass histos, binned in q^2
-	if(((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + V4_uncorrpimi)).E()) < 0.15)){
+	if(((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pimi_v4.at(0))).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + loc_proton_v4.at(0) + loc_pimi_v4.at(0))).E()) < 0.15)){
 	  h1_Q2_deltazero_ME_cut->Fill(Q2);
-	  h1_InvM_ppim_MEcut->Fill((V4_corrprot + V4_uncorrpimi).M());
+	  h1_InvM_ppim_MEcut->Fill((V4_corrprot + loc_pimi_v4.at(0)).M());
 	  h1_InvM_ppim_MEcut2->Fill(W_var);
 	}
 	
@@ -2052,7 +2054,7 @@ double p2_kin[2];
 
     if(num_p == 2){
       
-      TLorentzVector V4_p_uncorr[num_p]; //eventually replace with a vector of TLorentzVector objects, filled in the proton ID function, that can scale dynamically to the number of protons. Same for other variables
+      //TLorentzVector V4_p_uncorr[num_p]; //eventually replace with a vector of TLorentzVector objects, loc_proton_v4
       //float prot_vz[num_p];
       //double p_phi[num_p];
       //double p_phi_mod[num_p];
@@ -2065,10 +2067,11 @@ double p2_kin[2];
       
       //loop over all protons - this is generic enough to be called as a function, make sure it matches all multi-proton cases, and then replace them all
       for(int ii = 0;ii<num_p;ii++){
-	V4_p_uncorr[ii].SetPxPyPzE(p[index_p[ii]]*cx[index_p[ii]],p[index_p[ii]]*cy[index_p[ii]],p[index_p[ii]]*cz[index_p[ii]],TMath::Sqrt(m_prot*m_prot+p[index_p[ii]]*p[index_p[ii]]));
+	//V4_p_uncorr[ii].SetPxPyPzE(p[index_p[ii]]*cx[index_p[ii]],p[index_p[ii]]*cy[index_p[ii]],p[index_p[ii]]*cz[index_p[ii]],TMath::Sqrt(m_prot*m_prot+p[index_p[ii]]*p[index_p[ii]]));
 
 	//Correct proton vertex and momentum
-	corrections = makeProtonCorrections(vz_corr_func,ii,V4_p_uncorr[ii],cx[index_p[ii]],cy[index_p[ii]],cz[index_p[ii]],p[index_p[ii]],vz[index_p[ii]], ftarget);
+	//corrections = makeProtonCorrections(vz_corr_func,ii,V4_p_uncorr[ii],cx[index_p[ii]],cy[index_p[ii]],cz[index_p[ii]],p[index_p[ii]],vz[index_p[ii]], ftarget);
+	corrections = makeProtonCorrections(vz_corr_func,ii,loc_proton_v4.at(ii),cx[index_p[ii]],cy[index_p[ii]],cz[index_p[ii]],p[index_p[ii]],vz[index_p[ii]], ftarget);
 	prot_vz_corr[ii] = corrections.first;
 	prot_p_corr[ii] = corrections.second;
       }
@@ -2090,10 +2093,8 @@ double p2_kin[2];
 
 	  for(int ii=0;ii<2;ii++){
 	    V3_2prot_uncorr[ii].SetXYZ(p[index_p[ii]]*cx[index_p[ii]],p[index_p[ii]]*cy[index_p[ii]],p[index_p[ii]]*cz[index_p[ii]]);
-	    //V3_2prot_uncorr[1].SetXYZ(p[index_p[1]]*cx[index_p[1]],p[index_p[1]]*cy[index_p[1]],p[index_p[1]]*cz[index_p[1]]);
 
 	    V3_2prot_corr[ii].SetXYZ(prot_p_corr[ii]*cx[index_p[ii]],prot_p_corr[ii]*cy[index_p[ii]],prot_p_corr[ii]*cz[index_p[ii]]);
-	    //V3_2prot_corr[1].SetXYZ(prot_p_corr[1]*cx[index_p[1]],prot_p_corr[1]*cy[index_p[1]],prot_p_corr[1]*cz[index_p[1]]);
 
 	    V4_pro_corr[ii].SetVectM(V3_2prot_corr[ii],TMath::Sqrt(m_prot*m_prot+prot_p_corr[ii]*prot_p_corr[ii]));
 
@@ -2117,8 +2118,8 @@ double p2_kin[2];
 	  
           //h2_Wepp_ephi_corr_uncorrprot->Fill(el_phi_mod,(V4_target+V4_beam-V4_prot_uncorr1-V4_prot_uncorr2-V4_el).M());
           //h2_Wepp_ephi_uncorrprot->Fill(el_phi_mod,(V4_target+V4_beam-V4_prot_uncorr1-V4_prot_uncorr2-V4_el_uncorr).M());
-          h2_Wepp_ephi_corr_uncorrprot->Fill(el_phi_mod,(V4_target+*V4_beam-V4_p_uncorr[0]-V4_p_uncorr[1]-*V4_el).M());
-          h2_Wepp_ephi_uncorrprot->Fill(el_phi_mod,(V4_target+*V4_beam-V4_p_uncorr[0]-V4_p_uncorr[1]-*V4_el_uncorr).M());
+          h2_Wepp_ephi_corr_uncorrprot->Fill(el_phi_mod,(V4_target+*V4_beam-loc_proton_v4.at(0)-loc_proton_v4.at(1)-*V4_el).M());
+          h2_Wepp_ephi_uncorrprot->Fill(el_phi_mod,(V4_target+*V4_beam-loc_proton_v4.at(0)-loc_proton_v4.at(1)-*V4_el_uncorr).M());
 	  
           double mult = 0.5*((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2).Mag2()-m_neut*m_neut)/((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2).E()*V4_el_uncorr->Rho()-((V4_target+*V4_beam-V4_prot_corr1-V4_prot_corr2).Vect()).Dot(V4_el_uncorr->Vect()));
 	  
@@ -2332,370 +2333,380 @@ double p2_kin[2];
             }   //Filling the histogram for two protons
           }//2pi requirement
         }//2prot vert cut
-
-//-----------
-  h2_phot_pi_2p->Fill(num_pi, ec_num_n);
-  double prot_phi[2];
-  double prot_phi_mod[2];
-  double prot_theta[2];
-  double prot_vert[2];
-  double prot_vert_corr[2];
-  double prot_mom_corr[2];
-  TLorentzVector V4_p_corr[2];
-  V4_p[0].SetPxPyPzE(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+p[index_p[0]]*p[index_p[0]]));
-  V4_p[1].SetPxPyPzE(p[index_p[1]]*cx[index_p[1]],p[index_p[1]]*cy[index_p[1]],p[index_p[1]]*cz[index_p[1]],TMath::Sqrt(m_prot*m_prot+p[index_p[1]]*p[index_p[1]]));
-  V3_p[0] = V4_p[0].Vect();
-  V3_p[1] = V4_p[1].Vect();
-  for(int i=0; i<2; i++)
-  {
-    prot_vert[i] = vz[index_p[i]];
-    prot_phi[i]=TMath::ATan2(cy[index_p[i]],cx[index_p[i]])*TMath::RadToDeg();
-    prot_phi_mod[i]=prot_phi[i]+30;
-    if (prot_phi_mod[i]<0)prot_phi_mod[i]=prot_phi_mod[i]+360;
-    prot_theta[i]=TMath::ACos(cz[index_p[i]])*TMath::RadToDeg();
-    prot_vert_corr[i] = prot_vert[i] + vz_corr(vz_corr_func,prot_phi_mod[i],prot_theta[i]);
-    prot_mom_corr[i] = ProtonMomCorrection_He3_4Cell(ftarget,V4_p[i],prot_vert_corr[i]);
-    V4_p_corr[i].SetPxPyPzE(prot_mom_corr[i]*cx[index_p[i]],prot_mom_corr[i]*cy[index_p[i]],prot_mom_corr[i]*cz[index_p[i]],TMath::Sqrt(m_prot*m_prot+prot_mom_corr[i]*prot_mom_corr[i]));
-    p2_kin[i] = V4_p_corr[i].E() - m_prot;
-  }
-  if(num_pi==1 && ec_num_n == 1)
-  {
-    TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-    TVector3 V3_pi = V4_pi.Vect();
-    TVector3 V3_phot(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
-    double N_1pi_1p_0phot[2] = {0};
-    double N_1pi_1p_1phot[2] = {0};
-    double N_1pi_2p_1phot = 0;
-    double N_1pi_2p_0phot = 0;
-
-    double en_recon1[2];
-    en_recon1[0] = V4_el->E() + p2_kin[0] + V4_pi.E();
-    en_recon1[1] = V4_el->E() + p2_kin[1] + V4_pi.E();
-    double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-                                          (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
-
-    rotation->rot_1phot_1pi_2p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], N_1pi_1p_0phot, N_1pi_1p_1phot, &N_1pi_2p_0phot, &N_1pi_2p_1phot, N_tot);
-
-    //fill histograms here
-    if(N_1pi_2p_1phot!=0)
-    {
-      h1_rot1_1pi_2p_1phot->Fill(en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h1_rot1_1pi_2p_1phot->Fill(en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1[0], W_var, -(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1[1], W_var, -(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot2_1pi_2p_1phot->Fill(E_rec, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, -((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot3_1pi_2p_1phot->Fill(en_recon3, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-    }
-    double N1pi1p0phot[2] = {0};
-    double N1pi1p1phot[2] = {0};
-    rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p[0], V3_q, ec_radstat_n[0], &N1pi1p0phot[0], &N1pi1p1phot[0], N_tot);
-    rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p[1], V3_q, ec_radstat_n[0], &N1pi1p0phot[1], &N1pi1p1phot[1], N_tot);
-    if(N_1pi_2p_1phot!=0 && N1pi1p1phot[0]!=0 && N1pi1p1phot[1]!=0)
-    {
-      h1_rot1_1pi_2p_1phot->Fill(en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h1_rot1_1pi_2p_1phot->Fill(en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1[0], W_var, (N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1[1], W_var, (N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, (N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, (N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-    }
-    double N_1pi_1p[2] = {0};
-    double N_1pi_2p = 0;
-    rotation->rot_1pi_2p(V3_pi, q[index_pi[0]], V3_p, V3_q, N_1pi_1p, &N_1pi_2p, N_tot);
-
-    if(N_1pi_2p_1phot!=0 && N_1pi_2p!=0)
-    {
-      h1_rot1_1pi_2p_1phot->Fill(en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h1_rot1_1pi_2p_1phot->Fill(en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-	h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Q2_sub->Fill(Q2,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_omega_sub->Fill(omega,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_Wvar_sub->Fill(W_var,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Wvar_Q2_sub->Fill(W_var, Q2,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_Q2_omega_sub->Fill(omega,Q2,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1[0], W_var, (N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_cal_Wvar->Fill(en_recon1[1], W_var, (N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, (N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_Wvar->Fill(E_rec, W_var, (N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-
-      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      if(q[index_pi[0]]>0)
-      {
-        h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-      else
-      {
-        h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-        h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
-      }
-    }
-  }
-  if (num_pi==1 && ec_num_n==0 && num_n==0) {
-
-    V4_pi.SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-    V3_pi = V4_pi.Vect();
-    double qpi = q[index_pi[0]];
-    
-    N_1pi_1p[0]=N_1pi_1p[1]=0;
-    double N_1pi_2p = 0;
-    double en_recon1[2];
-    double en_recon3;
-    //double rot_angle;
-    
-    en_recon1[0] = V4_el->E() + p2_kin[0] + V4_pi.E();
-    en_recon1[1] = V4_el->E() + p2_kin[1] + V4_pi.E();
-    en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
-      (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pi[0]]));
-    
-    
-    rotation->rot_1pi_2p(V3_pi, qpi, V3_p, V3_q, N_1pi_1p, &N_1pi_2p, N_tot);
-    //fill the histograms here
-    if(N_1pi_2p!=0){
-      // First reconstruction method
-      h1_rot1_1pi_2p->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-      if(qpi>0)
-	{
-	  h1_rot1_1pi_2p_pipl->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      else
-	{
-	  h1_rot1_1pi_2p_pimi->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h1_Q2_sub->Fill(Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h1_omega_sub->Fill(omega,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_cal_Wvar->Fill(en_recon1[0], W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      h1_rot1_1pi_2p->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-      h2_rot_1pi_2p->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-      if(qpi>0)
-	{
-	  h1_rot1_1pi_2p_pipl->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      else
-	{
-	  h1_rot1_1pi_2p_pimi->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h1_Q2_sub->Fill(Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h1_omega_sub->Fill(omega,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_cal_Wvar->Fill(en_recon1[1], W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      //Second reconstruction method
-      h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-      if(qpi>0)
-	{
-	  h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      else
-	{
-	  h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-      if(qpi>0)
-	{
-	  h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      else
-	{
-	  h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      //Third reconstruction method
-      h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-      if(qpi>0)
-	{
-	  h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      else
-	{
-	  h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-      if(qpi>0)
-	{
-	  h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-      else
-	{
-	  h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
-	}
-    }
-  }
-  
-  TLorentzVector V4_pi[2];
-  TVector3 V3_pi[2], V3_pi_rot[2];
-  double N_all2 = 0;
-  double N_p1_pi1 = 0, N_p1_pi2 = 0, N_p2_pi2 = 0, N_p2_pi1 = 0;
-  if(num_pi == 2 && ec_num_n==0 && num_n==0)
-    {
-      V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
-      V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
-      V3_pi[0] = V4_pi[0].Vect();
-      V3_pi[1] = V4_pi[1].Vect();
       
-      double N_1pi_1p_[4]={0}, N_1pi_2p_[2] = {0}, N_2pi_1p_[2] = {0};
-      double en_recon1[4];
-      double en_recon3[2];
-      double rot_angle;
-      double qpi[2];
-      qpi[0] = q[index_pi[0]];
-      qpi[1] = q[index_pi[1]];
+      //-----------
+      h2_phot_pi_2p->Fill(num_pi, ec_num_n);
+      double prot_phi[2];
+      double prot_phi_mod[2];
+      double prot_theta[2];
+      double prot_vert[2];
+      double prot_vert_corr[2];
+      double prot_mom_corr[2];
+      TLorentzVector V4_p_corr[2];
+      V4_p[0].SetPxPyPzE(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(m_prot*m_prot+p[index_p[0]]*p[index_p[0]]));
+      V4_p[1].SetPxPyPzE(p[index_p[1]]*cx[index_p[1]],p[index_p[1]]*cy[index_p[1]],p[index_p[1]]*cz[index_p[1]],TMath::Sqrt(m_prot*m_prot+p[index_p[1]]*p[index_p[1]]));
+      //V3_p[0] = V4_p[0].Vect();
+      //V3_p[1] = V4_p[1].Vect();
+      V3_p[0] = loc_proton_v4.at(0).Vect();
+      V3_p[1] = loc_proton_v4.at(1).Vect();
+      for(int i=0; i<2; i++)
+	{
+	  prot_vert[i] = vz[index_p[i]];
+	  prot_phi[i]=TMath::ATan2(cy[index_p[i]],cx[index_p[i]])*TMath::RadToDeg();
+	  prot_phi_mod[i]=prot_phi[i]+30;
+	  if (prot_phi_mod[i]<0)prot_phi_mod[i]=prot_phi_mod[i]+360;
+	  prot_theta[i]=TMath::ACos(cz[index_p[i]])*TMath::RadToDeg();
+	  prot_vert_corr[i] = prot_vert[i] + vz_corr(vz_corr_func,prot_phi_mod[i],prot_theta[i]);
+	  prot_mom_corr[i] = ProtonMomCorrection_He3_4Cell(ftarget,V4_p[i],prot_vert_corr[i]);
+	  V4_p_corr[i].SetPxPyPzE(prot_mom_corr[i]*cx[index_p[i]],prot_mom_corr[i]*cy[index_p[i]],prot_mom_corr[i]*cz[index_p[i]],TMath::Sqrt(m_prot*m_prot+prot_mom_corr[i]*prot_mom_corr[i]));
+	  p2_kin[i] = V4_p_corr[i].E() - m_prot;
+	}
+      if(num_pi==1 && ec_num_n == 1)
+	{
+	  TLorentzVector V4_pi(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]], TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	  //TVector3 V3_pi = V4_pi.Vect();
+	  TVector3 V3_pi = loc_pion_v4.at(0).Vect();
+	  TVector3 V3_phot(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
+	  double N_1pi_1p_0phot[2] = {0};
+	  double N_1pi_1p_1phot[2] = {0};
+	  double N_1pi_2p_1phot = 0;
+	  double N_1pi_2p_0phot = 0;
+	  
+	  double en_recon1[2];
+// 	  en_recon1[0] = V4_el->E() + p2_kin[0] + V4_pi.E();
+// 	  en_recon1[1] = V4_el->E() + p2_kin[1] + V4_pi.E();
+// 	  double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi.E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi.E() + 2*V4_el->Rho()*V4_pi.Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+//	    (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi.E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi.Rho()*cz[index_pipl[0]]));
+	  en_recon1[0] = V4_el->E() + p2_kin[0] + loc_pion_v4.at(0).E();
+	  en_recon1[1] = V4_el->E() + p2_kin[1] + loc_pion_v4.at(0).E();
+	  double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + loc_pion_v4.at(0).E()) - e_mass*e_mass - 2*V4_el->E()*loc_pion_v4.at(0).E() + 2*V4_el->Rho()*loc_pion_v4.at(0).Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+	    (2*(m_neut - bind_en[ftarget] - V4_el->E() - loc_pion_v4.at(0).E()) + 2*(V4_el->Rho()*cz[ind_em] + loc_pion_v4.at(0).Rho()*cz[index_pipl[0]]));
+	  
+	  rotation->rot_1phot_1pi_2p(V3_phot, V3_pi, q[index_pi[0]], V3_p, V3_q, ec_radstat_n[0], N_1pi_1p_0phot, N_1pi_1p_1phot, &N_1pi_2p_0phot, &N_1pi_2p_1phot, N_tot);
+	  
+	  //fill histograms here
+	  if(N_1pi_2p_1phot!=0)
+	    {
+	      h1_rot1_1pi_2p_1phot->Fill(en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h1_rot1_1pi_2p_1phot->Fill(en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[0], (N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[1], (N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Q2_sub->Fill(Q2,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_omega_sub->Fill(omega,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Wvar_sub->Fill(W_var,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_cal_Wvar->Fill(en_recon1[0], W_var, -(N_1pi_1p_0phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_cal_Wvar->Fill(en_recon1[1], W_var, -(N_1pi_1p_0phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      
+	      h1_rot2_1pi_2p_1phot->Fill(E_rec, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_Wvar->Fill(E_rec, W_var, -((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      
+	      h1_rot3_1pi_2p_1phot->Fill(en_recon3, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, ((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -((N_1pi_1p_0phot[0]+N_1pi_1p_0phot[1])/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	    }
+	  double N1pi1p0phot[2] = {0};
+	  double N1pi1p1phot[2] = {0};
+	  rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p[0], V3_q, ec_radstat_n[0], &N1pi1p0phot[0], &N1pi1p1phot[0], N_tot);
+	  rotation->rot_1phot_1pi_1p(V3_phot, V3_pi, q[index_pi[0]], V3_p[1], V3_q, ec_radstat_n[0], &N1pi1p0phot[1], &N1pi1p1phot[1], N_tot);
+	  if(N_1pi_2p_1phot!=0 && N1pi1p1phot[0]!=0 && N1pi1p1phot[1]!=0)
+	    {
+	      h1_rot1_1pi_2p_1phot->Fill(en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h1_rot1_1pi_2p_1phot->Fill(en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[0], -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[1], -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Q2_sub->Fill(Q2,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_omega_sub->Fill(omega,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Wvar_sub->Fill(W_var,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Wvar_Q2_sub->Fill(W_var, Q2,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Q2_omega_sub->Fill(omega,Q2,(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Q2_sub->Fill(Q2,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_omega_sub->Fill(omega,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Wvar_sub->Fill(W_var,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Wvar_Q2_sub->Fill(W_var, Q2,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Q2_omega_sub->Fill(omega,Q2,(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_cal_Wvar->Fill(en_recon1[0], W_var, (N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_cal_Wvar->Fill(en_recon1[1], W_var, (N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      
+	      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_Wvar->Fill(E_rec, W_var, (N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_Wvar->Fill(E_rec, W_var, (N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      
+	      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N1pi1p0phot[0]/N1pi1p1phot[0])*(N_1pi_1p_1phot[0]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N1pi1p0phot[1]/N1pi1p1phot[1])*(N_1pi_1p_1phot[1]/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	    }
+	  double N_1pi_1p[2] = {0};
+	  double N_1pi_2p = 0;
+	  rotation->rot_1pi_2p(V3_pi, q[index_pi[0]], V3_p, V3_q, N_1pi_1p, &N_1pi_2p, N_tot);
+	  
+	  if(N_1pi_2p_1phot!=0 && N_1pi_2p!=0)
+	    {
+	      h1_rot1_1pi_2p_1phot->Fill(en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h1_rot1_1pi_2p_1phot->Fill(en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_1phot->Fill(E_rec, en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot1_1pi_2p_1phot_pipl->Fill(en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pipl->Fill(E_rec, en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot1_1pi_2p_1phot_pimi->Fill(en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[0], -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_rot_1pi_2p_1phot_pimi->Fill(E_rec, en_recon1[1], -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Q2_sub->Fill(Q2,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_omega_sub->Fill(omega,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Wvar_sub->Fill(W_var,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Wvar_Q2_sub->Fill(W_var, Q2,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Q2_omega_sub->Fill(omega,Q2,(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Q2_sub->Fill(Q2,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_omega_sub->Fill(omega,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_Wvar_sub->Fill(W_var,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Wvar_Q2_sub->Fill(W_var, Q2,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_Q2_omega_sub->Fill(omega,Q2,(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_cal_Wvar->Fill(en_recon1[0], W_var, (N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_cal_Wvar->Fill(en_recon1[1], W_var, (N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+
+	      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h1_rot2_1pi_2p_1phot->Fill(E_rec, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot2_1pi_2p_1phot_pipl->Fill(E_rec, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot2_1pi_2p_1phot_pimi->Fill(E_rec, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_Wvar->Fill(E_rec, W_var, (N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_Wvar->Fill(E_rec, W_var, (N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      
+	      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      h1_rot3_1pi_2p_1phot->Fill(en_recon3, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+	      if(q[index_pi[0]]>0)
+		{
+		  h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot3_1pi_2p_1phot_pipl->Fill(en_recon3, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	      else
+		{
+		  h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h1_rot3_1pi_2p_1phot_pimi->Fill(en_recon3, -(N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N_1pi_1p[0]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		  h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, (N_1pi_1p[1]/N_1pi_2p)*(N_1pi_2p_0phot/N_1pi_2p_1phot)*(1/Mott_cross_sec));
+		}
+	    }
+	}
+      if (num_pi==1 && ec_num_n==0 && num_n==0) {
+	
+	V4_pi.SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	//V3_pi = V4_pi.Vect();
+	V3_pi = loc_pion_v4.at(0).Vect();
+	double qpi = q[index_pi[0]];
+	
+	N_1pi_1p[0]=N_1pi_1p[1]=0;
+	double N_1pi_2p = 0;
+	double en_recon1[2];
+	double en_recon3;
+	//double rot_angle;
+	
+	en_recon1[0] = V4_el->E() + p2_kin[0] + loc_pion_v4.at(0).E();
+	en_recon1[1] = V4_el->E() + p2_kin[1] + loc_pion_v4.at(0).E();
+	en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() +  loc_pion_v4.at(0).E()) - e_mass*e_mass - 2*V4_el->E()* loc_pion_v4.at(0).E() + 2*V4_el->Rho()*loc_pion_v4.at(0).Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
+	  (2*(m_neut - bind_en[ftarget] - V4_el->E() - loc_pion_v4.at(0).E()) + 2*(V4_el->Rho()*cz[ind_em] + loc_pion_v4.at(0).Rho()*cz[index_pi[0]]));
+	
+	
+	rotation->rot_1pi_2p(V3_pi, qpi, V3_p, V3_q, N_1pi_1p, &N_1pi_2p, N_tot);
+	//fill the histograms here
+	if(N_1pi_2p!=0){
+	  // First reconstruction method
+	  h1_rot1_1pi_2p->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_rot_1pi_2p->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  if(qpi>0)
+	    {
+	      h1_rot1_1pi_2p_pipl->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  else
+	    {
+	      h1_rot1_1pi_2p_pimi->Fill(en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[0], (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h1_Q2_sub->Fill(Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h1_omega_sub->Fill(omega,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_cal_Wvar->Fill(en_recon1[0], W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  h1_rot1_1pi_2p->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  h2_rot_1pi_2p->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  if(qpi>0)
+	    {
+	      h1_rot1_1pi_2p_pipl->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_pipl->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  else
+	    {
+	      h1_rot1_1pi_2p_pimi->Fill(en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_rot_1pi_2p_pimi->Fill(E_rec, en_recon1[1], (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h1_Q2_sub->Fill(Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h1_omega_sub->Fill(omega,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h1_Wvar_sub->Fill(W_var,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_Wvar_Q2_sub->Fill(W_var, Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_Q2_omega_sub->Fill(omega,Q2,-(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_cal_Wvar->Fill(en_recon1[1], W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  //Second reconstruction method
+	  h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  if(qpi>0)
+	    {
+	      h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  else
+	    {
+	      h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  h1_rot2_1pi_2p->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  if(qpi>0)
+	    {
+	      h1_rot2_1pi_2p_pipl->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  else
+	    {
+	      h1_rot2_1pi_2p_pimi->Fill(E_rec, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_kin_e_Wvar->Fill(E_rec, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  //Third reconstruction method
+	  h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	  if(qpi>0)
+	    {
+	      h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  else
+	    {
+	      h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[0]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  h1_rot3_1pi_2p->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	  if(qpi>0)
+	    {
+	      h1_rot3_1pi_2p_pipl->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	  else
+	    {
+	      h1_rot3_1pi_2p_pimi->Fill(en_recon3, (N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	      h2_kin_e_pi_Wvar->Fill(en_recon3, W_var, -(N_1pi_1p[1]/N_1pi_2p)*(1/Mott_cross_sec));
+	    }
+	}
+      }
       
-      en_recon1[0] = V4_el->E() + p2_kin[0] + V4_pi[0].E();
-      en_recon1[1] = V4_el->E() + p2_kin[0] + V4_pi[1].E();
-      en_recon1[2] = V4_el->E() + p2_kin[1] + V4_pi[0].E();
-      en_recon1[3] = V4_el->E() + p2_kin[1] + V4_pi[1].E();
+      TLorentzVector V4_pi[2];
+      TVector3 V3_pi[2], V3_pi_rot[2];
+      double N_all2 = 0;
+      double N_p1_pi1 = 0, N_p1_pi2 = 0, N_p2_pi2 = 0, N_p2_pi1 = 0;
+      if(num_pi == 2 && ec_num_n==0 && num_n==0)
+	{
+	  V4_pi[0].SetPxPyPzE(p[index_pi[0]]*cx[index_pi[0]],p[index_pi[0]]*cy[index_pi[0]],p[index_pi[0]]*cz[index_pi[0]],TMath::Sqrt(p[index_pi[0]]*p[index_pi[0]]+m_pion*m_pion));
+	  V4_pi[1].SetPxPyPzE(p[index_pi[1]]*cx[index_pi[1]],p[index_pi[1]]*cy[index_pi[1]],p[index_pi[1]]*cz[index_pi[1]],TMath::Sqrt(p[index_pi[1]]*p[index_pi[1]]+m_pion*m_pion));
+	  //V3_pi[0] = V4_pi[0].Vect();
+	  //V3_pi[1] = V4_pi[1].Vect();
+	  V3_pi[0] = loc_pion_v4.at(0).Vect();
+	  V3_pi[1] = loc_pion_v4.at(1).Vect();
+	  
+	  double N_1pi_1p_[4]={0}, N_1pi_2p_[2] = {0}, N_2pi_1p_[2] = {0};
+	  double en_recon1[4];
+	  double en_recon3[2];
+	  double rot_angle;
+	  double qpi[2];
+	  qpi[0] = q[index_pi[0]];
+	  qpi[1] = q[index_pi[1]];
+	  
+	  en_recon1[0] = V4_el->E() + p2_kin[0] + loc_pion_v4.at(0).E();
+	  en_recon1[1] = V4_el->E() + p2_kin[0] + loc_pion_v4.at(1).E();
+	  en_recon1[2] = V4_el->E() + p2_kin[1] + loc_pion_v4.at(0).E();
+	  en_recon1[3] = V4_el->E() + p2_kin[1] + loc_pion_v4.at(1).E();
       for(int g = 0; g<2;g++){
-	en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + V4_pi[g].E()) - e_mass*e_mass - 2*V4_el->E()*V4_pi[g].E() + 2*V4_el->Rho()*V4_pi[g].Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
-	  (2*(m_neut - bind_en[ftarget] - V4_el->E() - V4_pi[g].E()) + 2*(V4_el->Rho()*cz[ind_em] + V4_pi[g].Rho()*cz[index_pi[g]]));
+	en_recon3[g] = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + loc_pion_v4.at(g).E()) - e_mass*e_mass - 2*V4_el->E()*loc_pion_v4.at(g).E() + 2*V4_el->Rho()*loc_pion_v4.at(g).Rho()*cos(V3_pi[g].Angle(V3_el)) + m_pion*m_pion)/
+	  (2*(m_neut - bind_en[ftarget] - V4_el->E() - loc_pion_v4.at(g).E()) + 2*(V4_el->Rho()*cz[ind_em] + loc_pion_v4.at(g).Rho()*cz[index_pi[g]]));
       }
       
       
@@ -2748,16 +2759,16 @@ double p2_kin[2];
     double N_1pion_1prot[2] = {0};
     double P_2p2pi_2p1pi[2][2] = {0};
     for(int i=0;i<2;i++){
-
+      
       rotation->rot_1pi_2p (V3_pi[i], qpi[i], V3_p, V3_q, N_1pion_1prot, &N_1pion_2prot, N_tot);
-
+      
       if(N_1pion_2prot!=0){
-      P_2p2pi_2p1pi[i][0] = (N_1pi_2p_[i]/N_all2)*(N_1pion_1prot[0]/N_1pion_2prot);
-      P_2p2pi_2p1pi[i][1] = (N_1pi_2p_[i]/N_all2)*(N_1pion_1prot[1]/N_1pion_2prot);
-
+	P_2p2pi_2p1pi[i][0] = (N_1pi_2p_[i]/N_all2)*(N_1pion_1prot[0]/N_1pion_2prot);
+	P_2p2pi_2p1pi[i][1] = (N_1pi_2p_[i]/N_all2)*(N_1pion_1prot[1]/N_1pion_2prot);
+	
+      }
     }
-    }
-
+    
 //---------------------------------------------------2p2pi->1p1pi-------------------------------------------------------
 
 //fill the histograms here
@@ -3113,8 +3124,6 @@ double p2_kin[2];
     } //2prot requirement
     
     
-    
-    
     //
         
     //---Events with exactly 3 protons
@@ -3128,7 +3137,8 @@ double p2_kin[2];
     if(num_p == 3){
       
       const int N_3p=3;  //what's the bloody point in declaring a constant for the number of protons in a three proton event? Of course its bloody three!!!!
-      TLorentzVector V4_p_uncorr[N_3p], V4_p_corr[N_3p],V4_prot_el[N_3p];
+      //TLorentzVector V4_p_uncorr[N_3p];
+      TLorentzVector V4_p_corr[N_3p],V4_prot_el[N_3p];
       //float prot_vz[N_3p];
       //double proton_phi[N_3p],proton_theta[N_3p];
       double prot_vz_corr[N_3p],prot_p_corr[N_3p];
@@ -3156,10 +3166,11 @@ double p2_kin[2];
       for(int i = 0; i < N_3p; i++)
 	{
 
-	  V4_p_uncorr[i].SetPxPyPzE(p[index_p[i]]*cx[index_p[i]],p[index_p[i]]*cy[index_p[i]],p[index_p[i]]*cz[index_p[i]],TMath::Sqrt(m_prot*m_prot+p[index_p[i]]*p[index_p[i]]));
+	  //V4_p_uncorr[i].SetPxPyPzE(p[index_p[i]]*cx[index_p[i]],p[index_p[i]]*cy[index_p[i]],p[index_p[i]]*cz[index_p[i]],TMath::Sqrt(m_prot*m_prot+p[index_p[i]]*p[index_p[i]]));
 
 	  //Correct proton vertex and momentum
-	  corrections = makeProtonCorrections(vz_corr_func,i,V4_p_uncorr[i],cx[index_p[i]],cy[index_p[i]],cz[index_p[i]],p[index_p[i]],vz[index_p[i]], ftarget);
+	  //corrections = makeProtonCorrections(vz_corr_func,i,V4_p_uncorr[i],cx[index_p[i]],cy[index_p[i]],cz[index_p[i]],p[index_p[i]],vz[index_p[i]], ftarget);
+	  corrections = makeProtonCorrections(vz_corr_func,i,loc_proton_v4.at(i),cx[index_p[i]],cy[index_p[i]],cz[index_p[i]],p[index_p[i]],vz[index_p[i]], ftarget);
 	  prot_vz_corr[i] = corrections.first;
 	  prot_p_corr[i] = corrections.second;
 
