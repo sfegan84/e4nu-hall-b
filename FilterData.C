@@ -1092,3 +1092,41 @@ void FilterData::Loop()
 } //End Loop function
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Int_t FilterData::electron_ID(){
+  return(0);
+}
+
+Int_t FilterData::proton_ID(int ii){
+  return(0);
+}
+
+Int_t FilterData::piplus_ID(int ii){
+  return(0);
+}
+
+Int_t FilterData::piminus_ID(int ii){
+  return(0);
+}
+
+
+//placeholders for kplus and kminus to implement later (useful work for a student)
+Int_t FilterData::kplus_ID(int ii){
+
+  return(0);
+}
+
+
+Int_t FilterData::kminus_ID(int ii){
+
+  return(0);
+}
+
+Int_t FilterData::neutral_ID(int ii){
+  return(0);
+}
+
+void FilterData::pi0_ID(){
+
+}
