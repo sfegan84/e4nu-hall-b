@@ -259,7 +259,7 @@ public :
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 
-   //PID functions called within Loop()
+   //PID functions called within Loop() - implement as derived base classes for now, to allow analysis and filtering to have subtle differences
    virtual Int_t     electron_ID();
    virtual Int_t     proton_ID(int ii);
    virtual Int_t     piplus_ID(int ii);

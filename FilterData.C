@@ -3,6 +3,7 @@
 //#include "e2a_ep_neutrino6_united4_radphot.h"
 #include "FilterData.h"
 #include "Constants.h"
+#include "DetectorConstants.h"
 
 #include <TH2.h>
 #include <TStyle.h>
@@ -54,12 +55,42 @@ extern Double_t FSum_pipl(Double_t *x,Double_t *par);
 
 extern Double_t FSub_pipl(Double_t *x,Double_t *par);
 
+const int ind_em=0; //Index for electron
+
+const int nsect=6;
+
+extern int 	el_segment, el_cc_sector;
+extern Double_t el_sccc_timediff;
+extern Double_t el_cc_nphe;
+extern double min_good_mom;
+extern double max_mom;
+extern double epratio_sig_cutrange;
+extern double prot_delt_cutrange;
+extern double pimi_delt_cutrange;
+extern double pipl_delt_cutrange;
+
+//extern Double_t sc_cc_delt_cut_sect[nsect]={-2,-5,-8,-8,-2,2};
+extern Double_t sc_cc_delt_cut_sect[nsect];
+extern Double_t elmom_corr_fact[nsect];
+
+extern double prot_mom_lim;
+extern double pipl_maxmom;
+extern double pimi_maxmom;
+
+TF1 *fsum_e_F,*fsub_e_F; // electron TF1 functions for E/p
+	TF1 *fsum_prot_F,*fsub_prot_F; // proton TF1 functions for E/p
+	TF1 *fsum_pimi_F,*fsub_pimi_F; // Pi minus TF1 functions for E/p
+	TF1 *fsum_pipl_F,*fsub_pipl_F; // Pi Plus TF1 functions for E/p
+
+//TLorentzVector *V4_el;
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 int CounterEvents = 0;
 
 void FilterData::Loop()
 {
+
 
 	std::map<std::string,double>vert_min;
 	std::map<std::string,double>vert_max;
@@ -109,28 +140,16 @@ void FilterData::Loop()
 //	double eps;
 	Float_t pimi_phimin = 0, pimi_phimax = 0;
 	Float_t pipl_phimin = 0, pipl_phimax = 0;
-	const int nsect=6;
+
 	double beta,delta;
 	TVector3 V3_pimi,V3_pipl,V3_rotprot1,V3_rotprot2,V3_rotprot3,V3_rot_pi,V3_rotprot;
 	TVector3 V3_phot_angles;
 	//double sum_val,sub_val;
-	double epratio_sig_cutrange=3.;
-	double prot_delt_cutrange=3.;
-	double pimi_delt_cutrange = 3.0;
-	double pipl_delt_cutrange = 3.0;
-	int 	el_segment, el_cc_sector;
 	//double delt_uplim,delt_lowlim;
-	double prot_accept_mom_lim = 0.3;  //proton momentum threshold
-	double prot_mom_lim = -999;
-	double min_good_mom = -999;
-	double max_mom = -999;
-	Double_t el_sccc_timediff;
-	Double_t sc_cc_delt_cut_sect[nsect]={-2,-5,-8,-8,-2,2};
-	Double_t el_cc_nphe;
-	Double_t elmom_corr_fact[nsect];
 
-	double pipl_maxmom = -999;
-	double pimi_maxmom = -999;
+	prot_mom_lim = -999;
+	pipl_maxmom = -999;
+	pimi_maxmom = -999;
 
 	int N_Ecal = 6;
 	
@@ -243,7 +262,7 @@ void FilterData::Loop()
 	
 	//Output file definition (find a way to define path, and file name, as an argument)
 	//TFile *file_out = new TFile(Form("/w/hallb-scifs17exp/clas/claseg2/apapadop/genie_filtered_data_e2a_ep_%s_%s_neutrino6_united4_radphot_test_100M.root",ftarget.c_str(),fbeam_en.c_str()), "Recreate");
-	TFile *file_out = new TFile(Form("/home/stuart/e4nu/code/e4nu_1p1pi/genie_filtered_data_e2a_eppi_%s_%s_test_100M.root",ftarget.c_str(),fbeam_en.c_str()), "Recreate");
+	TFile *file_out = new TFile(Form("/home/stuart/e4nu/code/e4nu-hall-b/genie_filtered_data_e2a_eppi_%s_%s_test_100M.root",ftarget.c_str(),fbeam_en.c_str()), "Recreate");
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -459,19 +478,16 @@ void FilterData::Loop()
 
 	//More functions
 
-	TF1 *fsum_e,*fsub_e; // electron TF1 functions for E/p
-	TF1 *fsum_prot,*fsub_prot; // proton TF1 functions for E/p
-	TF1 *fsum_pimi,*fsub_pimi; // Pi minus TF1 functions for E/p
-	TF1 *fsum_pipl,*fsub_pipl; // Pi Plus TF1 functions for E/p
 
-	fsum_pimi=new TF1("fsum_pimi",FSum_pimi,0.,5.,2);
-	fsub_pimi=new TF1("fsub_pimi",FSub_pimi,0.,5.,2);
-	fsum_pipl=new TF1("fsum_pipl",FSum_pipl,0.,5.,2);
-	fsub_pipl=new TF1("fsub_pipl",FSub_pipl,0.,5.,2);
-	fsum_prot=new TF1("fsum_prot",FSum_prot,0.,5.,2);
-	fsub_prot=new TF1("fsub_pprot",FSub_prot,0.,5.,2);
-	fsum_e = new TF1("fsum_e",FSum_e,0.,5.,2);
-	fsub_e = new TF1("fsub_e",FSub_e,0.,5.,2);
+
+	fsum_pimi_F=new TF1("fsum_pimi",FSum_pimi,0.,5.,2);
+	fsub_pimi_F=new TF1("fsub_pimi",FSub_pimi,0.,5.,2);
+	fsum_pipl_F=new TF1("fsum_pipl",FSum_pipl,0.,5.,2);
+	fsub_pipl_F=new TF1("fsub_pipl",FSub_pipl,0.,5.,2);
+	fsum_prot_F=new TF1("fsum_prot",FSum_prot,0.,5.,2);
+	fsub_prot_F=new TF1("fsub_pprot",FSub_prot,0.,5.,2);
+	fsum_e_F = new TF1("fsum_e",FSum_e,0.,5.,2);
+	fsub_e_F = new TF1("fsub_e",FSub_e,0.,5.,2);
 
 	//initialize Fiducial functions for EC limits
 
@@ -511,26 +527,34 @@ void FilterData::Loop()
 		  vert_min["4He"] = -2.27;  //runs with 5cm liquid target cell
 		}
 
-		if((runnb>18283 && runnb<18289) || (runnb>18300 && runnb<18304) || (runnb>18317 && runnb<18329)) fTorusCurrent=750; //setting appropriate torrus magnet current
-		else if ((runnb>18293 && runnb<18301) || (runnb>18305 && runnb<18317) || (runnb>18328 && runnb<18336))  fTorusCurrent=1500;
-		else fTorusCurrent=2250;
+		//setting appropriate torrus magnet current
+		if((runnb>18283 && runnb<18289) || (runnb>18300 && runnb<18304) || (runnb>18317 && runnb<18329)){
+		  fTorusCurrent=750;
+		}
+		else if ((runnb>18293 && runnb<18301) || (runnb>18305 && runnb<18317) || (runnb>18328 && runnb<18336)){
+		  fTorusCurrent=1500;
+		}
+		else{
+		  fTorusCurrent=2250;
+		}
+
 
 		if(jentry == 0){ //was n_evt == 1 before but jentry = n_evnt - 1
 			//SetMomCorrParameters(); Functions is missing F.H. 08/01/19
 			fiducialcut->SetConstants(fTorusCurrent, target_name, en_beam);
 			fiducialcut->SetFiducialCutParameters(fbeam_en);
+			std::cout << " EventLoop: Finished setting up fiducial cut class " << std::endl;
 		}
 
+
+		//---------------------------------------------
+		//--------START OF ELECTRON SELECTION----------
+		//---------------------------------------------
+		if(electron_ID()!=0) continue;
+
 		//int n_elec = 0;
-		const int ind_em=0; //Index for electron
-		if (ec[ind_em] <=0) {
-//			std::cout << "Possible problem with making electron ec vector. EC index below/equal Zero: ec[ind_em] =  " << ec[ind_em] << std::endl;
-			continue;
-		}
-		if (sc[ind_em] <=0) {
-//			std::cout << "Possible problem with making electron ec vector. SC index below/equal zero: sc[ind_em] =  " << sc[ind_em] << std::endl;
-			continue;
-		}
+
+
 
 		// -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -625,69 +649,69 @@ void FilterData::Loop()
 
 		//Define electron vectors, angles amd other Information
 
-		TVector3 e_ec_xyz1(ech_x[ec[ind_em]-1],ech_y[ec[ind_em]-1],ech_z[ec[ind_em]-1]);
-		TVector3 el_mom1(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em] ,p[ind_em]*cz[ind_em]);
-		//double sc_time = sc_t[sc[ind_em] - 1];
-		//double sc_path = sc_r[sc[ind_em] - 1];
-		//int sc_paddle = sc_pd[sc[ind_em] - 1];
-		//int sc_sector = sc_sect[sc[ind_em] - 1];
-		float el_vert = vz[ind_em];
-		//double ec_x = ech_x[ec[ind_em]-1];
-		//double ec_y = ech_y[ec[ind_em]-1];
-		//double ec_z = ech_z[ec[ind_em]-1];
-		double el_theta =  TMath::ACos(cz[ind_em])*TMath::RadToDeg();
-		double el_phi_mod = TMath::ATan2(cy[ind_em],cx[ind_em])*TMath::RadToDeg()+30; //Add extra 30 degree rotation in phi
-		if(el_phi_mod<0)  el_phi_mod  = el_phi_mod+360; //Add 360 so that electron phi is between 0 and 360 degree
-		int el_ec_sector = ec_sect[ec[ind_em] - 1];
-		double el_vert_corr = el_vert+vz_corr(vz_corr_func,el_phi_mod,el_theta);
+// 		TVector3 e_ec_xyz1(ech_x[ec[ind_em]-1],ech_y[ec[ind_em]-1],ech_z[ec[ind_em]-1]);
+// 		TVector3 el_mom1(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em] ,p[ind_em]*cz[ind_em]);
+// 		//double sc_time = sc_t[sc[ind_em] - 1];
+// 		//double sc_path = sc_r[sc[ind_em] - 1];
+// 		//int sc_paddle = sc_pd[sc[ind_em] - 1];
+// 		//int sc_sector = sc_sect[sc[ind_em] - 1];
+ 		float el_vert = vz[ind_em];
+// 		//double ec_x = ech_x[ec[ind_em]-1];
+// 		//double ec_y = ech_y[ec[ind_em]-1];
+// 		//double ec_z = ech_z[ec[ind_em]-1];
+ 		double el_theta =  TMath::ACos(cz[ind_em])*TMath::RadToDeg();
+ 		double el_phi_mod = TMath::ATan2(cy[ind_em],cx[ind_em])*TMath::RadToDeg()+30; //Add extra 30 degree rotation in phi
+ 		if(el_phi_mod<0)  el_phi_mod  = el_phi_mod+360; //Add 360 so that electron phi is between 0 and 360 degree
+ 		int el_ec_sector = ec_sect[ec[ind_em] - 1];
+ 		double el_vert_corr = el_vert+vz_corr(vz_corr_func,el_phi_mod,el_theta);
 
-		//Variables for electron cuts
-		double ece = TMath::Max( ec_ei[ec[ind_em] - 1] + ec_eo[ec[ind_em] - 1],   etot[ec[ind_em] - 1]);
-		el_segment = int((cc_segm[cc[ind_em]-1]-int(cc_segm[cc[ind_em]-1]/1000)*1000)/10); //does this work in all cases?? F.H. 08/07/19
-		el_cc_sector = cc_sect[cc[ind_em]-1];
-		el_sccc_timediff = sc_t[cc[ind_em]-1]-cc_t[cc[ind_em]-1]-(sc_r[cc[ind_em]-1]-cc_r[cc[ind_em]-1])/(c*ns_to_s);
-		el_cc_nphe = nphe[cc[ind_em]-1]/10.;
-		//double ec_SC_timediff_uncorr = ec_t[ec[ind_em]-1]-sc_t[sc[ind_em]-1]-(ec_r[ec[ind_em]-1]-sc_r[sc[ind_em]-1])/(c*ns_to_s);
+// 		//Variables for electron cuts
+// 		double ece = TMath::Max( ec_ei[ec[ind_em] - 1] + ec_eo[ec[ind_em] - 1],   etot[ec[ind_em] - 1]);
+// 		el_segment = int((cc_segm[cc[ind_em]-1]-int(cc_segm[cc[ind_em]-1]/1000)*1000)/10); //does this work in all cases?? F.H. 08/07/19
+// 		el_cc_sector = cc_sect[cc[ind_em]-1];
+// 		el_sccc_timediff = sc_t[cc[ind_em]-1]-cc_t[cc[ind_em]-1]-(sc_r[cc[ind_em]-1]-cc_r[cc[ind_em]-1])/(c*ns_to_s);
+// 		el_cc_nphe = nphe[cc[ind_em]-1]/10.;
+// 		//double ec_SC_timediff_uncorr = ec_t[ec[ind_em]-1]-sc_t[sc[ind_em]-1]-(ec_r[ec[ind_em]-1]-sc_r[sc[ind_em]-1])/(c*ns_to_s);
 
-		//fsum_e and fsub_p are TF1 Functions for electron E/p cuts
-		fsum_e->SetParameters(epratio_sig_cutrange, max_mom);
-		fsub_e->SetParameters(epratio_sig_cutrange, max_mom);
+// 		//fsum_e and fsub_p are TF1 Functions for electron E/p cuts
+// 		fsum_e->SetParameters(epratio_sig_cutrange, max_mom);
+// 		fsub_e->SetParameters(epratio_sig_cutrange, max_mom);
 
-		//Main Fiducial Cut for Electron
-		if( !EFiducialCut(fbeam_en, el_mom1) ) continue;//theta, phi cuts
-		if( !CutUVW(e_ec_xyz1) ) continue; //u>60, v<360, w<400
+// 		//Main Fiducial Cut for Electron
+// 		if( !EFiducialCut(fbeam_en, el_mom1) ) continue;//theta, phi cuts
+// 		if( !CutUVW(e_ec_xyz1) ) continue; //u>60, v<360, w<400
 
-		//General cut on EC, SC, CC hit and q (charge) for all events
-		if( ec[ind_em] < 0.5 ||  sc[ind_em] < 0.5 ||  cc[ind_em] < 0.5 || q[ind_em] >=0)
-		{
-		  continue;
-		}
+// 		//General cut on EC, SC, CC hit and q (charge) for all events
+// 		if( ec[ind_em] < 0.5 ||  sc[ind_em] < 0.5 ||  cc[ind_em] < 0.5 || q[ind_em] >=0)
+// 		{
+// 		  continue;
+// 		}
 
-		//Cut on 1.1 GeV events (E/p, energy deposit, TOF and cherenkov)
-		if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] <2. &&
-		  ( ec_ei[ec[ind_em] - 1] < 0.03 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
-				p[ind_em] < min_good_mom || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||   cc_c2[cc[ind_em]-1] > 0.1 ) )
-		{
-				continue;
-		}
+// 		//Cut on 1.1 GeV events (E/p, energy deposit, TOF and cherenkov)
+// 		if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] <2. &&
+// 		  ( ec_ei[ec[ind_em] - 1] < 0.03 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
+// 				p[ind_em] < min_good_mom || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||   cc_c2[cc[ind_em]-1] > 0.1 ) )
+// 		{
+// 				continue;
+// 		}
 
-		//Cut on 2.2 GeV events (E/p, energy deposit, TOF and cherenkov)
-		if(en_beam[fbeam_en] < 3.  && en_beam[fbeam_en] > 2 &&
-		  ( ec_ei[ec[ind_em] - 1] < 0.06 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
-				p[ind_em] < min_good_mom || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||
-				TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass)>en_beam[fbeam_en] ) ) 
-		//only here a cut on electron momentum to cut some very scarse events where p_e > beam energy (see Mariana's anaysis note)
-		{
-				continue;
-		}
+// 		//Cut on 2.2 GeV events (E/p, energy deposit, TOF and cherenkov)
+// 		if(en_beam[fbeam_en] < 3.  && en_beam[fbeam_en] > 2 &&
+// 		  ( ec_ei[ec[ind_em] - 1] < 0.06 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
+// 				p[ind_em] < min_good_mom || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||
+// 				TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass)>en_beam[fbeam_en] ) ) 
+// 		//only here a cut on electron momentum to cut some very scarse events where p_e > beam energy (see Mariana's anaysis note)
+// 		{
+// 				continue;
+// 		}
 
-		//Cut on 4.4 GeV events (E/p, energy deposit, TOF and cherenkov)
-		if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. &&
-		  ( ec_ei[ec[ind_em] - 1] < 0.055 || ece < 0.33 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
-				p[ind_em] < min_good_mom  || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff<sc_cc_delt_cut_sect[el_cc_sector-1] ) )
-		{
-				continue;
-		}
+// 		//Cut on 4.4 GeV events (E/p, energy deposit, TOF and cherenkov)
+// 		if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. &&
+// 		  ( ec_ei[ec[ind_em] - 1] < 0.055 || ece < 0.33 || ece/p[ind_em] < fsub_e->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e->Eval(p[ind_em]) ||
+// 				p[ind_em] < min_good_mom  || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff<sc_cc_delt_cut_sect[el_cc_sector-1] ) )
+// 		{
+// 				continue;
+// 		}
 
 		// --------------------------------------------------------------------------------------------
 
@@ -698,6 +722,7 @@ void FilterData::Loop()
 
 		// --------------------------------------------------------------------------------------------
 
+		//Eventually want the electron four vector as the return type from the electron_ID function
 		//Main Electron 4-Vectors with and without momentum correction. Units are GeV
 		TLorentzVector V4_el_uncorr(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em],p[ind_em]*cz[ind_em],TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass));
 		TLorentzVector V4_el(elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cx[ind_em],elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cy[ind_em],elmom_corr_fact[el_ec_sector-1]*p[ind_em]*cz[ind_em],TMath::Sqrt(p[ind_em]*p[ind_em]*elmom_corr_fact[el_ec_sector-1]*elmom_corr_fact[el_ec_sector-1]+e_mass*e_mass));
@@ -735,6 +760,15 @@ void FilterData::Loop()
 
 		// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+		//---------------------------------------------
+		//---------END OF ELECTRON SELECTION-----------
+		//---------------------------------------------
+		
+
+		//---------------------------------------------
+		//---------START OF HADRON SELECTION-----------
+		//---------------------------------------------
 		//Now we are done with the selection of electrons. Next step is looking for other hadrons in the events
 
 		//Index variables for hadrons (p and pions)
@@ -806,11 +840,11 @@ void FilterData::Loop()
 				prot_theta = TMath::ACos(cz[ind_p])*TMath::RadToDeg();
 
 				//fsum_e and fsub_p are TF1 Functions for proton delta cuts
-				fsum_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
-				fsub_prot->SetParameters(prot_delt_cutrange,prot_mom_lim);
+				fsum_prot_F->SetParameters(prot_delt_cutrange,prot_mom_lim);
+				fsub_prot_F->SetParameters(prot_delt_cutrange,prot_mom_lim);
 
 				//proton pid cut and momentum > 0.3GeV cut to get rid of low momentum protons that have a high energy loss and we don't know the efficiency precisely for
-				if(delta < fsum_prot->Eval(p[ind_p]) && delta > fsub_prot->Eval(p[ind_p]) && p[ind_p] >= prot_accept_mom_lim) {
+				if(delta < fsum_prot_F->Eval(p[ind_p]) && delta > fsub_prot_F->Eval(p[ind_p]) && p[ind_p] >= prot_accept_mom_lim) {
 
 					TLorentzVector V4_uncorrprot(p[ind_p]*cx[ind_p],p[ind_p]*cy[ind_p],p[ind_p]*cz[ind_p],TMath::Sqrt(p[ind_p]*p[ind_p]+ m_prot*m_prot ) );
 					p_vert_corr = vz[ind_p]+vz_corr(vz_corr_func,prot_phi_mod,prot_theta);
@@ -870,14 +904,14 @@ void FilterData::Loop()
 				beta = p[i]/TMath::Sqrt(p[i]*p[i]+m_pimi*m_pimi);
 				delta = sc_t[sc[i]-1]-sc_r[sc[i]-1]/(beta*c*ns_to_s) - tr_time;
 
-				//fsum_pimi and fsub_pimi are TF1 Functions for piminus delta cuts
+				//fsum_pimi_F and fsub_pimi_F are TF1 Functions for piminus delta cuts
 
-		      		fsub_pimi->SetParameters(pimi_delt_cutrange,pimi_maxmom);
-				fsum_pimi->SetParameters(pimi_delt_cutrange,pimi_maxmom);
+		      		fsub_pimi_F->SetParameters(pimi_delt_cutrange,pimi_maxmom);
+				fsum_pimi_F->SetParameters(pimi_delt_cutrange,pimi_maxmom);
 
 				//Pion pid delta cut
 
-				if(delta < fsum_pimi->Eval(p[i]) && delta > fsub_pimi->Eval(p[i])) {
+				if(delta < fsum_pimi_F->Eval(p[i]) && delta > fsub_pimi_F->Eval(p[i])) {
 
 					pimi_vert=vz[i];
 					pimi_phi = TMath::ATan2(cy[i],cx[i])*TMath::RadToDeg();
@@ -938,11 +972,11 @@ void FilterData::Loop()
 				delta= sc_t[sc[i]-1]-sc_r[sc[i]-1]/(beta*c*ns_to_s) - tr_time;
 
 				//fsum_piplus and fsub_piplus are TF1 Functions for piplus delta cuts
-				fsub_pipl->SetParameters(pipl_delt_cutrange,pipl_maxmom);
-				fsum_pipl->SetParameters(pipl_delt_cutrange,pipl_maxmom);
+				fsub_pipl_F->SetParameters(pipl_delt_cutrange,pipl_maxmom);
+				fsum_pipl_F->SetParameters(pipl_delt_cutrange,pipl_maxmom);
 
 				//Pion pid delta cut
-				if(delta < fsum_pipl->Eval(p[i]) && delta > fsub_pipl->Eval(p[i])) {
+				if(delta < fsum_pipl_F->Eval(p[i]) && delta > fsub_pipl_F->Eval(p[i])) {
 
 					pipl_vert=vz[i];
 					pipl_phi = TMath::ATan2(cy[i],cx[i])*TMath::RadToDeg();
@@ -1093,12 +1127,95 @@ void FilterData::Loop()
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//suboptimal version of e2a_eppi_v1::electron_ID, a stop-gap until we move to a model that uses one ID function for ROOT analysis and Genie filtering (or we have derived base classes, but this seems excessive, as any ID cuts to data are the sam whether we analyse in ROOT or convert to GENIE
+ Int_t FilterData::electron_ID(){
+  
+   if (ec[ind_em] <=0) {
+     //std::cout << "Possible problem with making electron ec vector. EC index below/equal Zero: ec[ind_em] =  " << ec[ind_em] << std::endl;
+     return -1;
+   }
+   if (sc[ind_em] <=0) {
+     //std::cout << "Possible problem with making electron ec vector. SC index below/equal zero: sc[ind_em] =  " << sc[ind_em] << std::endl;
+     return -1;
+   }
+  
+   TVector3 e_ec_xyz1(ech_x[ec[ind_em]-1],ech_y[ec[ind_em]-1],ech_z[ec[ind_em]-1]);
+   TVector3 el_mom1(p[ind_em]*cx[ind_em],p[ind_em]*cy[ind_em] ,p[ind_em]*cz[ind_em]);
+   //double sc_time = sc_t[sc[ind_em] - 1];
+   //double sc_path = sc_r[sc[ind_em] - 1];
+   //int sc_paddle = sc_pd[sc[ind_em] - 1];
+   //int sc_sector = sc_sect[sc[ind_em] - 1];
+   float el_vert = vz[ind_em];
 
-Int_t FilterData::electron_ID(){
-  return(0);
-}
+   //double ec_x = ech_x[ec[ind_em]-1];
+   //double ec_y = ech_y[ec[ind_em]-1];
+   //double ec_z = ech_z[ec[ind_em]-1];
+  
+   double el_theta =  TMath::ACos(cz[ind_em])*TMath::RadToDeg();
+  
+   float el_phi_mod = TMath::ATan2(cy[ind_em],cx[ind_em])*TMath::RadToDeg()+30; //Add extra 30 degree rotation in phi
+   if(el_phi_mod<0){
+     el_phi_mod  = el_phi_mod+360; //Add 360 so that electron phi is between 0 and 360 degree
+   }
+  
+   int el_ec_sector = ec_sect[ec[ind_em] - 1];
+ //   double el_vert_corr = el_vert+vz_corr(vz_corr_func,el_phi_mod,el_theta);
+  
+    //Variables for electron cuts
+    double ece = TMath::Max( ec_ei[ec[ind_em] - 1] + ec_eo[ec[ind_em] - 1],   etot[ec[ind_em] - 1]);
+    el_segment = int((cc_segm[cc[ind_em]-1]-int(cc_segm[cc[ind_em]-1]/1000)*1000)/10); //does this work in all cases?? F.H. 08/07/19
+    el_cc_sector = cc_sect[cc[ind_em]-1];
+    el_sccc_timediff = sc_t[cc[ind_em]-1]-cc_t[cc[ind_em]-1]-(sc_r[cc[ind_em]-1]-cc_r[cc[ind_em]-1])/(c*ns_to_s);
+    el_cc_nphe = nphe[cc[ind_em]-1]/10.;
+    //double ec_SC_timediff_uncorr = ec_t[ec[ind_em]-1]-sc_t[sc[ind_em]-1]-(ec_r[ec[ind_em]-1]-sc_r[sc[ind_em]-1])/(c*ns_to_s);
+
+    //fsum_e and fsub_p are TF1 Functions for electron E/p cuts
+    fsum_e_F->SetParameters(epratio_sig_cutrange, max_mom);
+    fsub_e_F->SetParameters(epratio_sig_cutrange, max_mom);
+   
+    //Main Fiducial Cut for Electron
+    if( !EFiducialCut(fbeam_en, el_mom1) )      return -1;//theta, phi cuts
+    if( !CutUVW(e_ec_xyz1) )     return -1; //u>60, v<360, w<400
+   
+    //General cut on EC, SC, CC hit and q (charge) for all events
+    if( ec[ind_em] < 0.5 ||  sc[ind_em] < 0.5 ||  cc[ind_em] < 0.5 || q[ind_em] >=0)
+      {
+      return -1;
+      }
+   
+    //Cut on 1.1 GeV events (E/p, energy deposit, TOF and cherenkov)
+    if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] <2. &&
+       ( ec_ei[ec[ind_em] - 1] < 0.03 || ece/p[ind_em] < fsub_e_F->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e_F->Eval(p[ind_em]) ||
+ 	p[ind_em] < min_good_mom || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||   cc_c2[cc[ind_em]-1] > 0.1 ) )
+      {
+      return -1;
+      }
+   
+    //Cut on 2.2 GeV events (E/p, energy deposit, TOF and cherenkov)
+    if(en_beam[fbeam_en] < 3.  && en_beam[fbeam_en] > 2 &&
+       ( ec_ei[ec[ind_em] - 1] < 0.06 || ece/p[ind_em] < fsub_e_F->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e_F->Eval(p[ind_em]) ||
+ 	p[ind_em] < min_good_mom || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff < sc_cc_delt_cut_sect[el_cc_sector-1] ||
+ 	TMath::Sqrt(p[ind_em]*p[ind_em]+e_mass*e_mass)>en_beam[fbeam_en] ) ) 
+      //only here a cut on electron momentum to cut some very scarce events where p_e > beam energy (see Mariana's anaysis note)
+      {
+      return -1;
+      }
+   
+    //Cut on 4.4 GeV events (E/p, energy deposit, TOF and cherenkov)
+    if(en_beam[fbeam_en] > 4. && en_beam[fbeam_en] < 5. &&
+       ( ec_ei[ec[ind_em] - 1] < 0.055 || ece < 0.33 || ece/p[ind_em] < fsub_e_F->Eval(p[ind_em]) || ece/p[ind_em] > fsum_e_F->Eval(p[ind_em]) ||
+ 	p[ind_em] < min_good_mom  || cc_c2[cc[ind_em]-1] >= 0.1 || el_sccc_timediff<sc_cc_delt_cut_sect[el_cc_sector-1] ) )
+      {
+      return -1;
+      }
+     
+   return(0);
+ }
 
 Int_t FilterData::proton_ID(int ii){
+
+
+
   return(0);
 }
 
