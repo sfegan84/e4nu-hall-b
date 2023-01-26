@@ -1,4 +1,4 @@
-  //Definition and initialization of Histograms
+ //Definition and initialization of Histograms
 h1_el_vertuncorr=new TH1F("h1_el_vertuncorr","",200,-10,10);
 h1_el_vertcorr=new TH1F("h1_el_vertcorr","",200,-10,10);
 h1_el_Mott_crosssec = new TH1F("h1_el_Mott_crosssec","",200,0.,0.01);
@@ -64,6 +64,8 @@ h1_pi0_gamma1_mom = new TH1F("h1_pi0_gamma1_mom","",300,0,3);
 h1_pi0_gamma2_mom = new TH1F("h1_pi0_gamma2_mom","",300,0,3);
 h1_neg_m=new TH1F("h1_neg_m","",300,0,2);
 h1_pos_m=new TH1F("h1_pos_m","",300,0,2);
+h1_kp_m=new TH1F("h1_kp_m","",300,0,2);
+h1_km_m=new TH1F("h1_km_m","",300,0,2);
 
 
   //Binning for fractional feed down energy histograms
@@ -174,13 +176,17 @@ h2_neutral_theta_phi_EC_all = new TH2F("h2_neutral_theta_phi_EC_all","",200,0,36
 h2_neutral_theta_phi_EC_all_fidcut = new TH2F("h2_neutral_theta_phi_EC_all_fidcut","",200,0,360,200,0,180);
 h2_pimi_theta_phi = new TH2F("h2_pimi_theta_phi","",200,0,360,200,0,180);
 h2_pipl_theta_phi = new TH2F("h2_pipl_theta_phi","",200,0,360,200,0,180);
+h2_kpl_theta_phi = new TH2F("h2_kpl_theta_phi","",200,0,360,200,0,180);
 h2_pimi_theta_phi_beffid = new TH2F("h2_pimi_theta_phi_beffid","",200,0,360,200,0,180);
 h2_pipl_theta_phi_beffid = new TH2F("h2_pipl_theta_phi_beffid","",200,0,360,200,0,180);
+h2_kpl_theta_phi_beffid = new TH2F("h2_kpl_theta_phi_beffid","",200,0,360,200,0,180);
 h2_prot_theta_phi = new TH2F("h2_prot_theta_phi","",200,0,360,200,0,180);
 h2_prot_px_py_p = new TH2F("h2_prot_px_py_p","",100,-1,1,100,-1,1);
 h2_prot_px_py_p_fidcut = new TH2F("h2_prot_px_py_p_fidcut","",100,-1,1,100,-1,1);
 h2_pipl_theta_phi_p = new TH2F("h2_pipl_theta_phi_p","",200,0,360,200,0,180);
 h2_pipl_theta_phi_fidcut = new TH2F("h2_pipl_theta_phi_fidcut","",200,0,360,200,0,180);
+h2_kpl_theta_phi_p = new TH2F("h2_kpl_theta_phi_p","",200,0,360,200,0,180);
+h2_kpl_theta_phi_fidcut = new TH2F("h2_kpl_theta_phi_fidcut","",200,0,360,200,0,180);
 h2_pimi_theta_phi_p = new TH2F("h2_pimi_theta_phi_p","",200,0,360,200,0,180);
 h2_pimi_theta_phi_fidcut = new TH2F("h2_pimi_theta_phi_fidcut","",200,0,360,200,0,180);
 h2_el_mom_diff = new TH2F("h2_el_mom_diff","",500,0.,1.,500,-0.1,0.1);
@@ -214,14 +220,17 @@ h2_pperp_W=new TH2F("h2_pperp_W","",200,0,3,200,0,2);
 h2_pipl_delt_p= new TH2F("h2_pipl_delt_p","",300,0.,2.5,300,-15,15);
 h2_pimi_delt_p= new TH2F("h2_pimi_delt_p","",300,0.,2.5,300,-15,15);
 h2_pos_delt_p= new TH2F("h2_pos_delt_p","",300,0.,2.5,300,-15,15);
+h2_kp_delt_p= new TH2F("h2_kp_delt_p","",300,0.,2.5,300,-15,15);
 h2_neg_delt_p= new TH2F("h2_neg_delt_p","",300,0.,2.5,300,-15,15);
 h2_pipl_beta_p = new TH2F("h2_pipl_beta_p","",200,0,4,200,0,1.2);
+h2_kp_beta_p = new TH2F("h2_kp_beta_p","",200,0,4,200,0,1.2);
 h2_pimi_beta_p = new TH2F("h2_pimi_beta_p","",200,0,4,200,0,1.2);
 h2_neg_beta_p = new TH2F("h2_neg_beta_p","",200,0,4,200,0,1.2);
 h2_pos_beta_p = new TH2F("h2_pos_beta_p","",200,0,4,200,0,1.2);
 h2_prot_beta_p = new TH2F("h2_prot_beta_p","",200,0,4,200,0,1.2);
 h2_neg_E_p = new TH2F("h2_neg_E_p","",200,0,3,200,0,200);
 h2_pos_E_p = new TH2F("h2_pos_E_p","",200,0,3,200,0,200);
+h2_kp_E_p = new TH2F("h2_kp_E_p","",200,0,3,200,0,200);
 h2_pimi_E_p = new TH2F("h2_pimi_E_p","",200,0,3,200,0,200);
 h2_pipl_E_p = new TH2F("h2_pipl_E_p","",200,0,3,200,0,200);
 h2_prot_E_p = new TH2F("h2_prot_E_p","",200,0,3,200,0,200);
@@ -354,6 +363,8 @@ h1_E_rec_2p1pi_1p0pi  = new TH1F("h1_E_rec_2p1pi_1p0pi","",n_bins,x_values);
    h2_prot_theta_phi_p_fidcut[h] = new TH2F(Form("h2_prot_theta_phi_p_fidcut_%d",h+1),"",200,h*60,(h+1)*60,200,0,180);
    h2_pipl_theta_phi_p_beffidcut[h] = new TH2F(Form("h2_pipl_theta_phi_p_beffidcut_%d",h+1),"",200,h*60,(h+1)*60,200,0,180);
    h2_pipl_theta_phi_p_fidcut[h] = new TH2F(Form("h2_pipl_theta_phi_p_fidcut_%d",h+1),"",200,h*60,(h+1)*60,200,0,180);
+   h2_kpl_theta_phi_p_beffidcut[h] = new TH2F(Form("h2_kpl_theta_phi_p_beffidcut_%d",h+1),"",200,h*60,(h+1)*60,200,0,180);
+   h2_kpl_theta_phi_p_fidcut[h] = new TH2F(Form("h2_kpl_theta_phi_p_fidcut_%d",h+1),"",200,h*60,(h+1)*60,200,0,180);
    h2_pimi_theta_phi_p_beffidcut[h] = new TH2F(Form("h2_pimi_theta_phi_p_beffidcut_%d",h+1),"",200,h*60,(h+1)*60,200,0,180);
    h2_pimi_theta_phi_p_fidcut[h] = new TH2F(Form("h2_pimi_theta_phi_p_fidcut_%d",h+1),"",200,h*60,(h+1)*60,200,0,180);
    h2_el_theta_p[h] = new TH2F(Form("h2_el_theta_p_%d",h+1),"",400,0,4,360,0,180);
@@ -364,6 +375,8 @@ h1_E_rec_2p1pi_1p0pi  = new TH1F("h1_E_rec_2p1pi_1p0pi","",n_bins,x_values);
    h2_pimi_theta_p_cut[h] = new TH2F(Form("h2_pimi_theta_p_cut_%d",h+1),"",400,0,4,360,0,180);
    h2_pipl_theta_p[h] = new TH2F(Form("h2_pipl_theta_p_%d",h+1),"",800,0,4,360,0,180);
    h2_pipl_theta_p_cut[h] = new TH2F(Form("h2_pipl_theta_p_cut_%d",h+1),"",400,0,4,360,0,180);
+   h2_kpl_theta_p[h] = new TH2F(Form("h2_kpl_theta_p_%d",h+1),"",800,0,4,360,0,180);
+   h2_kpl_theta_p_cut[h] = new TH2F(Form("h2_kpl_theta_p_cut_%d",h+1),"",400,0,4,360,0,180);
   }
 
 
@@ -1045,4 +1058,3 @@ h2_rot_1pi_3p_1phot_pipl->Sumw2();
   h1_E_rec_2p1pi_1p1pi->Sumw2();
   h1_E_tot_2p1pi_1p0pi->Sumw2();
   h1_E_rec_2p1pi_1p0pi->Sumw2();
-

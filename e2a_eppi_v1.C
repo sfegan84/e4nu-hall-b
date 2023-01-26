@@ -32,7 +32,7 @@ using namespace std;
 //should separate histos relating to general analysis (cross sections, etc) and channel specific ( (e,e'p), 2, 3, 4 proton subtractions)
 TH1F *h1_el_vertuncorr, *h1_el_vertcorr, *h1_el_Mott_crosssec, *h1_el_Etot, *h1_el_Ein, *h1_el_Etot_cut, *h1_el_Ein_cut, *h1_el_cc_nphe, *h1_el_cc_nphe_cut, *h1_el_cc_nphe_cut2, *h1_el_cc_chi2, *h1_Wvar, *h1_Wvar_weight, *h1_Wepp, *h1_Wepp_uncorr, *h1_xbjk, *h1_xbjk_weight, *h1_Q2, *h1_Q2_weight, *h1_el_theta, *h1_Nprot, *h1_Nprot_NonZeroProt, *h1_Nphot, *h1_Npiphot, *h1_Npiphot_norad, *h1_photon_E, *h1_photon_EC_E, *h1_phot_e_angle, *h1_time_ec, *h1_Npi, *h1_Npi_NonZeroProt, *h1_Npipl, *h1_Npimi, *h1_el_mom, *h1_el_mom_corr, *h1_el_mom_ratio, *h1_el_prot_vertdiff_all;
 //TH1F *h1_prot_vertdiff= new TH1F("h1_prot_vertdiff","",300,-10,10);
-TH1F *h1_el_prot_vertdiff, *h1_el_prot_vertdiff1, *h1_el_prot_vertdiff2, *h1_el_3prot_vertdiff1, *h1_el_3prot_vertdiff2, *h1_el_3prot_vertdiff3, *h1_el_4prot_vertdiff1, *h1_el_4prot_vertdiff2, *h1_el_4prot_vertdiff3,  *h1_el_4prot_vertdiff4, *h1_pipl_prot_vertdiff, *h1_pimi_prot_vertdiff, *h1_prot_mom, *h1_prot_mom_ratio,*h1_prot_mom_pimi, *h1_prot_mom_ratio_pimi, *h1_prot_mom_pipl, *h1_prot_mom_ratio_pipl, *h1_pimi_mom, *h1_pimi_mom_ratio, *h1_pipl_mom, *h1_pipl_mom_ratio,*h1_neg_m, *h1_pos_m, *h1_pi0_mom, *h1_pi0_gamma1_mom, *h1_pi0_gamma2_mom;
+TH1F *h1_el_prot_vertdiff, *h1_el_prot_vertdiff1, *h1_el_prot_vertdiff2, *h1_el_3prot_vertdiff1, *h1_el_3prot_vertdiff2, *h1_el_3prot_vertdiff3, *h1_el_4prot_vertdiff1, *h1_el_4prot_vertdiff2, *h1_el_4prot_vertdiff3,  *h1_el_4prot_vertdiff4, *h1_pipl_prot_vertdiff, *h1_pimi_prot_vertdiff, *h1_prot_mom, *h1_prot_mom_ratio,*h1_prot_mom_pimi, *h1_prot_mom_ratio_pimi, *h1_prot_mom_pipl, *h1_prot_mom_ratio_pipl, *h1_pimi_mom, *h1_pimi_mom_ratio, *h1_pipl_mom, *h1_pipl_mom_ratio,*h1_neg_m, *h1_pos_m, *h1_kp_m, *h1_km_m, *h1_pi0_mom, *h1_pi0_gamma1_mom, *h1_pi0_gamma2_mom;
 
 TH1F *h1_2gammaInvM, *h1_2gammaInvM_corr, *h1_2gammaAngle;
 TH2F *h2_InvM_vs_2gAngle, *h2_pi0Mom_vs_2gAngle, *h2_pi0Mom_vs_InvM;
@@ -45,7 +45,7 @@ TH2F *h2_Ecal_Eqe, *h2_Ecal_Ekin, *h2_Ecal_Ekin_pimi, *h2_Ecal_Ekin_pipl,  *h2_c
 
 TH2D *h2_el_Ein_Eout, *h2_el_Einout_Etot;
 
-TH2F *h2_el_ec_xy, *h2_el_ec_xy_fidcut, *h2_el_phi_vert, *h2_el_phi_vert_uncorr, *h2_el_theta_phi, *h2_neutral_costheta_phi_EC_all, *h2_neutral_theta_phi_EC_all, *h2_neutral_theta_phi_EC_all_fidcut, *h2_pimi_theta_phi, *h2_pipl_theta_phi, *h2_pimi_theta_phi_beffid, *h2_pipl_theta_phi_beffid, *h2_prot_theta_phi, *h2_prot_px_py_p, *h2_prot_px_py_p_fidcut, *h2_pipl_theta_phi_p, *h2_pipl_theta_phi_fidcut, *h2_pimi_theta_phi_p, *h2_pimi_theta_phi_fidcut, *h2_el_mom_diff, *h2_Q2_nu, *h2_Q2_nu_weight, *h2_Q2_xbjk_weight, *h2_Q2_W, *h2_xB_W, *h2_Q2_W_weight, *h2_el_pcorr_puncorr, *h2_Erec_pperp, *h2_Erec_pperp_newcut2, *h2_Erec_pperp_cut3, *h2_Erec_pperp_2p, *h2_Erec_pperp_321p, *h2_Erec_pperp_31p, *h2_Erec_pperp_4321p, *h2_Erec_pperp_431p, *h2_Erec_pperp_421p, *h2_Erec_pperp_41p, *h2_Erec_pperp_1p1pi, *h2_Erec_pperp_1p2pi_1p0pi, *h2_Erec_pperp_1p2pi_1p1pi, *h2_Erec_pperp_2p1pi_2p0pi, *h2_Erec_pperp_2p1pi_1p1pi, *h2_Erec_pperp_2p1pi_1p0pi, *h2_Erec_pperp_1p3pi, *h2_Erec_pperp_2p2pi, *h2_Erec_pperp_3p1pi, *h2_pperp_W, *h2_pipl_delt_p, *h2_pimi_delt_p, *h2_pos_delt_p, *h2_neg_delt_p, *h2_pipl_beta_p, *h2_pimi_beta_p, *h2_neg_beta_p, *h2_pos_beta_p, *h2_prot_beta_p, *h2_neg_E_p, *h2_pos_E_p, *h2_pimi_E_p, *h2_pipl_E_p, *h2_prot_E_p, *h2_prot_Deltat_p, *h2_el_vertcorr_runN, *h2_phot_e_angle_vsphotE, *h2_phot_e_angle_Erec, *h2_Wepp_ephi, *h2_Wepp_ephi_corr, *h2_Wepp_ephi_uncorrprot, *h2_Wepp_ephi_corr_uncorrprot;
+TH2F *h2_el_ec_xy, *h2_el_ec_xy_fidcut, *h2_el_phi_vert, *h2_el_phi_vert_uncorr, *h2_el_theta_phi, *h2_neutral_costheta_phi_EC_all, *h2_neutral_theta_phi_EC_all, *h2_neutral_theta_phi_EC_all_fidcut, *h2_pimi_theta_phi, *h2_pipl_theta_phi, *h2_kpl_theta_phi, *h2_pimi_theta_phi_beffid, *h2_pipl_theta_phi_beffid, *h2_kpl_theta_phi_beffid, *h2_prot_theta_phi, *h2_prot_px_py_p, *h2_prot_px_py_p_fidcut, *h2_pipl_theta_phi_p, *h2_pipl_theta_phi_fidcut, *h2_kpl_theta_phi_p, *h2_kpl_theta_phi_fidcut, *h2_pimi_theta_phi_p, *h2_pimi_theta_phi_fidcut, *h2_el_mom_diff, *h2_Q2_nu, *h2_Q2_nu_weight, *h2_Q2_xbjk_weight, *h2_Q2_W, *h2_xB_W, *h2_Q2_W_weight, *h2_el_pcorr_puncorr, *h2_Erec_pperp, *h2_Erec_pperp_newcut2, *h2_Erec_pperp_cut3, *h2_Erec_pperp_2p, *h2_Erec_pperp_321p, *h2_Erec_pperp_31p, *h2_Erec_pperp_4321p, *h2_Erec_pperp_431p, *h2_Erec_pperp_421p, *h2_Erec_pperp_41p, *h2_Erec_pperp_1p1pi, *h2_Erec_pperp_1p2pi_1p0pi, *h2_Erec_pperp_1p2pi_1p1pi, *h2_Erec_pperp_2p1pi_2p0pi, *h2_Erec_pperp_2p1pi_1p1pi, *h2_Erec_pperp_2p1pi_1p0pi, *h2_Erec_pperp_1p3pi, *h2_Erec_pperp_2p2pi, *h2_Erec_pperp_3p1pi, *h2_pperp_W, *h2_pipl_delt_p, *h2_pimi_delt_p, *h2_pos_delt_p, *h2_kp_delt_p, *h2_neg_delt_p, *h2_pipl_beta_p, *h2_pimi_beta_p, *h2_neg_beta_p, *h2_pos_beta_p, *h2_prot_beta_p, *h2_kp_beta_p, *h2_neg_E_p, *h2_pos_E_p, *h2_kp_E_p, *h2_pimi_E_p, *h2_pipl_E_p, *h2_prot_E_p, *h2_prot_Deltat_p, *h2_el_vertcorr_runN, *h2_phot_e_angle_vsphotE, *h2_phot_e_angle_Erec, *h2_Wepp_ephi, *h2_Wepp_ephi_corr, *h2_Wepp_ephi_uncorrprot, *h2_Wepp_ephi_corr_uncorrprot;
 
 
 TH1F *h1_E_rec_2p_det, *h1_E_tot_2p_det, *h1_E_tot_p_bkgd, *h1_E_rec_p_bkgd, *h1_E_tot_3pto1p, *h1_E_rec_3pto1p, *h1_E_tot_43pto1p, *h1_E_rec_43pto1p, *h1_E_tot_3pto2p, *h1_E_rec_3pto2p, *h1_E_tot_4pto1p, *h1_E_rec_4pto1p, *h1_E_tot_4pto3p, *h1_E_rec_4pto3p, *h1_E_tot_4pto2p, *h1_E_rec_4pto2p, *h1_E_rec, *h1_E_rec_0pi, *h1_E_rec_1pi, *h1_E_rec_1pi_weight, *h1_E_rec_2pi_weight, *h1_E_rec_3pi_weight, *h1_E_rec_4pi_weight, *h1_E_rec_20pi, *h1_E_rec_21pi, *h1_E_rec_30pi, *h1_E_rec_310pi, *h1_E_rec_320pi, *h1_E_rec_3210pi, *h1_E_rec_40pi, *h1_E_rec_410pi, *h1_E_rec_420pi, *h1_E_rec_4210pi, *h1_E_rec_430pi, *h1_E_rec_4310pi, *h1_E_rec_4320pi, *h1_E_rec_43210pi, *h1_E_rec_1prot, *h1_E_tot_1prot, *h1_E_rec_cutpi1_piplpimi, *h1_E_tot_cutpi1_piplpimi, *h1_Etot, *h1_E_rec_cut2_new, *h1_E_tot_cut2, *h1_E_rec_cut005_newcut3, *h1_E_rec_undetfactor, *h1_E_tot_undetfactor, *h1_E_tot_undetfactor_pipl, *h1_E_tot_undetfactor_pimi, *h1_E_tot_1p2pi, *h1_E_rec_1p2pi, *h1_E_tot_1p3pi, *h1_E_rec_1p3pi, *h1_E_tot_2p2pi, *h1_E_rec_2p2pi, *h1_E_tot_3p1pi, *h1_E_rec_3p1pi, *h1_E_tot_1p2pi_1p0pi, *h1_E_rec_1p2pi_1p0pi, *h1_E_tot_2p1pi_2p0pi, *h1_E_rec_2p1pi_2p0pi, *h1_E_tot_2p1pi_1p1pi, *h1_E_rec_2p1pi_1p1pi, *h1_E_tot_2p1pi_1p0pi, *h1_E_rec_2p1pi_1p0pi;
@@ -60,7 +60,7 @@ TH1F *h1_E_tot_undetfactor09, *h1_E_tot_cut2_09, *h1_E_tot_p_bkgd09, *h1_Etot_p3
   TH1F *h1_Erec_p_bkgd_slice_sub2p1pi_1p[3],*h1_Erec_p_bkgd_slice_sub3p1pi_0pi[3],*h1_Etot_p_bkgd_slice_sub2p1pi_2p[3],*h1_Erec_p_bkgd_slice_sub2p1pi_2p[3],*h1_Etot_p_bkgd_slice_sub2p1pi_1p0pi[3],*h1_Erec_p_bkgd_slice_sub2p1pi_1p0pi[3],*h1_Etot_p_bkgd_slice_sub1p2pi_0pi[3],*h1_Erec_p_bkgd_slice_sub1p2pi_0pi[3],*h1_Etot_p_bkgd_slice_sub1p3pi_0pi[3],*h1_Etot_p_bkgd_slice_sub3p1pi_0pi[3],*h1_Erec_p_bkgd_slice_sub1p3pi_0pi[3],*h1_Etot_p_bkgd_slice_sub2p2pi_0pi[3],*h1_Erec_p_bkgd_slice_sub2p2pi_0pi[3];
   TH1F *h1_Etot_p_bkgd_slice_sub32[3],*h1_Erec_p_bkgd_slice_sub32[3],*h1_Etot_p_bkgd_slice_sub31[3],*h1_Erec_p_bkgd_slice_sub31[3],*h1_Etot_p_bkgd_slice_sub43[3],*h1_Erec_p_bkgd_slice_sub43[3],*h1_Etot_p_bkgd_slice_sub41[3],*h1_Erec_p_bkgd_slice_sub41[3],*h1_Erec_p_bkgd_slice_sub42[3],*h1_Etot_p_bkgd_slice_sub42[3],*h1_Etot_p_bkgd_slice_sub431[3],*h1_Erec_p_bkgd_slice_sub431[3];
   TH1F *h1_el_ec_sc_timediff_sect_corr[6], *h1_el_ec_sc_timediff_sect[6],*h1_beta_ec_corr_sect[6],*h1_el_SCpdfidcut[6],*h1_el_SCpd[6];
-TH2F *h2_el_theta_phi_p_beffidcut[6],*h2_el_theta_phi_p_fidcut[6],*h2_el_ec_sc_timediff_ecu[6],*h2_el_ec_sc_timediff_ecv[6],*h2_el_ec_sc_timediff_ecw[6], *h2_el_ec_sc_timediff_SCpd[6],*h2_prot_theta_phi_p_beffidcut[6],*h2_prot_theta_phi_p_fidcut[6],*h2_el_theta_phi_p_beffidcut2[6],*h2_el_theta_phi_p_fidcut2[6],*h2_N_pi_phot[20],*h2_pimi_theta_phi_p_beffidcut[6],*h2_pimi_theta_phi_p_fidcut[6],*h2_pipl_theta_phi_p_beffidcut[6],*h2_pipl_theta_phi_p_fidcut[6],*h2_el_theta_p[6],*h2_el_theta_p_cut[6],*h2_prot_theta_p[6],*h2_prot_theta_p_cut[6],*h2_pimi_theta_p[6],*h2_pimi_theta_p_cut[6],*h2_pipl_theta_p[6],*h2_pipl_theta_p_cut[6];
+TH2F *h2_el_theta_phi_p_beffidcut[6],*h2_el_theta_phi_p_fidcut[6],*h2_el_ec_sc_timediff_ecu[6],*h2_el_ec_sc_timediff_ecv[6],*h2_el_ec_sc_timediff_ecw[6], *h2_el_ec_sc_timediff_SCpd[6],*h2_prot_theta_phi_p_beffidcut[6],*h2_prot_theta_phi_p_fidcut[6],*h2_el_theta_phi_p_beffidcut2[6],*h2_el_theta_phi_p_fidcut2[6],*h2_N_pi_phot[20],*h2_pimi_theta_phi_p_beffidcut[6],*h2_pimi_theta_phi_p_fidcut[6],*h2_pipl_theta_phi_p_beffidcut[6],*h2_kpl_theta_phi_p_beffidcut[6],*h2_pipl_theta_phi_p_fidcut[6],*h2_kpl_theta_phi_p_fidcut[6],*h2_el_theta_p[6],*h2_el_theta_p_cut[6],*h2_prot_theta_p[6],*h2_prot_theta_p_cut[6],*h2_pimi_theta_p[6],*h2_pimi_theta_p_cut[6],*h2_pipl_theta_p[6],*h2_pipl_theta_p_cut[6],*h2_kpl_theta_p[6],*h2_kpl_theta_p_cut[6];
 
 
   //Decleration of 2-dim arrays of histograms
@@ -6563,11 +6563,54 @@ Int_t e2a_eppi_v1::kplus_ID(int ii){
   double beta = p[ii]/TMath::Sqrt(p[ii]*p[ii]+m_kpl*m_kpl);
   double delta= sc_t[sc[ii]-1]-sc_r[sc[ii]-1]/(beta*c*ns_to_s) - tr_time;
 
+  h1_kp_m->Fill(TMath::Sqrt(p[ii]*p[ii]/(b[ii]*b[ii])-p[ii]*p[ii]));
+  h2_kp_delt_p->Fill(p[ii],delta);
+  h2_kp_beta_p->Fill(p[ii],b[ii]);
+  h2_kp_E_p->Fill(p[ii],edep[sc[ii]-1]);
+
   //no delta cuts
   //if(p[ii] >= pion_accept_mom_lim){ //can reuse pion limit
     TLorentzVector V4_uncorrkpl(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii],TMath::Sqrt(p[ii]*p[ii]+ m_kpl*m_kpl ) );
 
-    //if(PiplFiduialCut(fbeam_en, V3_kpl, &kpl_phimin, &kpl_phimax)){
+    double kpl_phi_mod = TMath::ATan2(cy[ii],cx[ii])*TMath::RadToDeg() + 30; //Add 30 degrees
+    if (kpl_phi_mod < 0){
+      kpl_phi_mod = kpl_phi_mod + 360;  //Pi plus is between 0 and 360 degree
+    }
+    double kpl_theta = TMath::ACos(cz[ii])*TMath::RadToDeg();
+    kpl_vert_corr = vz[ii] + vz_corr(vz_corr_func,kpl_phi_mod,kpl_theta);  //can we use this as is, or do we need some kaon specifics?
+
+    //Some if conditions for histograms
+    if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-4)<1)   h2_kpl_theta_phi_p->Fill(kpl_phi_mod,kpl_theta); //4.4 GeV
+    if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-2)<1)   h2_kpl_theta_phi_p->Fill(kpl_phi_mod,kpl_theta); //2.2 GeV
+    if(abs(p[ii]-0.5)<0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-1)<1)   h2_kpl_theta_phi_p->Fill(kpl_phi_mod,kpl_theta); //1.1 GeV
+    for(int k = 1; k <= 6; k++){ //k is sector number
+      if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. &&  abs(p[ii]-0.3)<0.025 && sc_sect[sc[ii]-1]==k) { //1.1 GeV
+	h2_kpl_theta_phi_p_beffidcut[k-1]->Fill(kpl_phi_mod,kpl_theta);
+      }
+      if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ii]-0.975)<0.025 && sc_sect[sc[ii]-1]==k) { //2.2 and 4.4 GeV
+	h2_kpl_theta_phi_p_beffidcut[k-1]->Fill(kpl_phi_mod,kpl_theta);
+      }
+    }
+    h2_kpl_theta_phi_beffid->Fill(kpl_phi_mod,kpl_theta);
+    h2_kpl_theta_p[sc_sect[sc[ii]-1]-1]->Fill(p[ii],kpl_theta);
+
+    if(PiplFiducialCut(fbeam_en, V3_kpl, &kpl_phimin, &kpl_phimax)){  //reusing piplus fiducial cuts
+
+      h2_kpl_theta_p_cut[sc_sect[sc[ii]-1]-1]->Fill(p[ii],kpl_theta);
+      //h1_kpl_prot_vertdiff->Fill(el_vert_corr-kpl_vert_corr);
+      if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-4)<1)	h2_kpl_theta_phi_fidcut->Fill(kpl_phi_mod,kpl_theta); //4.4 GeV
+      if(abs(p[ii]-1) < 0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-2)<1)	h2_kpl_theta_phi_fidcut->Fill(kpl_phi_mod,kpl_theta); //2.2 GeV
+      if(abs(p[ii]-0.5)<0.02 && sc_sect[sc[ii]-1]==5 && abs(en_beam[fbeam_en]-1)<1)	h2_kpl_theta_phi_fidcut->Fill(kpl_phi_mod,kpl_theta); //1.1 GeV
+      for(int k = 1; k <= 6; k++){ //k is sector number
+	if(en_beam[fbeam_en] > 1. && en_beam[fbeam_en] < 2. && abs(p[ii]-0.3)<0.025   && sc_sect[sc[ii]-1]==k) { //1.1 GeV
+	  h2_kpl_theta_phi_p_fidcut[k-1]->Fill(kpl_phi_mod,kpl_theta);
+	}
+	if(en_beam[fbeam_en] > 2. && en_beam[fbeam_en] < 5. && abs(p[ii]-0.975)<0.025 && sc_sect[sc[ii]-1]==k) {//2.2 and 4.4 GeV
+	  h2_kpl_theta_phi_p_fidcut[k-1]->Fill(kpl_phi_mod,kpl_theta);
+	}
+      }
+      
+      h2_kpl_theta_phi->Fill(kpl_phi_mod,kpl_theta);
 
 	num_kpl = num_kpl + 1;
 	num_kaon  = num_kaon + 1;
@@ -6585,7 +6628,7 @@ Int_t e2a_eppi_v1::kplus_ID(int ii){
 	loc_kaon_v4.push_back(V4_uncorrkpl);
 	loc_kpl_v4.push_back(V4_uncorrkpl);
 
-	//}//fidcut ends
+	}//fidcut ends
 	//}//delta cut ends
 
   return(0);
