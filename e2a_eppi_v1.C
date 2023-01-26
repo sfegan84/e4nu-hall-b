@@ -32,9 +32,10 @@ using namespace std;
 //should separate histos relating to general analysis (cross sections, etc) and channel specific ( (e,e'p), 2, 3, 4 proton subtractions)
 TH1F *h1_el_vertuncorr, *h1_el_vertcorr, *h1_el_Mott_crosssec, *h1_el_Etot, *h1_el_Ein, *h1_el_Etot_cut, *h1_el_Ein_cut, *h1_el_cc_nphe, *h1_el_cc_nphe_cut, *h1_el_cc_nphe_cut2, *h1_el_cc_chi2, *h1_Wvar, *h1_Wvar_weight, *h1_Wepp, *h1_Wepp_uncorr, *h1_xbjk, *h1_xbjk_weight, *h1_Q2, *h1_Q2_weight, *h1_el_theta, *h1_Nprot, *h1_Nprot_NonZeroProt, *h1_Nphot, *h1_Npiphot, *h1_Npiphot_norad, *h1_photon_E, *h1_photon_EC_E, *h1_phot_e_angle, *h1_time_ec, *h1_Npi, *h1_Npi_NonZeroProt, *h1_Npipl, *h1_Npimi, *h1_el_mom, *h1_el_mom_corr, *h1_el_mom_ratio, *h1_el_prot_vertdiff_all;
 //TH1F *h1_prot_vertdiff= new TH1F("h1_prot_vertdiff","",300,-10,10);
-TH1F *h1_el_prot_vertdiff, *h1_el_prot_vertdiff1, *h1_el_prot_vertdiff2, *h1_el_3prot_vertdiff1, *h1_el_3prot_vertdiff2, *h1_el_3prot_vertdiff3, *h1_el_4prot_vertdiff1, *h1_el_4prot_vertdiff2, *h1_el_4prot_vertdiff3,  *h1_el_4prot_vertdiff4, *h1_pipl_prot_vertdiff, *h1_pimi_prot_vertdiff, *h1_prot_mom, *h1_prot_mom_ratio,*h1_prot_mom_pimi, *h1_prot_mom_ratio_pimi, *h1_prot_mom_pipl, *h1_prot_mom_ratio_pipl, *h1_pimi_mom, *h1_pimi_mom_ratio, *h1_pipl_mom, *h1_pipl_mom_ratio,*h1_neg_m, *h1_pos_m;
+TH1F *h1_el_prot_vertdiff, *h1_el_prot_vertdiff1, *h1_el_prot_vertdiff2, *h1_el_3prot_vertdiff1, *h1_el_3prot_vertdiff2, *h1_el_3prot_vertdiff3, *h1_el_4prot_vertdiff1, *h1_el_4prot_vertdiff2, *h1_el_4prot_vertdiff3,  *h1_el_4prot_vertdiff4, *h1_pipl_prot_vertdiff, *h1_pimi_prot_vertdiff, *h1_prot_mom, *h1_prot_mom_ratio,*h1_prot_mom_pimi, *h1_prot_mom_ratio_pimi, *h1_prot_mom_pipl, *h1_prot_mom_ratio_pipl, *h1_pimi_mom, *h1_pimi_mom_ratio, *h1_pipl_mom, *h1_pipl_mom_ratio,*h1_neg_m, *h1_pos_m, *h1_pi0_mom, *h1_pi0_gamma1_mom, *h1_pi0_gamma2_mom;
 
-TH1F *h1_2gammaInvM, *h1_2gammaAngle;
+TH1F *h1_2gammaInvM, *h1_2gammaInvM_corr, *h1_2gammaAngle;
+TH2F *h2_InvM_vs_2gAngle, *h2_pi0Mom_vs_2gAngle, *h2_pi0Mom_vs_InvM;
 
 TH1F *h1_E_rec_1pi_weight_frac_feed, *h1_E_rec_2pi_weight_frac_feed, *h1_E_rec_3pi_weight_frac_feed, *h1_E_rec_4pi_weight_frac_feed, *h1_E_rec_0pi_frac_feed, *h1_E_tot_cut2_fracfeed, *h1_E_rec_cut2_new_fracfeed, *h1_E_tot_p_bkgd_fracfeed, *h1_E_rec_p_bkgd_fracfeed, *h1_E_tot_2p1pi_2p0pi_fracfeed, *h1_E_rec_2p1pi_2p0pi_fracfeed, *h1_E_tot_2p1pi_1p1pi_fracfeed, *h1_E_rec_2p1pi_1p1pi_fracfeed, *h1_E_tot_2p1pi_1p0pi_fracfeed, *h1_E_rec_2p1pi_1p0pi_fracfeed, *h1_E_tot_3pto2p_fracfeed, *h1_E_rec_3pto2p_fracfeed, *h1_E_tot_3pto1p_fracfeed, *h1_E_rec_3pto1p_fracfeed, *h1_E_tot_4pto3p_fracfeed, *h1_E_rec_4pto3p_fracfeed, *h1_E_tot_43pto1p_fracfeed, *h1_E_rec_43pto1p_fracfeed, *h1_E_tot_4pto2p_fracfeed, *h1_E_rec_4pto2p_fracfeed, *h1_E_tot_4pto1p_fracfeed, *h1_E_rec_4pto1p_fracfeed, *h1_E_tot_1p2pi_fracfeed, *h1_E_rec_1p2pi_fracfeed, *h1_E_tot_1p3pi_fracfeed, *h1_E_rec_1p3pi_fracfeed, *h1_E_tot_2p2pi_fracfeed, *h1_E_rec_2p2pi_fracfeed, *h1_E_tot_3p1pi_fracfeed, *h1_E_rec_3p1pi_fracfeed, *h1_E_tot_1p2pi_1p0pi_fracfeed, *h1_E_rec_1p2pi_1p0pi_fracfeed, *h1_E_rec_undetfactor_fracfeed, *h1_E_tot_undetfactor_fracfeed;
 
@@ -85,6 +86,10 @@ TH1F *h1_en_recon1;
 TH1F *h1_en_recon1_pimi;
 TH1F *h1_en_recon1_pipl;
 TH1F *h1_en_recon1_pi0;
+TH1F *h1_en_recon1_eta;
+TH1F *h1_en_recon1_klambda;
+TH1F *h1_en_recon1_kpkm;
+TH1F *h1_en_recon1_pippim;
 TH1F *h1_en_recon2;
 TH1F *h1_en_recon2_pimi;
 TH1F *h1_en_recon2_pipl;
@@ -264,22 +269,31 @@ TH2F *h2_rot_1pi_3p_1phot_pipl;
   TH2F *h2_kin_e_Wvar;
   TH2F *h2_kin_e_pi_Wvar;
   TH2F *h2_cal_Wvar;
+  TH2F *h2_W_Ecal_pi0, *h2_W_Ecal_eta;
+  TH2F *h2_W_Ecal_pi0_2, *h2_W_Ecal_eta2;
+  TH2F *h2_Ecal_pi0_p_perp, *h2_Ecal_eta_p_perp;
+  TH2F *h2_Ecal_pip_p_perp, *h2_Ecal_pim_p_perp;
   TH3F *h3_Npi_Np_Nphoton;
 
 
 //extra histos for my sanity
 TH1F *h1_Q2_1p1pi, *h1_Q2_deltaplus, *h1_Q2_deltazero, *h1_Q2_deltaplus_ME_cut, *h1_Q2_deltazero_ME_cut;
-TH1F *h1_InvM_eppi,*h1_InvM_ep,*h1_InvM_epi,*h1_InvM_ppi,*h1_InvM_ppip,*h1_InvM_ppim,*h1_InvM_ppip2,*h1_InvM_ppim2,*h1_InvM_ppi0,*h1_InvM_ppi0_2;
-TH1F *h1_InvM_ppip_MEcut,*h1_InvM_ppim_MEcut;
-TH1F *h1_InvM_ppip_MEcut2,*h1_InvM_ppim_MEcut2;
+TH1F *h1_InvM_eppi,*h1_InvM_ep,*h1_InvM_epi,*h1_InvM_ppi,*h1_InvM_ppip,*h1_InvM_ppim,*h1_InvM_ppip2,*h1_InvM_ppim2,*h1_InvM_ppi0,*h1_InvM_ppi0_2,*h1_InvM_pEta,*h1_InvM_pEta_2;
+TH1F *h1_InvM_ppip_MEcut,*h1_InvM_ppim_MEcut,*h1_InvM_ppi0_MEcut;
+TH1F *h1_InvM_ppip_MEcut2,*h1_InvM_ppim_MEcut2,*h1_InvM_ppi0_MEcut2;
 
-TH1F *h1_MM_eppipl,*h1_MM_eppimi,*h1_ME_eppipl,*h1_ME_eppimi;
+TH1F *h1_MM_eppipl,*h1_MM_eppimi,*h1_MM_eppi0,*h1_ME_eppipl,*h1_ME_eppimi,*h1_ME_eppi0;
 
 TH1F *h1_p_kin, *h1_p_kin_pimi, *h1_p_kin_pipl;
-TH1F *h1_pi_E, *h1_pi_E_pimi, *h1_pi_E_pipl;
+TH1F *h1_pi_E, *h1_pi_E_pimi, *h1_pi_E_pipl, *h1_pi_kin_pimi, *h1_pi_kin_pipl, *h1_pi_kin_pi0, *h1_pi_kin_eta;
 TH1F *h1_el_E, *h1_el_E_pimi, *h1_el_E_pipl;
 
 TH1F *h1_del_pt;
+
+TH1F *h1_p_perp_eppi0;
+TH1F *h1_p_perp_eppip;
+TH1F *h1_p_perp_eppim;
+TH1F *h1_p_perp_epeta;
 
 TH1F *h1_en_recon1_Q2_1;
 TH1F *h1_en_recon1_pimi_Q2_1;
@@ -419,6 +433,11 @@ std::vector<TLorentzVector> loc_proton_v4;
 std::vector<TLorentzVector> loc_pion_v4;
 std::vector<TLorentzVector> loc_pipl_v4;
 std::vector<TLorentzVector> loc_pimi_v4;
+std::vector<TLorentzVector> loc_kaon_v4;
+std::vector<TLorentzVector> loc_kpl_v4;
+std::vector<TLorentzVector> loc_kmi_v4;
+std::vector<TLorentzVector> loc_gamma_v4;
+std::vector<Int_t> loc_gamma_sector;
 
 TLorentzVector *lTmp;
 
@@ -436,6 +455,9 @@ int num_pimi;
 int num_pipl;
 int num_pi_phot;
 int num_pi_phot_nonrad;
+int num_kaon;
+int num_kpl;
+int num_kmi;
 int ec_num_n;
 int num_phot_rad;
 
@@ -444,6 +466,9 @@ int ec_index_n[20]={};
 int index_pi[20]={}; //index for each proton
 int index_pimi[20]={}; //index for each proton
 int index_pipl[20]={}; //index for each proton
+int index_kpl[20]={}; //index for each proton
+int index_kmi[20]={}; //index for each proton
+int index_kaon[20]={}; //index for each proton
 int ind_pi_phot[20]={}; //index for each proton
 bool ec_radstat_n[20] = {false};
 
@@ -671,19 +696,25 @@ double del_pt;
   h1_InvM_ppim = new TH1F("h1_InvM_ppim","",400,0,3);
   h1_InvM_ppip_MEcut = new TH1F("h1_InvM_ppip_MEcut","",400,0,3);
   h1_InvM_ppim_MEcut = new TH1F("h1_InvM_ppim_MEcut","",400,0,3);
+  h1_InvM_ppi0_MEcut = new TH1F("h1_InvM_ppi0_MEcut","",400,0,3);
   h1_InvM_ppip2 = new TH1F("h1_InvM_ppip2","",400,0,3);
   h1_InvM_ppim2 = new TH1F("h1_InvM_ppim2","",400,0,3);
   h1_InvM_ppi0 = new TH1F("h1_InvM_ppi0","",400,0,3);
   h1_InvM_ppi0_2 = new TH1F("h1_InvM_ppi0_2","",400,0,3);
+  h1_InvM_pEta = new TH1F("h1_InvM_pEta","",400,0,3);
+  h1_InvM_pEta_2 = new TH1F("h1_InvM_pEta_2","",400,0,3);
   h1_InvM_ppip_MEcut2 = new TH1F("h1_InvM_ppip_MEcut2","",400,0,3);
   h1_InvM_ppim_MEcut2 = new TH1F("h1_InvM_ppim_MEcut2","",400,0,3);
+  h1_InvM_ppi0_MEcut2 = new TH1F("h1_InvM_ppi0_MEcut2","",400,0,3);
   h1_InvM_ep = new TH1F("h1_InvM_ep","",400,0,3);
   h1_InvM_epi = new TH1F("h1_InvM_epi","",400,0,3);
 
   h1_MM_eppipl = new TH1F("h1_MM_eppipl","",500,-1,4);
   h1_MM_eppimi = new TH1F("h1_MM_eppimi","",500,-1,4);
+  h1_MM_eppi0  = new TH1F("h1_MM_eppi0","",500,-1,4);
   h1_ME_eppipl = new TH1F("h1_ME_eppipl","",500,-1,4);
   h1_ME_eppimi = new TH1F("h1_ME_eppimi","",500,-1,4);
+  h1_ME_eppi0  = new TH1F("h1_ME_eppi0","",500,-1,4);
 
   h1_p_kin = new TH1F("h1_p_kin","",400,0,3);
   h1_p_kin_pimi = new TH1F("h1_p_kin_pimi","",400,0,3);
@@ -693,12 +724,26 @@ double del_pt;
   h1_pi_E_pimi = new TH1F("h1_pi_E_pimi","",400,0,3);
   h1_pi_E_pipl = new TH1F("h1_pi_E_pipl","",400,0,3);
 
+  h1_pi_kin_pimi = new TH1F("h1_pi_kin_pimi","",400,0,3);
+  h1_pi_kin_pipl = new TH1F("h1_pi_kin_pipl","",400,0,3);
+  h1_pi_kin_pi0 = new TH1F("h1_pi_kin_pi0","",400,0,3);
+  h1_pi_kin_eta = new TH1F("h1_pi_kin_eta","",400,0,3);
+
   h1_el_E = new TH1F("h1_el_E","",400,0,3);
   h1_el_E_pimi = new TH1F("h1_el_E_pimi","",400,0,3);
   h1_el_E_pipl = new TH1F("h1_el_E_pipl","",400,0,3);
 
   h1_del_pt = new TH1F("h1_del_pt","",500,0,5);
+  h1_p_perp_eppi0 = new TH1F("h1_p_perp_eppi0","",500,0,5);
+  h1_p_perp_eppip = new TH1F("h1_p_perp_eppip","",500,0,5);
+  h1_p_perp_eppim = new TH1F("h1_p_perp_eppim","",500,0,5);
+  h1_p_perp_epeta = new TH1F("h1_p_perp_epeta","",500,0,5);
 
+
+  h2_InvM_vs_2gAngle = new TH2F("h2_InvM_vs_2gAngle","",200,0,1,180,0,180);
+
+  h2_pi0Mom_vs_2gAngle = new TH2F("h2_pi0Mom_vs_2gAngle","",300,0,3,180,0,180);
+  h2_pi0Mom_vs_InvM = new TH2F("h2_pi0Mom_vs_InvM","",300,0,3,200,0,1);
 
 //theta phi plots, in momentum slices, for fiducial cut definitions
   for(int ii=0; ii<24;ii++){
@@ -719,6 +764,7 @@ double del_pt;
   }
 
  h1_2gammaInvM = new TH1F("h1_2gammaInvM","Two Photon Invariant Mass",500,0,1);
+ h1_2gammaInvM_corr = new TH1F("h1_2gammaInvM_corr","Two Photon Invariant Mass (corrected)",500,0,1);
  h1_2gammaAngle = new TH1F("h1_2gammaAngle","Two Photon Opening Angle",360,0,180);
 
   int CounterEvents = 0;
@@ -821,6 +867,9 @@ double del_pt;
     num_pi_phot = 0; //couting all pions and photons
     num_pimi = 0;
     num_pipl = 0;
+    num_kaon = 0;
+    num_kpl = 0;
+    num_kmi = 0;
     num_pi_phot_nonrad=0; //counting all pions and non-radiation photons
     num_phot_rad = 0; //counting radiation photons
     //Index and number variables for neutral particles
@@ -859,6 +908,10 @@ double del_pt;
     loc_pion_v4.clear();
     loc_pipl_v4.clear();
     loc_pimi_v4.clear();
+    loc_kaon_v4.clear();
+    loc_kpl_v4.clear();
+    loc_kmi_v4.clear();
+    loc_gamma_v4.clear();
 
     CounterEvents ++;
 
@@ -905,11 +958,20 @@ double del_pt;
 
 
 	//-------------------------------------------------------------------
-	//-------CALLS TO AS YET UNIMPLEMENTED KAON SELECTION FUNCTIONS------
+	//---------CALLS TO AS YET INCOMPLETE KAON SELECTION FUNCTIONS-------
 	//-------------------------------------------------------------------
+	if(q[i] > 0 &&  sc[i] > 0 && dc[i] > 0 && stat[i] > 0 && id[i] == 321) //positive particle. possible k plus, adding id requirement, which seems to be missing
+	  {
+	    if(kplus_ID(i)!=0) continue;
+	  }
 
+
+	if(q[i] < 0 &&  sc[i] > 0 && dc[i] > 0 && stat[i] > 0 && id[i] == -321) //negative particle. possible k minus, adding id requirement, which seems to be missing
+	  {
+	    if(kminus_ID(i)!=0) continue;
+	  }
 	//-------------------------------------------------------------------
-	//-----END CALLS TO AS YET UNIMPLEMENTED KAON SELECTION FUNCTIONS----
+	//---------CALLS TO AS YET INCOMPLETE KAON SELECTION FUNCTIONS-------
 	//-------------------------------------------------------------------
 	
 
@@ -1602,6 +1664,24 @@ double del_pt;
 	  
 	}//end of 2pi 0 photon statement
 	
+	if(num_pi==2 && ec_num_n==0 && num_n==0)
+	  {
+		//if there's a piplus and a piminus
+		if(num_pipl == 1 && num_pimi == 1){
+		  double en_recon2pi = V4_el->E() + p_kin + (loc_pimi_v4.at(0)).E() + (loc_pipl_v4.at(0)).E();
+		  h1_en_recon1_pippim->Fill(en_recon2pi,1/Mott_cross_sec);
+		}
+	  }
+
+	if(num_kaon==2 && ec_num_n==0 && num_n==0)
+	  {
+		//if there's a k plus and a k minus
+		if(num_kpl == 1 && num_kmi == 1){
+		  double en_reconKPKM = V4_el->E() + p_kin + (loc_kmi_v4.at(0)).E() + (loc_kpl_v4.at(0)).E();
+		  h1_en_recon1_kpkm->Fill(en_reconKPKM,1/Mott_cross_sec);
+		}
+	  }
+
 	if(num_pi==1 && ec_num_n==0 && num_n==0)
 	  {
 	    if(num_pipl==1 )
@@ -1611,11 +1691,16 @@ double del_pt;
 		TVector3 V3_pi = (loc_pion_v4.at(0)).Vect();
 		// First reconstruction method
 		double en_recon1 = V4_el->E() + p_kin + (loc_pion_v4.at(0)).E();
-		
+
+		TLorentzVector V4_e_p_pip = *V4_el + loc_proton_v4.at(0) + loc_pion_v4.at(0);
+		double p_perp_eppip = TMath::Sqrt(V4_e_p_pip.Px()*V4_e_p_pip.Px()+V4_e_p_pip.Py()*V4_e_p_pip.Py());
+		h1_p_perp_eppip->Fill(p_perp_eppip);
+
 		h1_p_kin->Fill(p_kin);
 		h1_p_kin_pipl->Fill(p_kin);
 		h1_pi_E->Fill((loc_pion_v4.at(0)).E());
 		h1_pi_E_pipl->Fill((loc_pion_v4.at(0)).E());
+		h1_pi_kin_pipl->Fill((loc_pion_v4.at(0)).E()-m_pipl);
 		h1_el_E->Fill(V4_el->E());
 		h1_el_E_pipl->Fill(V4_el->E());
 		
@@ -1629,7 +1714,7 @@ double del_pt;
 		h2_Ecal_Ekin->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
 		h2_Ecal_Ekin_pipl->Fill(E_rec, en_recon1, 1/Mott_cross_sec);
 		
-		
+		h2_Ecal_pip_p_perp->Fill(en_recon1, p_perp_eppip, 1/Mott_cross_sec);
 		
 		//Third reconstruction method
 		double en_recon3 = (m_prot*m_prot - (m_prot - bind_en[ftarget])*(m_prot - bind_en[ftarget]) + 2*(m_neut - bind_en[ftarget])*(V4_el->E() + (loc_pion_v4.at(0)).E()) - e_mass*e_mass - 2*V4_el->E()*(loc_pion_v4.at(0)).E() + 2*V4_el->Rho()*(loc_pion_v4.at(0)).Rho()*cos(V3_pi.Angle(V3_el)) + m_pion*m_pion)/
@@ -1659,12 +1744,15 @@ double del_pt;
 		// First reconstruction method
 		double en_recon1 = V4_el->E() + p_kin + (loc_pion_v4.at(0)).E();
 		
-		
+		TLorentzVector V4_e_p_pim = *V4_el + loc_proton_v4.at(0) + loc_pion_v4.at(0);
+		double p_perp_eppim = TMath::Sqrt(V4_e_p_pim.Px()*V4_e_p_pim.Px()+V4_e_p_pim.Py()*V4_e_p_pim.Py());
+		h1_p_perp_eppim->Fill(p_perp_eppim);
 		
 		h1_p_kin->Fill(p_kin);
 		h1_p_kin_pimi->Fill(p_kin);
 		h1_pi_E->Fill((loc_pion_v4.at(0)).E());
 		h1_pi_E_pimi->Fill((loc_pion_v4.at(0)).E());
+		h1_pi_kin_pimi->Fill((loc_pion_v4.at(0)).E()-m_pimi);
 		h1_el_E->Fill(V4_el->E());
 		h1_el_E_pimi->Fill(V4_el->E());
 		
@@ -1672,6 +1760,16 @@ double del_pt;
 		h1_en_recon1->Fill(en_recon1, 1/Mott_cross_sec);
 		h1_en_recon1_pimi->Fill(en_recon1, 1/Mott_cross_sec);
 		h2_cal_Wvar->Fill(en_recon1, W_var, 1/Mott_cross_sec);
+
+		//if there's a kaon
+		if(num_kpl == 1){
+		  //cout<<"candidate kaon"<<endl;
+		  double en_reconKL = V4_el->E() + p_kin + (loc_pion_v4.at(0)).E() + (loc_kaon_v4.at(0)).E();
+		  h1_en_recon1_klambda->Fill(en_reconKL,1/Mott_cross_sec);
+		}
+
+		h2_Ecal_pim_p_perp->Fill(en_recon1, p_perp_eppim, 1/Mott_cross_sec);
+
 		//Second reconstruction method
 		h1_en_recon2->Fill(E_rec, 1/Mott_cross_sec);
 		h1_en_recon2_pimi->Fill(E_rec, 1/Mott_cross_sec);
@@ -3181,7 +3279,9 @@ double p2_kin[2];
 	  
 	  V4_prot_el[i]=V4_p_corr[i]+*V4_el;
 	  E_cal[i]=V4_el->E()+ V4_p_corr[i].E()-m_prot+bind_en[ftarget];
+	  //This is transverse momentum for e'p
 	  p_miss_perp[i]=TMath::Sqrt(V4_prot_el[i].Px()*V4_prot_el[i].Px()+V4_prot_el[i].Py()*V4_prot_el[i].Py());
+
 	}
       V3_prot_el[0][0]=V4_el->Vect()+V3_prot[0];
       V3_prot_el[0][1]=V4_el->Vect()+V3_prot[1];
@@ -5841,7 +5941,6 @@ TH2F* h2_sub_kin_cal_pipl = (TH2F*) h2_cal_kin_pipl->Clone("sub_cal_vs_kin_pipl"
 //Particle ID function for the electron
 Int_t e2a_eppi_v1::electron_ID(){
 
-
   if(ec[ind_em] <= 0){
     //std::cout << "Possible problem with making electron ec vector. EC index below/equal Zero: ec[ind_em] =  " << ec[ind_em] << std::endl;
     return -1;
@@ -6454,14 +6553,73 @@ Int_t e2a_eppi_v1::piminus_ID(int ii){
   return(0);
 }
 
-//placeholders for kplus and kminus to implement later (useful work for a student)
 Int_t e2a_eppi_v1::kplus_ID(int ii){
+  Float_t kpl_phimin = 0, kpl_phimax = 0;
+  const double kpl_vertcut = 2.5; //Vertexcut reusing Pi plus value for now
+
+  double kpl_vert_corr;
+
+  TVector3 V3_kpl(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii]);
+  double beta = p[ii]/TMath::Sqrt(p[ii]*p[ii]+m_kpl*m_kpl);
+  double delta= sc_t[sc[ii]-1]-sc_r[sc[ii]-1]/(beta*c*ns_to_s) - tr_time;
+
+  //no delta cuts
+  //if(p[ii] >= pion_accept_mom_lim){ //can reuse pion limit
+    TLorentzVector V4_uncorrkpl(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii],TMath::Sqrt(p[ii]*p[ii]+ m_kpl*m_kpl ) );
+
+    //if(PiplFiduialCut(fbeam_en, V3_kpl, &kpl_phimin, &kpl_phimax)){
+
+	num_kpl = num_kpl + 1;
+	num_kaon  = num_kaon + 1;
+	//num_pi_phot = num_pi_phot + 1;
+	//num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
+	index_kpl[num_kpl - 1] = ii;
+	index_kaon[num_kaon - 1] = ii;
+	//ind_pi_phot[num_pi_phot - 1] = ii;
+	
+	//h2_kpl_beta_p->Fill(p[ii],b[ii]);
+	//h2_kpl_E_p->Fill(p[ii],edep[sc[ii]-1]);
+	//h2_kpl_delt_p->Fill(p[ii],delta);
+	
+	//push back pi plus 4-vector
+	loc_kaon_v4.push_back(V4_uncorrkpl);
+	loc_kpl_v4.push_back(V4_uncorrkpl);
+
+	//}//fidcut ends
+	//}//delta cut ends
 
   return(0);
 }
 
 
 Int_t e2a_eppi_v1::kminus_ID(int ii){
+  Float_t kmi_phimin = 0, kmi_phimax = 0;
+  const double kmi_vertcut = 2.5; //Vertexcut reusing Pi plus value for now
+
+  double kmi_vert_corr;
+
+  TVector3 V3_kmi(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii]);
+  double beta = p[ii]/TMath::Sqrt(p[ii]*p[ii]+m_kmi*m_kmi);
+  double delta= sc_t[sc[ii]-1]-sc_r[sc[ii]-1]/(beta*c*ns_to_s) - tr_time;
+
+  //no delta cuts
+    TLorentzVector V4_uncorrkmi(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii],TMath::Sqrt(p[ii]*p[ii]+ m_kmi*m_kmi ) );
+
+	num_kmi = num_kmi + 1;
+	num_kaon  = num_kaon + 1;
+	//num_pi_phot = num_pi_phot + 1;
+	//num_pi_phot_nonrad = num_pi_phot_nonrad + 1;
+	index_kmi[num_kmi - 1] = ii;
+	index_kaon[num_kaon - 1] = ii;
+	//ind_pi_phot[num_pi_phot - 1] = ii;
+	
+	//h2_kpl_beta_p->Fill(p[ii],b[ii]);
+	//h2_kpl_E_p->Fill(p[ii],edep[sc[ii]-1]);
+	//h2_kpl_delt_p->Fill(p[ii],delta);
+	
+	//push back pi plus 4-vector
+	loc_kaon_v4.push_back(V4_uncorrkmi);
+	loc_kmi_v4.push_back(V4_uncorrkmi);
 
   return(0);
 }
@@ -6496,6 +6654,8 @@ Int_t e2a_eppi_v1::neutral_ID(int ii){
   TVector3 V3_phot_angles(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii]);
   double ec_delta = ec_t[ec[ii]-1] - neut_ecpath_corr/(c*ns_to_s) + EC_time_offset[make_pair(ftarget,ec_sect[ec[ii]-1])] - tr_time;
   
+
+
   h1_beta_ec->Fill(b[ii]);
   h1_beta_ec_corr->Fill(neut_beta_corr);
   h1_beta_ec_corr_sect[ec_sect[ec[ii]-1]-1]->Fill(neut_beta_corr);
@@ -6513,7 +6673,15 @@ Int_t e2a_eppi_v1::neutral_ID(int ii){
       ind_pi_phot[num_pi_phot - 1] = ii;
       //Photon EC energy deposit
       double photon_ece = TMath::Max( ec_ei[ec[ii] - 1] + ec_eo[ec[ii] - 1],etot[ec[ii] - 1]);
-      
+
+      TLorentzVector V4_gamma(p[ii]*cx[ii],p[ii]*cy[ii],p[ii]*cz[ii],photon_ece/EC_sampling_frac);      
+
+      //test 1: try applying beta correction as an energy correction
+      //double e_corr = V4_gamma.Vect().Mag()/neut_beta_corr;
+      //V4_gamma.SetE(e_corr);
+      //better yet, follow the process of CLAS-note 2013-004 to correct the individual photon energies
+
+
       //Cut on Radiation photon via angle with respect to the electron
       //within 40 degrees in theta and 30 degrees in phi
       if(V3_phot_angles.Angle(V3_el)*TMath::RadToDeg() < phot_rad_cut && abs(neut_phi_mod-el_phi_mod) < phot_e_phidiffcut ) {
@@ -6529,6 +6697,11 @@ Int_t e2a_eppi_v1::neutral_ID(int ii){
       h1_photon_E->Fill(photon_ece/EC_sampling_frac);
       h1_phot_e_angle->Fill(V3_phot_angles.Angle(V3_el)*TMath::RadToDeg());
       h2_phot_e_angle_vsphotE->Fill(photon_ece/EC_sampling_frac,V3_phot_angles.Angle(V3_el)*TMath::RadToDeg());
+
+      //have a photon 4-vector data structure here and push them back
+      loc_gamma_v4.push_back(V4_gamma);
+      loc_gamma_sector.push_back(ec_sect[ec[ii]-1]);
+
     }//end if photon fiducial
   }//n beta
   
@@ -6539,14 +6712,16 @@ Int_t e2a_eppi_v1::neutral_ID(int ii){
 
 //-----pi0_ID-----
 //Particle ID function for the pi0
+//temporarily chucking etas in here too
 //proof of principle based on two photon events only, improve pion ID, and expand to higher photon multiplicities
+//photon selection via electron-photon angular difference may not be appropriate to use the same photons for pion ID
 void e2a_eppi_v1::pi0_ID(){
 
 //---
       //Photon EC energy deposit
       Double_t photon_ece1 = TMath::Max( ec_ei[ec[ec_index_n[0]]-1] + ec_eo[ec[ec_index_n[0]]-1],etot[ec[ec_index_n[0]]-1]);
       Double_t photon_ece2 = TMath::Max( ec_ei[ec[ec_index_n[1]]-1] + ec_eo[ec[ec_index_n[1]]-1],etot[ec[ec_index_n[1]]-1]);
-      TLorentzVector V4_gamma[2];
+      TLorentzVector V4_gamma[2]; //what corrections are needed?
 
       TVector3 V3_phot[2];
       //V3_phot[0].SetXYZ(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]]);
@@ -6554,9 +6729,27 @@ void e2a_eppi_v1::pi0_ID(){
       V3_phot[0].SetXYZ(ech_x[ec[ec_index_n[0]]-1],ech_y[ec[ec_index_n[0]]-1],ech_z[ec[ec_index_n[0]]-1]);
       V3_phot[1].SetXYZ(ech_x[ec[ec_index_n[1]]-1],ech_y[ec[ec_index_n[1]]-1],ech_z[ec[ec_index_n[1]]-1]);
 
-      V4_gamma[0].SetPxPyPzE(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]],photon_ece1/EC_sampling_frac);
-      V4_gamma[1].SetPxPyPzE(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]],photon_ece2/EC_sampling_frac);
+      //V4_gamma[0].SetPxPyPzE(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]],photon_ece1/EC_sampling_frac);
+      //V4_gamma[1].SetPxPyPzE(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]],photon_ece2/EC_sampling_frac);
+//      V4_gamma[0] = loc_gamma_v4.at(0);
+//      V4_gamma[1] = loc_gamma_v4.at(1);
 
+double eCorrFactor1 = 1.0;
+double eCorrFactor2 = 1.0;
+
+      if(loc_gamma_sector.at(0) == loc_gamma_sector.at(1)){
+	eCorrFactor1 = 1.185 - (0.0372/photon_ece1) + (0.00243/(photon_ece1*photon_ece1)) - (0.0001301/(photon_ece1*photon_ece1*photon_ece1));
+	eCorrFactor2 = 1.185 - (0.0372/photon_ece2) + (0.00243/(photon_ece2*photon_ece2)) - (0.0001301/(photon_ece2*photon_ece2*photon_ece2));
+	V4_gamma[0].SetPxPyPzE(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]],photon_ece1/(EC_sampling_frac*eCorrFactor1));
+	V4_gamma[1].SetPxPyPzE(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]],photon_ece2/(EC_sampling_frac*eCorrFactor2));
+      }
+      else{
+	eCorrFactor1 = 1.213 - (0.03917/photon_ece1) + (0.003065/(photon_ece1*photon_ece1)) - (0.00009897/(photon_ece1*photon_ece1*photon_ece1));
+	eCorrFactor2 = 1.213 - (0.03917/photon_ece2) + (0.003065/(photon_ece2*photon_ece2)) - (0.00009897/(photon_ece2*photon_ece2*photon_ece2));
+	V4_gamma[0].SetPxPyPzE(p[ec_index_n[0]]*cx[ec_index_n[0]],p[ec_index_n[0]]*cy[ec_index_n[0]],p[ec_index_n[0]]*cz[ec_index_n[0]],photon_ece1/(EC_sampling_frac*eCorrFactor1));
+	V4_gamma[1].SetPxPyPzE(p[ec_index_n[1]]*cx[ec_index_n[1]],p[ec_index_n[1]]*cy[ec_index_n[1]],p[ec_index_n[1]]*cz[ec_index_n[1]],photon_ece2/(EC_sampling_frac*eCorrFactor2));
+      }
+      
 //       V4_gamma[0].SetVect(V3_phot[0]);
 //       V4_gamma[0].SetE(photon_ece1/EC_sampling_frac);
 //       V4_gamma[1].SetVect(V3_phot[1]);
@@ -6566,42 +6759,120 @@ void e2a_eppi_v1::pi0_ID(){
       //cout<<ec_eo[ec[ec_index_n[0]]-1]<<endl;
       //cout<<etot[ec[ec_index_n[0]]-1]<<endl<<endl;
 
-
+      TLorentzVector V4_targ(0,0,0,m_prot);
       //fill a two photon invariant mass
       TLorentzVector lGammaGamma = V4_gamma[0] + V4_gamma[1];
       TLorentzVector lPi0;
+      TLorentzVector lEta;
       TLorentzVector lP(p[index_p[0]]*cx[index_p[0]],p[index_p[0]]*cy[index_p[0]],p[index_p[0]]*cz[index_p[0]],TMath::Sqrt(p[index_p[0]]*p[index_p[0]]+ m_prot*m_prot ) );
       Double_t InvM_gg = TMath::Sqrt((2*photon_ece1/EC_sampling_frac*photon_ece2/EC_sampling_frac)*(1-TMath::Cos(V3_phot[0].Angle(V3_phot[1]))));
+      //Double_t InvM_gg = TMath::Sqrt((2*photon_ece1/(EC_sampling_frac*eCorrFactor1)*photon_ece2/(EC_sampling_frac*eCorrFactor2))*(1-TMath::Cos(V3_phot[0].Angle(V3_phot[1]))));
       //h1_2gammaInvM->Fill(lGammaGamma.M());
       //h1_2gammaInvM->Fill(photon_ece2/EC_sampling_frac);
       //h1_2gammaInvM->Fill((V4_gamma[0] + V4_gamma[1]).M());
       h1_2gammaInvM->Fill(TMath::Sqrt((2*photon_ece1/EC_sampling_frac*photon_ece2/EC_sampling_frac)*(1-TMath::Cos(V3_phot[0].Angle(V3_phot[1])))));
+      h1_2gammaInvM_corr->Fill(TMath::Sqrt((2*photon_ece1/(EC_sampling_frac*eCorrFactor1)*photon_ece2/(EC_sampling_frac*eCorrFactor2))*(1-TMath::Cos(V3_phot[0].Angle(V3_phot[1])))));
 
+      Double_t ggAngle = V3_phot[0].Angle(V3_phot[1]);
+      
       p_kin = lP.E() - m_prot;
 
+
+      h2_InvM_vs_2gAngle->Fill(InvM_gg,ggAngle*TMath::RadToDeg());
+
+      lPi0.SetVectM(lGammaGamma.Vect(),0.135);
+
+      h2_pi0Mom_vs_InvM->Fill(lPi0.Rho(),InvM_gg);	  
+
       //clean up selection?
-      //2 photon invariant mass cut
+      //2 photon invariant mass cut, should also look at an opening angle cut and a momentum cut on each photon
+      //clean up individual photons to rule out neutron
+
       if((InvM_gg > 0.1) && (InvM_gg < 0.2)){
 
 	//look at opening angle
-	Double_t ggAngle = V3_phot[0].Angle(V3_phot[1]);
+
 	h1_2gammaAngle->Fill(ggAngle*TMath::RadToDeg());
 	//h1_2gammaAngle->Fill(V4_gamma[0].Angle(V4_gamma[1]));
+
+	//try a loose opening angle cut, maybe around 65 degrees...
 
 	//reconstruct beam energy from final state particles
 	//double en_recon1_pi0 = V4_el.E() + p_kin + lGammaGamma.E();
 
-	lPi0.SetVectM(lGammaGamma.Vect(),0.135);
 
-	double en_recon1_pi0 = V4_el->E() + p_kin + lPi0.E();
 
-	//h1_en_recon1_pi0->Fill(en_recon1_pi0, 1/Mott_cross_sec);
-	h1_en_recon1_pi0->Fill(en_recon1_pi0);
-	
-	h1_InvM_ppi0->Fill(W_var);
-	h1_InvM_ppi0_2->Fill((lP + lPi0).M());
+	if(!(lPi0.Rho() > 2.0 && ggAngle*TMath::RadToDeg() > 20)){
+	  h2_pi0Mom_vs_2gAngle->Fill(lPi0.Rho(),ggAngle*TMath::RadToDeg());
+	  
+	  //if momentum of reconstructed pi0 > 2.0 and opening angle of constitent photons > 20, don't count it as a pion
+	  
 
+
+
+	  double en_recon1_pi0 = V4_el->E() + p_kin + lPi0.E();
+	  
+	  TLorentzVector V4_e_p_pi0 = *V4_el + lP + lPi0;
+	  
+	  double p_perp_eppi0 = TMath::Sqrt(V4_e_p_pi0.Px()*V4_e_p_pi0.Px()+V4_e_p_pi0.Py()*V4_e_p_pi0.Py());
+	  
+	  h1_p_perp_eppi0->Fill(p_perp_eppi0);
+	  
+	  //h1_en_recon1_pi0->Fill(en_recon1_pi0, 1/Mott_cross_sec);
+	  h1_en_recon1_pi0->Fill(en_recon1_pi0);
+	  
+	  h1_InvM_ppi0->Fill(W_var);
+	  h1_InvM_ppi0_2->Fill((lP + lPi0).M());
+	  h1_pi_kin_pi0->Fill((lPi0.E())-m_pion);
+	  
+	  h1_pi0_mom->Fill(lPi0.Rho());
+	  h1_pi0_gamma1_mom->Fill(V4_gamma[0].Rho());
+	  h1_pi0_gamma2_mom->Fill(V4_gamma[1].Rho());
+	  
+	  h2_W_Ecal_pi0->Fill(en_recon1_pi0, (*V4_el + lP + lPi0).M(), 1/Mott_cross_sec);
+	  h2_W_Ecal_pi0_2->Fill(en_recon1_pi0, W_var, 1/Mott_cross_sec);
+	  
+	  h2_Ecal_pi0_p_perp->Fill(en_recon1_pi0, p_perp_eppi0, 1/Mott_cross_sec);
+	  
+	  h1_MM_eppi0->Fill(((*V4_beam + V4_targ) - (*V4_el + lP + lPi0)).Rho());
+	  //h1_ME_eppipl->Fill(V4_beam.E() - (V4_el + V4_uncorrprot + V4_uncorrpipl).E());
+	  h1_ME_eppi0->Fill(((*V4_beam + V4_targ) - (*V4_el + lP + lPi0)).E());
+	  
+	  if(((((*V4_beam + V4_targ) - (*V4_el + lP + lPi0)).E()) > -0.05) && ((((*V4_beam + V4_targ) - (*V4_el + lP + lPi0)).E()) < 0.15)){
+	    //h1_Q2_deltaplus_ME_cut->Fill(Q2);
+	    h1_InvM_ppi0_MEcut->Fill((lP + lPi0).M());
+	    h1_InvM_ppi0_MEcut2->Fill(W_var);
+	  }
+	  
+	}
       }
+      else if((InvM_gg > 0.5) && (InvM_gg < 0.58)){
+
+	//reconstruct beam energy from final state particles
+	//double en_recon1_pi0 = V4_el.E() + p_kin + lGammaGamma.E();
+
+	lEta.SetVectM(lGammaGamma.Vect(),0.548);
+
+	double en_recon1_eta = V4_el->E() + p_kin + lEta.E();
+
+	TLorentzVector V4_e_p_eta = *V4_el + lP + lEta;
+
+	double p_perp_epeta = TMath::Sqrt(V4_e_p_eta.Px()*V4_e_p_eta.Px()+V4_e_p_eta.Py()*V4_e_p_eta.Py());
+
+	h1_p_perp_epeta->Fill(p_perp_epeta);
+
+	h1_en_recon1_eta->Fill(en_recon1_eta);
+	
+	h1_InvM_pEta->Fill(W_var);
+	h1_InvM_pEta_2->Fill((lP + lEta).M());
+	h1_pi_kin_eta->Fill((lEta.E())-m_eta);
+
+	h2_W_Ecal_eta->Fill(en_recon1_eta, (*V4_el + lP + lEta).M(), 1/Mott_cross_sec);
+	h2_W_Ecal_eta2->Fill(en_recon1_eta, W_var, 1/Mott_cross_sec);
+
+	h2_Ecal_eta_p_perp->Fill(en_recon1_eta, p_perp_epeta, 1/Mott_cross_sec);
+      }
+      else{}
 
 }
 

@@ -59,6 +59,9 @@ h1_pimi_mom = new TH1F("h1_pimi_mom","",300,0,3);
 h1_pimi_mom_ratio = new TH1F("h1_pimi_mom_ratio","",50,0.97,1.2);
 h1_pipl_mom = new TH1F("h1_pipl_mom","",300,0,3);
 h1_pipl_mom_ratio = new TH1F("h1_pipl_mom_ratio","",50,0.97,1.2);
+h1_pi0_mom = new TH1F("h1_pi0_mom","",300,0,3);
+h1_pi0_gamma1_mom = new TH1F("h1_pi0_gamma1_mom","",300,0,3);
+h1_pi0_gamma2_mom = new TH1F("h1_pi0_gamma2_mom","",300,0,3);
 h1_neg_m=new TH1F("h1_neg_m","",300,0,2);
 h1_pos_m=new TH1F("h1_pos_m","",300,0,2);
 
@@ -464,6 +467,14 @@ h1_en_recon1_pipl=new TH1F("cal_pipl", "",n_bins, x_values);
   h1_en_recon1_pipl->Sumw2();
 h1_en_recon1_pi0=new TH1F("cal_pi0", "",n_bins, x_values);
   h1_en_recon1_pi0->Sumw2();
+h1_en_recon1_eta=new TH1F("cal_eta", "",n_bins, x_values);
+  h1_en_recon1_eta->Sumw2();
+h1_en_recon1_klambda=new TH1F("cal_klambda", "",n_bins, x_values);
+  h1_en_recon1_klambda->Sumw2();
+h1_en_recon1_kpkm=new TH1F("cal_kpkm", "",n_bins, x_values);
+  h1_en_recon1_kpkm->Sumw2();
+h1_en_recon1_pippim=new TH1F("cal_pippim", "",n_bins, x_values);
+  h1_en_recon1_pippim->Sumw2();
 h1_en_recon2=new TH1F("kin_e","",n_bins, x_values);
   h1_en_recon2->Sumw2();
 h1_en_recon2_pimi=new TH1F("kin_e_pimi","",n_bins, x_values);
@@ -825,6 +836,23 @@ h2_rot_1pi_3p_1phot_pipl->Sumw2();
   h2_kin_e_pi_Wvar->Sumw2();
    h2_cal_Wvar = new TH2F("h2_cal_Wvar","",200,0,5,200,0,5);
   h2_cal_Wvar->Sumw2();
+   h2_W_Ecal_pi0 = new TH2F("h2_W_Ecal_pi0","",200,0,5,200,0,5);
+  h2_W_Ecal_pi0->Sumw2();
+   h2_W_Ecal_eta = new TH2F("h2_W_Ecal_eta","",200,0,5,200,0,5);
+  h2_W_Ecal_eta->Sumw2();
+   h2_W_Ecal_pi0_2 = new TH2F("h2_W_Ecal_pi0_2","",200,0,5,200,0,5);
+  h2_W_Ecal_pi0_2->Sumw2();
+   h2_W_Ecal_eta2 = new TH2F("h2_W_Ecal_eta2","",200,0,5,200,0,5);
+  h2_W_Ecal_eta2->Sumw2();
+   h2_Ecal_pi0_p_perp = new TH2F("h2_Ecal_pi0_p_perp","",200,0,5,200,0,5);
+  h2_Ecal_pi0_p_perp->Sumw2();
+   h2_Ecal_pip_p_perp = new TH2F("h2_Ecal_pip_p_perp","",200,0,5,200,0,5);
+  h2_Ecal_pip_p_perp->Sumw2();
+   h2_Ecal_pim_p_perp = new TH2F("h2_Ecal_pim_p_perp","",200,0,5,200,0,5);
+  h2_Ecal_pim_p_perp->Sumw2();
+   h2_Ecal_eta_p_perp = new TH2F("h2_Ecal_eta_p_perp","",200,0,5,200,0,5);
+  h2_Ecal_eta_p_perp->Sumw2();
+
  h3_Npi_Np_Nphoton=new TH3F("h3_Npi_Np_Nphoton", "", 11, -0.5, 4.5, 11, -0.5, 4.5, 11, -0.5, 4.5);
 
 

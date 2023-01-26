@@ -11,7 +11,7 @@
 
 
 	//All units are in GeV
-	const double m_pimi = 0.139570, m_pipl = 0.139570, m_pion = 0.139570;
+const double m_pimi = 0.139570, m_pipl = 0.139570, m_pion = 0.139570, m_eta=0.547853, m_kpl=0.493677, m_kmi=0.493677;
   const double m_prot = 0.9382720813, m_neut = 0.939565;
 const double m_delta = 1.232;
 	const double H3_bind_en = 0.008481, He4_bind_en = 0.0283, C12_bind_en = 0.09215, B_bind_en = 0.0762;
